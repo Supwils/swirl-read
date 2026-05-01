@@ -127,9 +127,9 @@
    theme-aware colors via semantic tokens.
    ───────────────────────────────────────────────────────────────────────── */
 .swilread-prose {
-  font-family: var(--font-serif);
-  font-size: 18px;
-  line-height: 1.7;
+  font-family: var(--reader-font-family, var(--font-serif));
+  font-size: var(--reader-font-size, 18px);
+  line-height: var(--reader-line-height, 1.7);
   color: var(--color-text);
 }
 
@@ -470,6 +470,16 @@
     transition:
       background-color 200ms ease,
       color 200ms ease;
+  }
+
+  /* Zen mode (M2.6 wires the F-key) — hide all chrome, keep only content. */
+  body.zen-mode header,
+  body.zen-mode aside.swilread-callout__header {
+    /* keep content; hide app-shell header. callout headers stay because
+       they're part of the content semantics, not chrome. */
+  }
+  body.zen-mode > #root > div > header {
+    display: none;
   }
 
   /* Respect reduced motion preferences */

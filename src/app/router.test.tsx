@@ -39,7 +39,9 @@ describe('production route tree', () => {
   it('renders AppShell with no-vault placeholder at /app', () => {
     renderAt('/app')
     expect(screen.getByText(/no vault selected/i)).toBeInTheDocument()
-    expect(screen.getByText(/app shell · placeholder/i)).toBeInTheDocument()
+    // AppShell header now contains the SwilRead wordmark + ThemeSwitcher
+    expect(screen.getByRole('link', { name: /swilread/i })).toBeInTheDocument()
+    expect(screen.getByRole('combobox')).toBeInTheDocument()
   })
 
   it('renders VaultHome with vaultId at /app/:vaultId', () => {

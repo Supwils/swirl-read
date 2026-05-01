@@ -356,22 +356,29 @@ Goal: The immersive single-column experience with all 5 themes.
 
 ---
 
-### M2.3 — `useUIStore` with theme/typography settings
+### M2.3 — `useUIStore` with theme/typography settings ✅ Done 2026-05-01
 
-**File**: `src/stores/ui-store.ts`
+**Files**: `src/stores/ui-store.ts` + `.test.ts`, `src/app/use-apply-ui-prefs.ts`, `src/ui/components/ThemeSwitcher.tsx`
 
 **Deliverables**:
 
-- Store with theme, fontFamily, fontSize, lineHeight, contentWidth, zenMode
-- Persists to IndexedDB
-- Selectors for each field
+- ✅ Store with `theme`, `fontFamily`, `fontSize`, `lineHeight`, `contentWidth`, `zenMode`, `ready`
+- ✅ Persists to Dexie `preferences` table (zenMode session-scoped by design)
+- ✅ Defensive pref reads with type-guards + numeric clamping at both load and write
+- ✅ `useApplyUIPrefs` hook — syncs body class + CSS vars on `<html>`
+- ✅ `<ThemeSwitcher />` mounted in AppShell header
+- ✅ `resetToDefaults` action
+- ✅ 13 tests including invalid-value fallback and clamping behavior
 
 **Acceptance**:
 
-- Changing values in store reflects in UI immediately
-- Settings persist across reloads
+- ✅ Changing theme in dropdown reflects instantly across body bg, prose, code, callouts
+- ✅ Settings persist across reloads
+- ✅ Typography CSS vars on `<html>` consumed by `.swilread-prose` and DocumentPage container
 
 **Dependencies**: M2.2
+
+**Notes**: Auto theme renders correctly via `@media (prefers-color-scheme)` at first paint; live OS-level switch listening can be added in M9.x. Settings panel UI (sliders for font size etc.) is M2.4.
 
 ---
 

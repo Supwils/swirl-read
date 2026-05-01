@@ -112,8 +112,11 @@ export function DocumentPage() {
 
   return (
     <article
-      className="mx-auto max-w-[720px] px-6 py-12 font-serif text-[18px] leading-[1.7]"
-      style={{ color: 'var(--color-text)' }}
+      className="mx-auto px-6 py-12 font-serif"
+      style={{
+        color: 'var(--color-text)',
+        maxWidth: 'var(--reader-content-width, 720px)',
+      }}
     >
       <header className="mb-8">
         <p

@@ -1,4 +1,5 @@
 import { Link, Outlet } from 'react-router'
+import { ThemeSwitcher } from '@/ui/components/ThemeSwitcher'
 
 export function AppShell() {
   return (
@@ -14,12 +15,7 @@ export function AppShell() {
         >
           SwilRead
         </Link>
-        <span
-          className="font-serif text-sm"
-          style={{ color: 'var(--color-text-muted)' }}
-        >
-          App Shell · placeholder
-        </span>
+        <ThemeSwitcher />
       </header>
       <div className="flex-1">
         <Outlet />

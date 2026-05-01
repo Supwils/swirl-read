@@ -4,6 +4,74 @@
 
 ---
 
+## 2026-05-01 · M2.3 · UI Store + Theme Switcher
+
+**Status**: ✅ Done
+
+### What was built
+
+The four themes + Auto are now actually reachable. Until this commit the body class was hardcoded to `theme-sepia` in `index.html`; all the dual-theme Shiki and palette work was invisible. Now there's a header dropdown that switches themes instantly with persisted preference.
+
+**Files created**:
+
+- `src/stores/ui-store.ts` — Zustand store with `theme`, `fontFamily`, `fontSize`, `lineHeight`, `contentWidth`, `zenMode`, `ready`. Setters persist to Dexie `preferences` table (except `zenMode`, intentionally session-scoped).
+- `src/stores/ui-store.test.ts` — 13 tests covering init defaults, persistence round-trip, invalid value fallback, numeric clamping, setters, zenMode, resetToDefaults
+- `src/app/use-apply-ui-prefs.ts` — top-level hook that syncs store state into DOM (body class for theme, CSS vars on root for typography)
+- `src/ui/components/ThemeSwitcher.tsx` — minimal `<select>` dropdown for the AppShell header
+
+**Files modified**:
+
+- `src/app/AppShell.tsx` — replaced "App Shell · placeholder" with `<ThemeSwitcher />`
+- `src/App.tsx` — calls `useApplyUIPrefs()` once at the top of the tree
+- `src/main.tsx` — fires `useUIStore.getState().init()` alongside vault store init
+- `src/styles/globals.css` — `.swilread-prose` now uses `var(--reader-font-family)`, `var(--reader-font-size)`, `var(--reader-line-height)`; added zen-mode rule that hides AppShell header
+- `src/ui/reading-shell/DocumentPage.tsx` — article maxWidth uses `var(--reader-content-width)`
+- `src/app/router.test.tsx` — header assertion updated for the new ThemeSwitcher combobox + wordmark link
+
+### Architecture decisions
+
+- **Defensive pref reads**. Each pref load goes through `readPref(key, isValid, fallback)`. An IDB row with corrupted data (e.g. `theme: 'INVALID'`) falls back to default rather than crashing. Type-guard functions enumerate the valid string unions.
+- **Numeric clamping at both load and write**. Out-of-range stored values get clamped on `init`; user inputs get clamped on every setter call.
+- **`zenMode` deliberately session-scoped**. A stuck zen state surviving page reloads would be a UX trap. F-key (M2.6) toggles in-session only.
+- **Top-level hook for DOM sync** (`useApplyUIPrefs`) rather than a provider. Mounting it once in `App.tsx` covers the entire tree; no provider re-renders.
+- **CSS variables drive typography**. `--reader-font-size`, `--reader-line-height`, `--reader-content-width`, `--reader-font-family` are set on `<html>` from the store. Changing any preference is one DOM property write — no React re-renders of content.
+- **Subscriptions are field-scoped**. Each useEffect in the apply hook subscribes to only the field it cares about — changing fontSize doesn't re-run the theme classList effect.
+
+### Verification
+
+- `pnpm typecheck` → 0 errors
+- `pnpm lint` → 0 errors, 0 warnings
+- `pnpm format:check` → all conformant
+- `pnpm test` → **181 passing** (was 168; +13 ui-store tests)
+- `pnpm build` → 224 KB gzipped JS (~1 KB delta — store + switcher are tiny)
+- Live dev-server: HMR applied; switching themes in the AppShell dropdown updates the body class instantly
+
+### Manual browser E2E (now finally visible)
+
+1. `pnpm dev`, open `localhost:5173/`
+2. Open vault, navigate to any Markdown file with code blocks
+3. AppShell header → "Theme" dropdown → pick Sepia / Light / Dark / OLED / Auto
+4. Body background, text color, code highlighting, callout tints, wikilink underlines — **everything switches in one frame**
+5. Reload page; chosen theme is restored from IndexedDB
+
+### Issues / Notes
+
+- **Auto theme not yet driven by `prefers-color-scheme` change events**: the CSS rule uses `@media (prefers-color-scheme: ...)` to render `.theme-auto` correctly, but the store still treats `auto` as a static value. M9.x can add a `matchMedia` subscription if needed.
+- **Router test assertion updated** for the new header content (wordmark link + combobox).
+
+### Next step
+
+Reasonable directions:
+
+- **M2.4 — Settings panel UI** (Radix Dialog with sliders for font size / line height / content width / font family / theme)
+- **M3.7 + M3.8 — Embeds** (`![[image.png]]` images, `![[page.md]]` inline includes)
+- **M3.9 — Highlights `==text==`** (cheap; vault uses them)
+- **M3.4 — Wikilink hover preview** (Floating UI popover)
+
+Lean toward **M3.7 + M3.8 embeds** — image embeds in particular are a glaring missing feature for any vault with screenshots or diagrams.
+
+---
+
 ## 2026-05-01 · M3.12 · Shiki Code Highlighting (pipeline becomes async)
 
 **Status**: ✅ Done

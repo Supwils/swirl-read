@@ -31,8 +31,9 @@ The product is fully designed. These documents tell you HOW to build it.
 - ✅ **Milestone 1 complete** — first real render from a real vault works
 - ✅ **M3.2 + M3.3** — Wikilinks: parse, resolve, click-to-navigate
 - ✅ **M3.5 + M3.6** — Callouts: 14 canonical types + 12 aliases, themed colors, Lucide icons
-- ✅ **M3.12** — Shiki code highlighting (dual-theme, 27 langs bundled, async pipeline) (168 tests passing)
-- 🔜 Pick next: M2.3 theme store + switcher (lets dual-theme actually show), M3.7+M3.8 embeds, or M3.9 highlights
+- ✅ **M3.12** — Shiki code highlighting (dual-theme, 27 langs bundled, async pipeline)
+- ✅ **M2.3** — UI store + theme switcher (themes finally reachable via header dropdown, persisted) (181 tests passing)
+- 🔜 Pick next: M3.7+M3.8 embeds (`![[image.png]]`), M2.4 settings panel, or M3.9 highlights
 
 ## Before Coding
 
