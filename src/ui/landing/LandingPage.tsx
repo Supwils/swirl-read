@@ -1,15 +1,17 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { registerVault, saveHandle } from '@/core/vault'
+import { saveHandle } from '@/core/vault'
 import type { FSAPIVaultAdapter } from '@/core/vault'
+import { useVaultStore } from '@/stores/vault-store'
 import { FolderPicker } from './FolderPicker'
 
 export function LandingPage() {
   const [pickerOpen, setPickerOpen] = useState(false)
   const navigate = useNavigate()
+  const registerVault = useVaultStore((s) => s.registerVault)
 
   async function handlePicked(adapter: FSAPIVaultAdapter) {
-    registerVault(adapter)
+    await registerVault(adapter)
     // Best-effort: persist the handle for future sessions. Real cross-session
     // restore lands in M6.3; for now this just primes IndexedDB.
     try {

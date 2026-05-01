@@ -24,8 +24,9 @@ The product is fully designed. These documents tell you HOW to build it.
 - ✅ **Milestone 0 complete** — project bootstrap done
 - ✅ **M1.1** — `VaultFileSystem` interface + path utilities (34 unit tests)
 - ✅ **M1.2** — `FSAPIVaultAdapter` (32 unit tests with FSAPI mock)
-- ✅ **M1.3** — Folder picker UI + session vault registry; pick→register→navigate flow works end-to-end (93 tests passing)
-- 🔜 **M1.4** — `useVaultStore` (Zustand) replacing the session registry
+- ✅ **M1.3** — Folder picker UI + session vault registry; pick→register→navigate flow works end-to-end
+- ✅ **M1.4** — Zustand `useVaultStore` + Dexie persistence; registry shim deleted (98 tests passing)
+- 🔜 **M1.5** — Markdown rendering pipeline (basic CommonMark + GFM)
 
 ## Before Coding
 

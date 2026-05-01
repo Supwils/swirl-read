@@ -4,6 +4,90 @@
 
 ---
 
+## 2026-05-01 · M1.4 · Zustand Vault Store + Dexie Schema
+
+**Status**: ✅ Done
+
+### What was built
+
+Replaced the M1.3 session-only registry with a persistent Zustand store backed by Dexie.
+
+**Files created**:
+
+- `src/core/persistence/db.ts` — Dexie schema for `vaults` and `preferences` tables, plus `StoredVault`↔`VaultMeta` conversion (Dates serialized as ms-since-epoch for IDB friendliness)
+- `src/stores/vault-store.ts` — `useVaultStore` with `init`, `registerVault`, `switchVault`, `removeVault`, `attachAdapter`; module-level `adapters: Map<VaultId, VaultFileSystem>` for live adapter handles
+- `src/stores/vault-store.test.ts` — 11 tests covering init, register, re-register, persistence-survives-reload, switch, remove, attach
+
+**Files modified**:
+
+- `src/main.tsx` — fires `useVaultStore.getState().init()` on app boot (fire-and-forget; UI branches on `ready`)
+- `src/ui/landing/LandingPage.tsx` — uses `registerVault` selector from the store; awaits the async registration
+- `src/ui/reading-shell/VaultHome.tsx` — uses `getAdapter(id)` from the store
+- `src/setup-tests.ts` — imports `fake-indexeddb/auto` so all tests get a working IndexedDB environment
+- `src/core/vault/index.ts` — barrel export trimmed (registry exports gone)
+
+**Files deleted**:
+
+- `src/core/vault/registry.ts` — replaced by Zustand store
+- `src/core/vault/registry.test.ts` — corresponding tests deleted
+
+### Architecture decisions
+
+- **Adapters are non-reactive (Map outside Zustand)**. Vault adapters wrap large objects (file handles, blob URL caches). Putting them in Zustand state would (a) break shallow-equality optimizations and (b) cause unnecessary re-renders on every adapter creation. Module-level Map keyed by ID; store tracks just the metadata + active id.
+- **Dexie storage shape ≠ domain shape**. `StoredVault` uses `registeredAtMs: number` instead of `Date` to keep IndexedDB-friendly primitive values. Conversion happens at the Dexie boundary via `storedToMeta` / `metaToStored`.
+- **Active vault id is persisted as a preference**. On returning user (M6.3) we'll re-restore the active id and prompt for permission re-grant. For now: persisted but unused on init beyond surfacing the value.
+- **`init()` is idempotent** — early-returns if `ready` is already true. Strict Mode double-renders won't double-load.
+- **`__resetDbForTests` clears tables; never deletes the Dexie instance**. First attempt deleted the instance and re-created via `Object.assign` — broke because Dexie holds internal state references that survive the Object.assign. Cleared tables in a transaction is the correct pattern.
+- **`attachAdapter()` is the seam for M6.3**. When a returning user re-grants permission, M6.3 will load the meta, request permission via the persisted handle, and call `attachAdapter()` to bind the live adapter without touching meta.
+
+### Migration notes
+
+- `registerVault`, `getVault`, `listVaults`, `unregisterVault`, `subscribe` from `core/vault/registry` are GONE. Use the store:
+  - `useVaultStore(s => s.registerVault)` (reactive selector in components)
+  - `useVaultStore.getState().registerVault(adapter)` (one-shot in event handlers)
+  - `getAdapter(id)` from `@/stores/vault-store` (non-reactive lookup)
+- The audit-flagged "shadow tests" pattern was avoided here: `vault-store.test.ts` exercises the **same** store instance as production (via `useVaultStore.getState()` and `setState`) and uses fake-indexeddb for real IDB persistence semantics.
+
+### Verification
+
+- `pnpm typecheck` → 0 errors
+- `pnpm lint` → 0 errors, 0 warnings
+- `pnpm format:check` → all conformant
+- `pnpm test` → **98 passing** (was 93; +11 vault-store, −6 deleted registry)
+- `pnpm build` → 676 ms; bundle 128.49 KB gzipped JS (was 94 KB; +34 KB for Dexie + Zustand). Still well under 250 KB budget.
+
+Manual browser sanity check: dev server's HMR caught up across all migrations; live URL still serves the app.
+
+### Issues / Notes
+
+- First test run hit `DatabaseClosedError` because `__resetDbForTests` was deleting the Dexie instance. Switched to clearing tables — the singleton `db` reference survives across all tests.
+- `fake-indexeddb/auto` shim in setup-tests gives every test a real IDB. Trade-off: slightly slower setup (~250ms vs ~70ms before) but real persistence semantics in tests.
+- `attachAdapter` test was sync but written as `async` — caught by `require-await` lint, fixed to non-async.
+
+### Bundle composition
+
+| Asset                       | Size (gzipped) |
+| --------------------------- | -------------- |
+| Application JS (incl. deps) | 128.49 KB      |
+| CSS                         | 4.20 KB        |
+| **Total initial paint**     | **~133 KB**    |
+
+The +34 KB for Dexie + Zustand buys us: typed reactive store, real IDB persistence with migrations, multi-vault support, and the foundation for M2.3 (UI prefs persistence) and M6.3 (returning user). Worth it.
+
+### Next step
+
+Now that the store is real, the natural next jump is the **product wow moment** — actually rendering a Markdown file from the user's vault.
+
+**M1.5 — Markdown rendering pipeline (basic CommonMark + GFM)**:
+
+- `src/core/render/pipeline.ts` exporting `renderMarkdown(source: string): React.ReactNode`
+- unified pipeline: remark-parse → remark-gfm → remark-rehype → rehype-react
+- Custom plugins (wikilinks, callouts, embeds, highlight) come in M3.x
+
+Then **M1.6** wires it into `DocumentPage.tsx` and the demo finally runs end-to-end on Wilson's vault.
+
+---
+
 ## 2026-05-01 · M1.3 · Folder Picker UI + Session Vault Registry
 
 **Status**: ✅ Done

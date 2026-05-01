@@ -221,22 +221,36 @@ Goal: Open a folder via FSAPI, list .md files, render one as styled HTML. The "w
 
 ---
 
-### M1.4 — Set up `useVaultStore` (Zustand)
+### M1.4 — Set up `useVaultStore` (Zustand) ✅ Done 2026-05-01
 
-**File**: `src/stores/vault-store.ts`
+**Files**:
+
+- `src/stores/vault-store.ts` — Zustand store with `init`, `registerVault`, `switchVault`, `removeVault`, `attachAdapter`
+- `src/stores/vault-store.test.ts` — 11 tests
+- `src/core/persistence/db.ts` — Dexie schema (`vaults`, `preferences`); `StoredVault`↔`VaultMeta` conversion
+- `src/main.tsx` — fires `init()` on boot
+- `src/setup-tests.ts` — `fake-indexeddb/auto` for tests
+
+**Files deleted**: `src/core/vault/registry.ts` and its test (replaced by store)
 
 **Deliverables**:
 
-- Store with `registeredVaults`, `activeVaultId`, `activeVaultFs`
-- `registerVault(fs)` adds to list, sets active
-- `switchVault(id)` changes active vault
-- Persistence via Dexie
+- ✅ Store with `registeredVaults: VaultMeta[]`, `activeVaultId: VaultId | null`, `ready: boolean`
+- ✅ `registerVault(fs)` persists meta, caches adapter in module-level Map, sets active
+- ✅ `switchVault(id)` changes active and bumps `lastOpenedAt`
+- ✅ `removeVault(id)` removes from Dexie + adapters Map; clears active if needed
+- ✅ Persistence via Dexie (vaults table + preferences for active id)
+- ✅ Test parity uses real production store (no shadow store) + fake-indexeddb for real IDB semantics
 
 **Acceptance**:
 
-- Picking a folder registers a vault and routes to `/app/:vaultId`
+- ✅ Picking a folder registers a vault and routes to `/app/:vaultId`
+- ✅ Page reload preserves the registered vault list (verified in test by clearing in-memory state and re-`init()`)
+- ⏸️ Adapter restoration on returning users requires permission re-grant — deferred to M6.3 (foundation laid via `attachAdapter()`)
 
 **Dependencies**: M1.2, M1.3
+
+**Notes**: Adapters live in a module-level Map outside Zustand (large non-serializable objects). `__resetDbForTests` clears tables rather than re-creating the Dexie instance. Bundle grew +34 KB gzipped (Dexie + Zustand) — buys persistence + multi-vault foundation.
 
 ---
 

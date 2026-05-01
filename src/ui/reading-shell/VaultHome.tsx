@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router'
-import { getVault, type VaultEntry } from '@/core/vault'
+import type { VaultEntry } from '@/core/vault'
+import { getAdapter } from '@/stores/vault-store'
 
 interface VaultPreview {
   vaultName: string
@@ -19,7 +20,7 @@ export function VaultHome() {
 
   useEffect(() => {
     if (!vaultId) return
-    const vault = getVault(vaultId)
+    const vault = getAdapter(vaultId)
     if (!vault) {
       setState({ kind: 'missing' })
       return
