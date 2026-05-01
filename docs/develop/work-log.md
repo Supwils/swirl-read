@@ -4,6 +4,88 @@
 
 ---
 
+## 2026-05-01 · M3.2 + M3.3 · Wikilinks (parse → resolve → click)
+
+**Status**: ✅ Done — wikilinks fully clickable in real vaults
+
+### What was built
+
+End-to-end `[[wikilink]]` support: a remark plugin parses the syntax, a resolver maps targets to real vault paths, and a React component renders them as React Router `<Link>`s. Hopping between notes by clicking now works.
+
+**Files created**:
+
+- `src/core/render/plugins/remark-wikilink.ts` — remark plugin: parses `[[target]]`, `[[target|alias]]`, `[[target#heading]]`, `[[target#heading|alias]]`, `[[target^block]]`, `[[target^block|alias]]`. Uses `unist-util-visit` to split text nodes containing wikilink syntax.
+- `src/core/render/plugins/remark-wikilink.test.ts` — 16 tests (every form, multiple links, surrounding text preservation, hast hints, Unicode, newline boundaries)
+- `src/core/navigation/wikilink-resolver.ts` — `buildWikilinkIndex(vault) → WikilinkIndex` (basename → paths map) and `resolveWikilink(target, index, current?)`
+- `src/core/navigation/wikilink-resolver.test.ts` — 11 tests covering exact paths, stem lookups, missing-extension fallback, ambiguous basenames, Unicode
+- `src/ui/reading-shell/Wikilink.tsx` — React component reading from context, calling resolver, rendering Link / pending / broken states
+- `src/ui/reading-shell/wikilink-context.ts` — `WikilinkContext` carrying `{ vaultId, currentPath, index }` (separate file so Wikilink.tsx exports only components)
+
+**Files modified**:
+
+- `src/core/render/pipeline.ts` — wires `remarkWikilink` between gfm and rehype; extends sanitize schema to allow `<wikilink>` tag and `data-target` / `data-alias` / `data-heading` / `data-block-id` attributes
+- `src/ui/reading-shell/DocumentPage.tsx` — builds wikilink index per vault on mount; passes `{ wikilink: Wikilink }` as the `components` map to `renderMarkdown`; wraps content in `WikilinkContext.Provider`
+- `src/styles/globals.css` — three wikilink visual states (resolved / pending / broken) with theme-aware colors, dashed underlines, hover highlights via `color-mix()`
+
+### Architecture decisions
+
+- **Visit-based parser, not micromark extension**. A proper micromark extension would parse `[[...]]` as a first-class token and handle nested-emphasis edge cases. The visit approach (split text nodes after parsing) covers ~95% of real-world wikilinks at a fraction of the implementation cost. Documented limitation: wikilinks inside emphasis or other phrasing wrappers may not split correctly. Will upgrade to micromark extension if/when issues surface.
+- **Custom mdast node + custom hast tag name**. Plugin emits `type: 'wikilink'` mdast nodes with `data.hName: 'wikilink'`, producing `<wikilink>` in hast. Sanitize schema explicitly allows this tag + the four data attrs. JSX runtime maps `wikilink` → `Wikilink` component via the `components` parameter.
+- **Resolution is synchronous + index-based**. Async resolution per click would be too slow and would race React rendering. Build a basename → paths index when DocumentPage mounts; pass it via context; resolver is O(1).
+- **Three render states for clarity**. `resolved` (green-ish, hover highlight), `pending` (dimmed, shown while index is loading), `broken` (strikethrough + dotted underline + tooltip). No silent failures; the user always sees something readable.
+- **Context separation for fast-refresh**. `Wikilink.tsx` exports only the component; `wikilink-context.ts` exports only the context. Required by `react-refresh/only-export-components`.
+- **First-match wins for ambiguous basenames** (e.g. two `me.md` in different folders). Deterministic via insertion order from `walk()`. Better disambiguation (prefer current-folder sibling) is a M3.x polish task.
+- **Heading + block-id flow into URL hash** (`#heading` or `#^block-id`). Actual scroll behavior lands in M4.6 (TOC anchor handling).
+
+### Pipeline composition (current)
+
+```
+remark-parse
+  → remark-frontmatter (strips YAML/TOML)
+  → remark-gfm (tables, task lists, strikethrough, autolink)
+  → remark-wikilink (NEW — Obsidian [[links]])
+  → remark-rehype (mdast → hast)
+  → rehype-sanitize (extended schema)
+  → hast-util-to-jsx-runtime (hast → React, with components map)
+```
+
+### Verification
+
+- `pnpm typecheck` → 0 errors
+- `pnpm lint` → 0 errors, 0 warnings (with one inline-justified `as number` cast in remark-wikilink.ts)
+- `pnpm format:check` → all conformant
+- `pnpm test` → **153 passing** (was 126; +27 from the two new test files)
+- `pnpm build` → 920 ms; bundle 179 KB gzipped JS — wikilink plugin adds well under 1 KB (just AST manipulation)
+- Live dev-server smoke test: HMR applied; Wilson's vault now shows clickable `[[link]]`s
+
+### Manual browser E2E (now closes the loop)
+
+1. `pnpm dev`, open `localhost:5173/`
+2. Open my vault → pick `/Users/supwils/supwilsoft/supwil/`
+3. Navigate to `/app/supwil-XXXX/index.md`
+4. **All `[[wikilinks]]` in `index.md` are now clickable** — the navigation map (`career-map`, `knowledge-map`, etc.) becomes a real working hypertext
+5. Click any wikilink → navigate to that page → its wikilinks are clickable too → ♾️ navigation
+6. Unresolved links (pointing to a target the vault doesn't contain) render with strikethrough + tooltip explaining why
+
+This is the first time the "personal wiki" experience is real.
+
+### Issues / Notes
+
+- **`@types/mdast` and `@types/unist`** weren't installed by default — added as devDeps. mdast/unist provide the AST type definitions the plugin and tests reference.
+- **`unist-util-visit` index narrowing**: TypeScript inferred `index` as `never` despite the `typeof === 'number'` guard. Cast through a local binding (`const idx = index as number`) — surfaces the workaround intentionally rather than burying behind `// @ts-expect-error`.
+- **Pipeline call signature broadened**: `renderMarkdown` now takes optional `components`, but call sites that don't pass any still work. DocumentPage passes `{ wikilink: Wikilink }`; tests in `pipeline.test.tsx` pass nothing and exercise only built-in tags.
+
+### Next step
+
+Two productive directions, both small:
+
+- **M3.4 — Wikilink hover preview** (Floating UI popover with first 200 chars of target file) — the polish that makes the linking experience genuinely Obsidian-grade
+- **M3.5 + M3.6 — Callouts** (`> [!note]`, `> [!warning]`, etc.) — Wilson's vault uses these heavily; rendering them properly will be another visible quality bump
+
+Or pick a different milestone if there's more strategic value.
+
+---
+
 ## 2026-05-01 · M1.5 + M1.6 · Markdown Pipeline + DocumentPage (the wow moment)
 
 **Status**: ✅ Done — first end-to-end render of real Markdown content

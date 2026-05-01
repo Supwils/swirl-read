@@ -1,9 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useParams } from 'react-router'
 import { isMarkdown, VaultFileNotFoundError } from '@/core/vault'
+import type { VaultFileSystem } from '@/core/vault'
+import {
+  buildWikilinkIndex,
+  type WikilinkIndex,
+} from '@/core/navigation/wikilink-resolver'
 import { renderMarkdown } from '@/core/render/pipeline'
 import { getAdapter } from '@/stores/vault-store'
+import { Wikilink } from './Wikilink'
+import { WikilinkContext } from './wikilink-context'
 
 type LoadState =
   | { kind: 'idle' }
@@ -13,12 +20,44 @@ type LoadState =
   | { kind: 'missing-file' }
   | { kind: 'error'; message: string }
 
+const wikilinkComponents = {
+  // hast-util-to-jsx-runtime accepts custom tag names via lowercase keys.
+  // Our remark-wikilink plugin emits an `<wikilink>` element which we map
+  // to the React component below.
+  wikilink: Wikilink,
+}
+
 export function DocumentPage() {
   const params = useParams<{ vaultId: string; '*': string }>()
   const vaultId = params.vaultId
   const filePath = params['*'] ?? ''
   const [state, setState] = useState<LoadState>({ kind: 'idle' })
+  const [wikilinkIndex, setWikilinkIndex] = useState<WikilinkIndex | null>(null)
 
+  // Build the wikilink index once per vault. Cheap walk for typical vaults
+  // (M1.2 walk is lazy and streams). Re-runs only when vaultId changes.
+  useEffect(() => {
+    if (!vaultId) return
+    const vault = getAdapter(vaultId)
+    if (!vault) {
+      setWikilinkIndex(null)
+      return
+    }
+    let cancelled = false
+    void buildIndexSafe(vault)
+      .then((index) => {
+        if (!cancelled) setWikilinkIndex(index)
+      })
+      .catch(() => {
+        // Index build failure is non-fatal — wikilinks render in pending state.
+        if (!cancelled) setWikilinkIndex(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [vaultId])
+
+  // Read + render the current document.
   useEffect(() => {
     if (!vaultId || !filePath) return
     const vault = getAdapter(vaultId)
@@ -33,13 +72,8 @@ export function DocumentPage() {
       .then((raw) => {
         if (cancelled) return
         const md = isMarkdown(filePath)
-        const content = md ? renderMarkdown(raw) : null
-        setState({
-          kind: 'rendered',
-          content,
-          isMd: md,
-          raw,
-        })
+        const content = md ? renderMarkdown(raw, wikilinkComponents) : null
+        setState({ kind: 'rendered', content, isMd: md, raw })
       })
       .catch((err: unknown) => {
         if (cancelled) return
@@ -56,6 +90,18 @@ export function DocumentPage() {
       cancelled = true
     }
   }, [vaultId, filePath])
+
+  const ctxValue = useMemo(
+    () =>
+      vaultId
+        ? {
+            vaultId,
+            currentPath: filePath,
+            index: wikilinkIndex,
+          }
+        : null,
+    [vaultId, filePath, wikilinkIndex],
+  )
 
   return (
     <article
@@ -102,8 +148,10 @@ export function DocumentPage() {
         </p>
       )}
 
-      {state.kind === 'rendered' && state.isMd && (
-        <div className="swilread-prose">{state.content}</div>
+      {state.kind === 'rendered' && state.isMd && ctxValue && (
+        <WikilinkContext.Provider value={ctxValue}>
+          <div className="swilread-prose">{state.content}</div>
+        </WikilinkContext.Provider>
       )}
 
       {state.kind === 'rendered' && !state.isMd && (
@@ -119,4 +167,8 @@ export function DocumentPage() {
       )}
     </article>
   )
+}
+
+async function buildIndexSafe(vault: VaultFileSystem): Promise<WikilinkIndex> {
+  return buildWikilinkIndex(vault)
 }

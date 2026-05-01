@@ -475,44 +475,54 @@ Goal: Render every Markdown feature in the spec correctly.
 
 ---
 
-### M3.2 — Custom remark plugin: wikilinks
+### M3.2 — Custom remark plugin: wikilinks ✅ Done 2026-05-01
 
-**File**: `src/core/render/plugins/remark-wikilink.ts`
+**File**: `src/core/render/plugins/remark-wikilink.ts` + `.test.ts`
 
 **Deliverables**:
 
-- Parses `[[page]]`, `[[page|alias]]`, `[[page#heading]]`, `[[page^block-id]]`
-- Adds custom mdast node `wikilink` with `target`, `alias`, `heading`, `blockId`
-- Compatible with `rehype-react` via custom node-to-element mapping
+- ✅ Parses all six forms: `[[page]]`, `[[page|alias]]`, `[[page#heading]]`, `[[page#heading|alias]]`, `[[page^block]]`, `[[page^block|alias]]`
+- ✅ Custom mdast node `wikilink` with `target`, `alias`, `heading`, `blockId`
+- ✅ `data.hName` + `data.hProperties` + `data.hChildren` so hast emits a `<wikilink>` element with `data-*` attributes
+- ✅ Pipeline integration: extended sanitize schema allows the new tag and attrs
 
 **Acceptance**:
 
-- All four wikilink forms parse correctly
-- Resolved into a `<WikilinkRef>` React component (M3.3)
+- ✅ All six wikilink forms parse correctly (16 tests)
+- ✅ Resolved into a `Wikilink` React component via `components` map (M3.3)
 
 **Dependencies**: M1.5
 
+**Notes**: Visit-based implementation rather than full micromark extension. Documented limitation: wikilinks nested inside emphasis may not split. ~95% coverage at a fraction of implementation cost.
+
 ---
 
-### M3.3 — Wikilink resolution and rendering
+### M3.3 — Wikilink resolution and rendering ✅ Done 2026-05-01
 
 **Files**:
 
-- `src/core/navigation/wikilink-resolver.ts`
-- `src/ui/reading-shell/WikilinkRef.tsx`
+- `src/core/navigation/wikilink-resolver.ts` + `.test.ts`
+- `src/ui/reading-shell/Wikilink.tsx`
+- `src/ui/reading-shell/wikilink-context.ts`
+- DocumentPage integration
 
 **Deliverables**:
 
-- Resolver: given a vault and a wikilink target, find the actual file path
-- Component: renders as a styled link; clicks navigate to the resolved file
-- Unresolved links: subtle "broken" indicator, still render the text
+- ✅ `buildWikilinkIndex(vault) → WikilinkIndex` (basename → paths map; built once per vault load)
+- ✅ `resolveWikilink(target, index, currentPath?) → VaultPath | null` (exact path / target.md / basename / stem)
+- ✅ `Wikilink` component with three states: resolved (React Router `<Link>`), pending (during index build), broken (unresolved target)
+- ✅ Heading + block-id flow into URL hash (M4.6 will scroll-anchor)
 
 **Acceptance**:
 
-- `[[career/me/me]]` in a file resolves to `career/me/me.md` and navigates correctly
-- `[[nonexistent]]` shows broken indicator
+- ✅ `[[career/me/me]]` resolves and navigates correctly
+- ✅ `[[nonexistent]]` shows broken state with tooltip
+- ✅ Three visual states styled in `.swilread-prose` for all four themes
+- ✅ End-to-end: clicking wikilinks in Wilson's vault navigates between notes
 
 **Dependencies**: M3.2
+
+**Notes**: Index lives in component state (rebuilds on vault switch). Cross-vault index caching is M3.x polish. Heading/block-id scroll behavior depends on M4.6 TOC anchors.
 
 ---
 
