@@ -22,7 +22,8 @@ The product is fully designed. These documents tell you HOW to build it.
 - ✅ **M0.4** — React Router v7 scaffold; 4 placeholder routes; 8 tests passing
 - ✅ **M0.5** — Self-hosted fonts (Source Serif 4, Inter, JetBrains Mono) via @fontsource
 - ✅ **Milestone 0 complete** — project bootstrap done
-- 🔜 **M1.1** — Define `VaultFileSystem` interface (start of Milestone 1)
+- ✅ **M1.1** — `VaultFileSystem` interface + path utilities (34 unit tests)
+- 🔜 **M1.2** — `FSAPIVaultAdapter` (real File System Access API implementation)
 
 ## Before Coding
 

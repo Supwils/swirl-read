@@ -135,19 +135,27 @@ Goal: A working dev environment with our chosen stack. Renders "Hello SwilRead" 
 
 Goal: Open a folder via FSAPI, list .md files, render one as styled HTML. The "we're really doing this" moment.
 
-### M1.1 — Define `VaultFileSystem` interface
+### M1.1 — Define `VaultFileSystem` interface ✅ Done 2026-05-01
 
-**File**: `src/core/vault/types.ts`
+**Files**: `src/core/vault/types.ts`, `src/core/vault/path.ts`, `src/core/vault/index.ts`
 
 **Deliverables**:
 
-- Types `VaultFile`, `VaultDirectory`, `VaultEntry`
-- Interface `VaultFileSystem` exactly as specified in `architecture-overview.md`
-- Type tests (compile-time only)
+- ✅ Types `VaultId`, `VaultPath`, `VaultFile`, `VaultDirectory`, `VaultEntry`, `VaultMeta`
+- ✅ Interface `VaultFileSystem` with `id`, `name`, `list`, `walk`, `stat`, `readText`, `readBinary`, `getBlobURL`, `hasPermission`, `requestPermission`
+- ✅ Typed error hierarchy: `VaultError`, `VaultPermissionDeniedError`, `VaultFileNotFoundError`, `VaultReadError`
+- ✅ Path utilities `path.ts`: `normalizePath`, `joinPath`, `dirname`, `basename`, `extname`, `splitPath`, `isMarkdown`, `isImage`, `isWithin`
+- ✅ 34 unit tests for path utilities (every edge case)
+- ✅ Barrel export `index.ts`
 
-**Acceptance**: Interface compiles; ready for adapters to implement
+**Acceptance**:
+
+- ✅ Interface compiles; ready for adapters to implement
+- ✅ Path utilities have full test coverage (42/42 tests passing)
 
 **Dependencies**: M0.1
+
+**Notes**: Added beyond original spec — `stat()` method, typed error classes, path utilities, and `VaultMeta` for persistence. These are all foundational and would have been added in subsequent tasks anyway. Better to land them together so M1.2 can use them.
 
 ---
 

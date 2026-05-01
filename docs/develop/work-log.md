@@ -4,6 +4,98 @@
 
 ---
 
+## 2026-05-01 · M1.1 · VaultFileSystem Interface
+
+**Status**: ✅ Done
+
+### What was built
+
+The foundational abstraction. Every adapter (FSAPI, Sample, future Tauri) implements `VaultFileSystem`; the rest of the app sees only this interface.
+
+**Files created**:
+
+- `src/core/vault/types.ts` — types, interface, error hierarchy (all type-only at runtime except errors)
+- `src/core/vault/path.ts` — pure path utilities (normalize, join, dirname, basename, extname, split, isMarkdown, isImage, isWithin)
+- `src/core/vault/path.test.ts` — 34 tests covering all path helpers and edge cases
+- `src/core/vault/index.ts` — barrel export so callers `import from '@/core/vault'`
+
+### Public API surface
+
+```ts
+// Types
+type VaultId          // opaque persistent ID, e.g. "supwil-a3f7"
+type VaultPath        // POSIX relative, e.g. "career/me/me.md"
+type VaultFile        // path, name, extension, size, modifiedAt
+type VaultDirectory
+type VaultEntry       // VaultFile | VaultDirectory
+type VaultMeta        // persistable: id, name, registeredAt, lastOpenedAt
+
+// The contract
+interface VaultFileSystem {
+  readonly id: VaultId
+  readonly name: string
+  list(path): Promise<VaultEntry[]>
+  walk(): AsyncIterable<VaultFile>
+  stat(path): Promise<VaultEntry>
+  readText(path): Promise<string>
+  readBinary(path): Promise<Uint8Array>
+  getBlobURL(path): Promise<string>
+  hasPermission(): Promise<boolean>
+  requestPermission(): Promise<boolean>
+}
+
+// Errors (so callers branch on type, not message)
+class VaultError
+class VaultPermissionDeniedError
+class VaultFileNotFoundError
+class VaultReadError      // accepts ES2022 Error.cause
+```
+
+### Architecture decisions
+
+- **All async, even in-memory adapters** — keeps the interface uniform; `await` everywhere is fine
+- **`AsyncIterable<VaultFile>` for `walk()`** — streams large vaults instead of materializing a list. Lazy by design.
+- **`""` represents the vault root** — explicit, matches `dirname()` returning `""` for top-level files
+- **POSIX paths only** — even on Windows browsers, FSAPI gives us names; we normalize backslash → slash
+- **Lowercase extensions in `extname()`** — case-insensitive matching, idiomatic for the file-type dispatcher (M7.1)
+- **Dotfiles return `""` from `extname()`** — `.gitignore` is a name, not an extension; `.env.local` correctly returns `.local`
+- **Typed error hierarchy** — branch on `instanceof VaultFileNotFoundError` instead of inspecting messages
+- **`isWithin()` checks segment boundaries** — `careers/me` is NOT within `career`; we only match on `${parent}/` prefix
+- **No JSDoc on `path.ts` internals**, but full JSDoc on `VaultFileSystem` interface — it's the public API of `core/vault`
+- **Barrel `index.ts`** — single import point: `import { VaultFile, joinPath } from '@/core/vault'`
+
+### Verification
+
+- `pnpm typecheck` → 0 errors
+- `pnpm lint` → 0 errors, 0 warnings
+- `pnpm format:check` → all conformant
+- `pnpm test` → 42/42 passing in 92 ms
+  - `path.test.ts` — 34 tests (every utility, every edge case)
+  - existing — 8 tests (LandingPage, router)
+
+### Issues / Notes
+
+- None. Pure types + pure functions; trivially testable.
+
+### Next step
+
+**M1.2 — Implement `FSAPIVaultAdapter`**
+
+Real File System Access API adapter:
+
+- Class implementing `VaultFileSystem`
+- `window.showDirectoryPicker()` for initial folder selection
+- Persists `FileSystemDirectoryHandle` to IndexedDB via Dexie (M1.4 will add the store)
+- `walk()` lazily yields files via async iteration over directory handles
+- `readText` / `readBinary` via `getFile()` → `text()` / `arrayBuffer()`
+- `getBlobURL` caches `URL.createObjectURL` results per path
+- Permission API: `queryPermission()` / `requestPermission()` on the handle
+- Manual end-to-end test: pick `/Users/supwils/supwilsoft/supwil/`, walk it, read `index.md`
+
+This is where types become real I/O.
+
+---
+
 ## 2026-05-01 · M0.5 · Self-Hosted Fonts
 
 **Status**: ✅ Done
