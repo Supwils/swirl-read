@@ -8,13 +8,13 @@ Concrete library choices with versions and rationale. Add a dependency only if i
 
 ## Build & Dev
 
-| Tool           | Version | Why                                                                  |
-| -------------- | ------- | -------------------------------------------------------------------- |
-| **Vite**       | ^7.0    | Fast dev server, native ESM, mature plugin ecosystem                 |
-| **TypeScript** | ^5.6    | Strict mode required                                                 |
-| **pnpm**       | ^9      | Faster, less disk than npm; required for monorepo-friendliness later |
-| **Vitest**     | ^2      | Test runner; integrates with Vite                                    |
-| **Playwright** | ^1.48   | E2E tests against the dev server                                     |
+| Tool           | Version | Why                                                                                               |
+| -------------- | ------- | ------------------------------------------------------------------------------------------------- |
+| **Vite**       | ^7.0    | Fast dev server, native ESM, mature plugin ecosystem                                              |
+| **TypeScript** | ^5.6    | Strict mode required                                                                              |
+| **pnpm**       | ^10     | Faster, less disk than npm; required for monorepo-friendliness later                              |
+| **Vitest**     | ^3      | Test runner; **must be v3+ for Vite 7 compatibility** (v2 ships vite 5 types and breaks `tsc -b`) |
+| **Playwright** | ^1.48   | E2E tests against the dev server                                                                  |
 
 ---
 
@@ -160,12 +160,16 @@ For future inline preview-mode WYSIWYG:
 
 ## Testing
 
-| Library                    | Version | Why                                                 |
-| -------------------------- | ------- | --------------------------------------------------- |
-| **Vitest**                 | ^2      | Unit tests                                          |
-| **@testing-library/react** | ^16     | Component tests                                     |
-| **Playwright**             | ^1.48   | E2E                                                 |
-| **MSW**                    | ^2      | (If we ever need to mock network — unlikely in MVP) |
+| Library                         | Version | Why                                                                     |
+| ------------------------------- | ------- | ----------------------------------------------------------------------- |
+| **Vitest**                      | ^3      | Unit tests; v3 required for Vite 7 type compatibility (see Build & Dev) |
+| **@vitest/ui**                  | ^3      | Browser-based test UI; pinned to vitest major                           |
+| **@testing-library/react**      | ^16     | Component tests                                                         |
+| **@testing-library/jest-dom**   | ^6      | DOM matchers (`toBeInTheDocument`, etc.)                                |
+| **@testing-library/user-event** | ^14     | Realistic user interaction simulation                                   |
+| **jsdom**                       | ^25     | DOM environment for unit tests                                          |
+| **Playwright**                  | ^1.48   | E2E (deferred to M9.x)                                                  |
+| **MSW**                         | ^2      | (If we ever need to mock network — unlikely in MVP)                     |
 
 ---
 

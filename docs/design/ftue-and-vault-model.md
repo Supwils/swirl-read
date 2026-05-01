@@ -92,36 +92,17 @@ The goal of those 30 seconds is **not to teach features**. It's to make the user
 
 The sample vault is itself a piece of content the user wants to read. It demonstrates the product by being good content rendered well.
 
-**Theme suggestion: "The Art of Reading"** (or similar evergreen, intellectually interesting topic)
+**Theme: "Reading in the Age of AI"** — see [`brand-and-positioning.md`](./brand-and-positioning.md) for the canonical content list and structure. (Earlier drafts of this document proposed "The Art of Reading"; the brand doc is the source of truth and supersedes that.)
 
-Sample vault file list (~12-15 files):
+The vault contains ~15 files across three sections: `reading/`, `thinking/`, `knowing/`, plus an `index.md`, `why-this-vault-exists.md`, `recommended-readings.md`, and a closing `about-swilread.md`. Every essay subtly reinforces the brand thesis (deep reading as a counter to passive AI consumption) without lecturing.
 
-```
-sample-vault/
-├── index.md                    ← Welcome + map of this vault
-├── art-of-reading-map.md       ← Section map
-├── slow-reading.md             ← Long-form essay; demos prose typography
-├── active-vs-passive.md        ← Has a callout, blockquotes
-├── reading-environments.md     ← Has images, captions
-├── note-taking.md              ← Has tables, lists
-├── memory-and-recall.md        ← Has math (forgetting curve formula)
-├── speed-reading-myths.md      ← Has wikilinks to other pages
-├── digital-vs-paper.md         ← Cross-references previous pages
-├── focus-techniques/           ← Subdirectory demo
-│   ├── focus-techniques-map.md
-│   ├── pomodoro.md
-│   └── deep-work.md
-├── recommended-books.md        ← Has a long list, code-like quote blocks
-└── about-swilread.md           ← Subtle product intro at the end
-```
+**Why this content** (in either earlier or final form):
 
-**Why this content**:
-
-- Universally interesting (anyone can engage with "how to read better")
+- Universally interesting (anyone can engage with "how we know things")
 - Demonstrates every Markdown feature naturally
 - Shows the structured navigation pattern (map files, subdirectories)
 - Subtly proves the product's thesis: "this is how knowledge should feel"
-- The about-swilread.md at the end is the soft pitch, not a hard sell
+- `about-swilread.md` at the end is the soft pitch, not a hard sell
 
 **Bundling**: ship as a JSON blob in the app bundle (~150KB compressed). Loads instantly.
 
@@ -338,16 +319,16 @@ The adapter only affects parsing nuances; the reading experience is unified.
 
 ## Decisions Locked In
 
-| Question               | Decision                                                   |
-| ---------------------- | ---------------------------------------------------------- |
-| Landing strategy       | Hybrid single-page: hero + 2 CTAs + scroll-to-features     |
-| Visual personality     | Clean, literary, confident; not SaaS-flashy                |
-| Sample vault           | Yes, ~15 curated knowledge files (theme: "Art of Reading") |
-| Vault picker UX        | Inline consent panel before OS dialog                      |
-| Returning user         | Auto-restore last vault; multi-vault picker if multiple    |
-| Onboarding tour        | None. Just contextual one-shot hints                       |
-| Single vault structure | First-class via section detection (`*-map.md` convention)  |
-| Multi-vault            | Supported via top-left vault switcher                      |
-| Cross-vault search     | Phase 2+                                                   |
-| Vault adapters         | Auto-detect Obsidian / Logseq / Foam / plain               |
-| Config file            | Optional (`swilread.config.json`); convention-first        |
+| Question               | Decision                                                                                            |
+| ---------------------- | --------------------------------------------------------------------------------------------------- |
+| Landing strategy       | Hybrid single-page: hero + 2 CTAs + scroll-to-features                                              |
+| Visual personality     | Clean, literary, confident; not SaaS-flashy                                                         |
+| Sample vault           | Yes, ~15 curated knowledge files (theme: "Reading in the Age of AI" — see brand-and-positioning.md) |
+| Vault picker UX        | Inline consent panel before OS dialog                                                               |
+| Returning user         | Auto-restore last vault; multi-vault picker if multiple                                             |
+| Onboarding tour        | None. Just contextual one-shot hints                                                                |
+| Single vault structure | First-class via section detection (`*-map.md` convention)                                           |
+| Multi-vault            | Supported via top-left vault switcher                                                               |
+| Cross-vault search     | Phase 2+                                                                                            |
+| Vault adapters         | Auto-detect Obsidian / Logseq / Foam / plain                                                        |
+| Config file            | Optional (`swilread.config.json`); convention-first                                                 |

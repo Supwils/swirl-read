@@ -1,6 +1,6 @@
 # SwilRead — Product Vision
 
-> Status: Brainstorming · Last updated: 2026-04-30
+> Status: Decided · Foundational · Last updated: 2026-05-01
 
 ---
 

@@ -4,6 +4,96 @@
 
 ---
 
+## 2026-05-01 · Audit Remediation Pass
+
+**Status**: ✅ Done
+
+External review caught 5 issues spanning truth-source drift, shadow tests, and version mismatches. Fixed all five before resuming feature work.
+
+### Issue 1 (HIGH) — `CLAUDE.md` stale state block
+
+`CLAUDE.md` claimed "pre-implementation, codebase empty" while M0.1–M1.1 had shipped. Multi-agent risk: a fresh agent reads CLAUDE.md first and starts re-doing M0.
+
+**Fix**:
+
+- Updated state block to reflect actual progress
+- Declared three files as the **execution truth source** (with explicit precedence over CLAUDE.md if they disagree):
+  - `docs/develop/README.md`
+  - `docs/develop/phase-1-implementation-plan.md`
+  - `docs/develop/work-log.md`
+
+### Issue 2 (MEDIUM) — Router test was a shadow implementation, AND it masked a production bug
+
+`router.test.tsx` rebuilt a parallel `routes` array instead of importing from `router.tsx`. There was no test for the production assembly (`App.tsx` mounting `RouterProvider`).
+
+**Fix**:
+
+- Refactored `src/app/router.tsx` to export `routes` as a single source of truth; `router` is built from those routes.
+- `router.test.tsx` now imports `routes` directly — any drift in the production tree is caught automatically.
+- Added two structural assertions on the route tree shape (top-level paths, `/app` children).
+- **New file**: `src/App.test.tsx` — smoke test that mounts production `<App />` and asserts the LandingPage renders. Boring on the surface; critical in practice.
+
+### Real bug discovered during fix
+
+The new `App.test.tsx` immediately failed with:
+
+> Cannot destructure property 'basename' of 'React.useContext(...)' as it is null.
+
+Root cause: `App.tsx` imported `RouterProvider` from `react-router/dom`, which is the **HydratedRouter / RSC** variant designed for server-rendered apps. For a `createBrowserRouter`-based SPA the correct import is `react-router` (main entry). The wrong import provided a context-less RouterProvider, so `<Link>` inside `LandingPage` crashed at render time.
+
+Without the audit's prompt to fix the shadow test, this would have shipped to production. Type-check, lint, and the original test suite all stayed green while the actual app was broken.
+
+**Fix**: changed the import in `src/App.tsx` to `import { RouterProvider } from 'react-router'`. App.test.tsx now passes.
+
+### Issue 3 (MEDIUM) — `tech-stack.md` lists vitest ^2 but we run 3.2.4
+
+After M0.4 we upgraded to vitest 3 (and `@vitest/ui` 3) to resolve a Vite 7 type conflict (vitest 2 ships vite 5 types and breaks `tsc -b`). The doc never moved.
+
+**Fix**:
+
+- Updated Build & Dev table to **^3** with an explicit warning: "must be v3+ for Vite 7 compatibility (v2 ships vite 5 types and breaks `tsc -b`)"
+- Updated Testing table with full pinned versions for vitest, @vitest/ui, RTL, jest-dom, user-event, jsdom
+- Bumped pnpm version to ^10 (we use 10.27)
+
+### Issue 4 (MEDIUM) — Phase 1 plan promised iPad/iPhone, gaps doc says iOS impossible in v1
+
+`phase-1-implementation-plan.md` M9.2 acceptance was "usable on iPad and iPhone" while `gaps-and-open-questions.md#PG-03` explicitly says iOS Safari has no FSAPI for picking local folders and mobile is "not in v1." This guarantees a fake failure at milestone review.
+
+**Fix**: rewrote M9.2 as **"Responsive layout (desktop + tablet only in v1)"**. Acceptance now targets 768–1280px viewports running desktop browsers (laptops + Android tablets in desktop Chrome). iPhone/iPad-Safari is documented as known-broken and tracked as a Phase 3 task. Cross-references `gaps-and-open-questions.md#PG-03`.
+
+### Issue 5 (LOW-MED) — Design doc drift
+
+- `vision.md` still tagged **Status: Brainstorming** while `design/README.md` declared design complete.
+- `ftue-and-vault-model.md` still proposed **"The Art of Reading"** as the sample vault theme; `brand-and-positioning.md` had locked it as **"Reading in the Age of AI"**.
+
+**Fix**:
+
+- `vision.md` status → "Decided · Foundational · 2026-05-01"
+- `ftue-and-vault-model.md` sample vault section now defers to `brand-and-positioning.md` as canonical, notes the supersession, and removes the now-stale file tree (the brand doc has the current one).
+
+### Verification
+
+- `pnpm typecheck` → 0 errors
+- `pnpm lint` → 0 errors, 0 warnings
+- `pnpm format:check` → all conformant
+- `pnpm test` → 45 tests passing (was 42; +3 from new structural tests + App smoke test)
+- `pnpm build` → 567 ms; 91.28 KB gzipped JS
+
+### Lessons learned (worth carrying forward)
+
+- **Tests that don't import the production module are shadow tests.** They prove the test code works — nothing more. Always import the real artifact.
+- **A 3-line wiring file (`App.tsx`) deserves at least one mounted-render test.** That's where layer-boundary bugs hide — type-check can't see them, unit tests bypass them.
+- **Truth-source declarations in `CLAUDE.md` matter for multi-agent work.** Without them, every agent picks its own favorite doc.
+- **Doc updates should be part of the same PR/commit as the change they describe.** When we upgraded vitest in M0.4, the work log captured it but tech-stack.md drifted. The fix: tech-stack.md is now part of the verification checklist for any dependency change.
+
+### Next step
+
+**Resume M1.2 — Implement `FSAPIVaultAdapter`**
+
+Audit remediation has not consumed the M1.2 task itself. Next agent picks up where we left off: implement the real File System Access API adapter, persist the `FileSystemDirectoryHandle`, and manually verify against `/Users/supwils/supwilsoft/supwil/`.
+
+---
+
 ## 2026-05-01 · M1.1 · VaultFileSystem Interface
 
 **Status**: ✅ Done

@@ -11,10 +11,19 @@ Sub-tagline: **A reading sanctuary for the AI era.**
 
 ## Project State
 
-- **Phase**: Pre-implementation (design complete, ready to build Phase 1)
-- **Codebase**: Empty — `docs/` is the only populated directory
-- **Stack target**: Vite + React 19 + TypeScript + Tailwind CSS v4
+- **Phase**: Implementation in progress — Milestone 0 complete, currently in Milestone 1
+- **Stack**: Vite 7 + React 19 + TypeScript 5.9 strict + Tailwind v4 + React Router 7
 - **Platform**: Web App via File System Access API (Tauri desktop deferred)
+
+### Truth source for "what's done / what's next"
+
+Two files are the **execution truth source**. If they disagree with anything else (this file included), they win:
+
+1. [`docs/develop/README.md`](docs/develop/README.md) — current milestone status
+2. [`docs/develop/phase-1-implementation-plan.md`](docs/develop/phase-1-implementation-plan.md) — ordered task list with completion markers
+3. [`docs/develop/work-log.md`](docs/develop/work-log.md) — chronological details, decisions, issues per task
+
+Update these two-plus-one whenever a task moves. The rest of the docs follow.
 
 ## Required Reading Before Coding
 

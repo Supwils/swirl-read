@@ -1152,19 +1152,27 @@ Goal: Beautiful landing experience and a curated sample vault.
 
 ---
 
-### M9.2 — Mobile responsive
+### M9.2 — Responsive layout (desktop + tablet only in v1)
+
+**Scope**: Reconciled with `docs/design/gaps-and-open-questions.md#PG-03` — **iOS phones/tablets are NOT a v1 target** because File System Access API has no iOS support for picking local folders. Mobile is a Phase 3 concern.
 
 **Deliverables**:
 
-- Layout adapts to viewports < 768px
-- File tree becomes bottom sheet
-- TOC becomes floating button
-- Settings becomes full-screen modal
-- Touch gestures for navigation
+- Layout adapts to viewports between 768px and 1280px (small laptop / iPad-class screens running desktop browsers)
+- File tree gracefully collapses to a slide-out panel below 1024px
+- TOC becomes a corner button below 1024px
+- Settings panel becomes full-width below 768px
+- No phone-specific UI in v1 — viewports < 640px get the desktop layout with horizontal scroll where unavoidable
 
-**Acceptance**: SwilRead is usable on iPad and iPhone (Chrome/Safari)
+**Acceptance**:
+
+- SwilRead is usable in Chrome/Edge/Safari on a 13" laptop and on an Android tablet running desktop Chrome
+- Sample vault renders correctly when window resized between 768px and 1920px
+- iPhone/iPad-Safari path is documented as known-broken and tracked as a Phase 3 task (not blocking v1 ship)
 
 **Dependencies**: all UI tasks
+
+**Note**: Full mobile (touch gestures, bottom sheets, native iOS) lands in Phase 3 once we either ship Tauri, build a companion bridge daemon, or accept iCloud-mediated read-only mode. See `docs/design/gaps-and-open-questions.md#PG-03` for the full analysis.
 
 ---
 

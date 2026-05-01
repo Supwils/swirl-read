@@ -1,31 +1,34 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
-import { AppShell } from '@/app/AppShell'
-import { LandingPage } from '@/ui/landing/LandingPage'
-import { NoVaultSelected } from '@/ui/reading-shell/NoVaultSelected'
-import { VaultHome } from '@/ui/reading-shell/VaultHome'
-import { DocumentPage } from '@/ui/reading-shell/DocumentPage'
+import { routes } from './router'
 
-const routes = [
-  { path: '/', element: <LandingPage /> },
-  {
-    path: '/app',
-    element: <AppShell />,
-    children: [
-      { index: true, element: <NoVaultSelected /> },
-      { path: ':vaultId', element: <VaultHome /> },
-      { path: ':vaultId/*', element: <DocumentPage /> },
-    ],
-  },
-]
-
+/**
+ * Mount the production route tree at a given path.
+ *
+ * Imports `routes` from `./router` directly — there is NO parallel route tree
+ * in tests. If `router.tsx` changes the tree, these tests run against the new
+ * tree automatically. The browser-vs-memory difference is only the history
+ * adapter; route resolution is identical.
+ */
 function renderAt(path: string) {
-  const router = createMemoryRouter(routes, { initialEntries: [path] })
-  return render(<RouterProvider router={router} />)
+  const memoryRouter = createMemoryRouter(routes, { initialEntries: [path] })
+  return render(<RouterProvider router={memoryRouter} />)
 }
 
-describe('router', () => {
+describe('production route tree', () => {
+  it('exposes exactly two top-level routes', () => {
+    expect(routes).toHaveLength(2)
+    expect(routes.map((r) => r.path)).toEqual(['/', '/app'])
+  })
+
+  it('exposes /app with the expected children', () => {
+    const app = routes.find((r) => r.path === '/app')
+    expect(
+      app?.children?.map((c) => ('index' in c ? '<index>' : c.path)),
+    ).toEqual(['<index>', ':vaultId', ':vaultId/*'])
+  })
+
   it('renders LandingPage at /', () => {
     renderAt('/')
     expect(
