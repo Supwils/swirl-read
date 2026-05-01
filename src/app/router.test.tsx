@@ -44,9 +44,13 @@ describe('production route tree', () => {
 
   it('renders VaultHome with vaultId at /app/:vaultId', () => {
     renderAt('/app/my-knowledge')
-    expect(screen.getByText(/vault home · placeholder/i)).toBeInTheDocument()
+    expect(screen.getByText(/vault home/i)).toBeInTheDocument()
     expect(
       screen.getByRole('heading', { level: 2, name: /my-knowledge/i }),
+    ).toBeInTheDocument()
+    // Unregistered vault shows the missing-state message
+    expect(
+      screen.getByText(/not registered in the current session/i),
     ).toBeInTheDocument()
   })
 

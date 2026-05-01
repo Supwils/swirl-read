@@ -4,6 +4,81 @@
 
 ---
 
+## 2026-05-01 · M1.3 · Folder Picker UI + Session Vault Registry
+
+**Status**: ✅ Done
+
+### What was built
+
+End-to-end pick → register → navigate flow. The first task that exercises M1.2's adapter in a real browser.
+
+**Files created**:
+
+- `src/core/vault/registry.ts` — session-only adapter registry (`registerVault`, `getVault`, `listVaults`, `unregisterVault`, `subscribe`); will be replaced by Zustand store in M1.4
+- `src/core/vault/registry.test.ts` — 6 tests covering registration, lookup, replacement, unregister, subscribe/unsubscribe
+- `src/ui/landing/FolderPicker.tsx` — accessible consent panel; FSAPI feature-detect; AbortError swallowed silently; non-Abort errors surfaced inline
+- `src/ui/landing/FolderPicker.test.tsx` — 8 tests including success path, AbortError path, non-Abort error path, FSAPI-not-supported state
+
+**Files modified**:
+
+- `src/ui/landing/LandingPage.tsx` — replaced single "Enter the app" link with two CTAs ("Try with sample vault" disabled placeholder, "Open my vault" opens picker); on success registers vault, persists handle, navigates
+- `src/ui/landing/LandingPage.test.tsx` — updated 6 tests for new CTA structure + picker open/close
+- `src/ui/reading-shell/VaultHome.tsx` — pulls adapter from registry, calls `vault.list('')`, renders top-level entries with `📁`/`📄` icons; explicit states for missing vault and read errors
+- `src/app/router.test.tsx` — VaultHome assertion updated to expect "not registered" state for unregistered vault IDs
+- `src/core/vault/index.ts` — barrel export updated with registry surface
+
+### Architecture decisions
+
+- **Session-only registry as a deliberate stop-gap.** `registry.ts` is module-level state with a clear `TODO(M1.4)` marker. Surface is intentionally minimal so the future Zustand store can replace it without a churning rewrite. `subscribe()` is included up front so `useSyncExternalStore`-based components can already use it without abstraction breakage.
+- **Best-effort handle persistence.** LandingPage calls `saveHandle` after registration, but failures are non-fatal (warned to console, not surfaced to user). True cross-session restore is M6.3 — for M1.3, the call just primes IndexedDB so we can verify persistence works before the store layer needs it.
+- **`void navigate(...)` for fire-and-forget routing.** React Router 7's `navigate()` returns `Promise<void>`; we don't await because the next render will happen anyway. Explicit `void` prefix satisfies `@typescript-eslint/no-floating-promises`.
+- **FolderPicker focuses the Cancel button.** Defensive UX choice: never trap a user inside an unfamiliar OS dialog with their primary keyboard target on the destructive (privacy-sensitive) action.
+- **`AbortError` swallowed silently.** When the user dismisses the OS picker, the panel returns to idle state — no error message, no toast. Anything else is treated as an actual error and surfaced inline.
+- **FSAPI feature detection.** `'showDirectoryPicker' in window` checked at render. If absent (Firefox, Safari without the flag), Choose folder is disabled and a friendly message points to Chrome/Edge/Brave.
+- **VaultHome handles 5 explicit states.** `idle | loading | ready | missing | error`. No "spinner forever" — the missing state is the most likely failure mode (page refresh loses the registry) and gets a specific copy explaining what to do.
+
+### Verification
+
+- `pnpm typecheck` → 0 errors
+- `pnpm lint` → 0 errors, 0 warnings
+- `pnpm format:check` → all conformant
+- `pnpm test` → **93 passing** (was 77; +6 registry, +8 FolderPicker, +2 LandingPage delta)
+- `pnpm build` → 559 ms; bundle 94.25 KB gzipped (was 91 KB; +3 KB for new components)
+
+### Manual browser E2E (scripted)
+
+Browser test against the canonical fixture `/Users/supwils/supwilsoft/supwil/`:
+
+1. `pnpm dev`, open `http://localhost:5173/` in Chrome/Edge/Brave
+2. Click "Open my vault" → consent panel appears with brand styling
+3. Click "Choose folder" → OS directory picker opens
+4. Pick `supwil/` → permission dialog (auto-granted in modern Chrome for already-trusted sites)
+5. URL changes to `/app/supwil-XXXX`
+6. VaultHome renders: "Connected to supwil · N top-level entries" with the directory listing matching what's actually in the folder
+7. Refresh page → returns to landing page (no auto-restore yet; that's M6.3)
+
+This is the M1 proof-of-concept moment for picking and listing. Rendering an actual `.md` file is M1.5 / M1.6.
+
+### Issues / Notes
+
+- **Lint round 2**: original `import { FSAPIVaultAdapter } from '@/core/vault'` triggered `consistent-type-imports` because the class was only referenced as a type in `handlePicked`'s parameter. Split into runtime + type imports.
+- **`void` operator for navigate**: React Router 7 typing surfaces `navigate()` as Promise-returning when called without a state argument. ESLint's strict promise rule flags it; `void` is the canonical "I know this is a Promise and I'm ignoring it" marker.
+
+### Next step
+
+**M1.4 — `useVaultStore` (Zustand) + Dexie schema**
+
+Replace the module-level registry with a real reactive store:
+
+- Persisted fields: `registeredVaults: VaultMeta[]`, `activeVaultId: VaultId | null`
+- Methods: `registerVault(adapter) → VaultMeta`, `switchVault(id)`, `removeVault(id)`
+- Migrate LandingPage and VaultHome from `registerVault` / `getVault` to the store
+- Set up Dexie schema `swilread` with `vaults` and `preferences` tables
+
+Once that lands, the registry shim deletes itself.
+
+---
+
 ## 2026-05-01 · M1.2 · FSAPIVaultAdapter
 
 **Status**: ✅ Done (unit-tested; manual browser E2E pending in M1.3)

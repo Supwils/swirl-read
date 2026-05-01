@@ -52,3 +52,11 @@ export {
   deleteHandle,
   listHandleIds,
 } from './handle-storage'
+
+export {
+  registerVault,
+  getVault,
+  listVaults,
+  unregisterVault,
+  subscribe as subscribeRegistry,
+} from './registry'

@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { LandingPage } from './LandingPage'
 
@@ -8,6 +9,14 @@ function renderWithRouter(ui: React.ReactElement) {
 }
 
 describe('LandingPage', () => {
+  beforeEach(() => {
+    Object.defineProperty(window, 'showDirectoryPicker', {
+      configurable: true,
+      writable: true,
+      value: vi.fn(),
+    })
+  })
+
   it('renders the brand wordmark', () => {
     renderWithRouter(<LandingPage />)
     expect(
@@ -29,10 +38,30 @@ describe('LandingPage', () => {
     ).toBeInTheDocument()
   })
 
-  it('renders an enter-the-app link to /app', () => {
+  it('renders both CTAs (sample vault disabled, open vault enabled)', () => {
     renderWithRouter(<LandingPage />)
-    const link = screen.getByRole('link', { name: /enter the app/i })
-    expect(link).toBeInTheDocument()
-    expect(link).toHaveAttribute('href', '/app')
+    const sampleBtn = screen.getByRole('button', {
+      name: /try with sample vault/i,
+    })
+    const openBtn = screen.getByRole('button', { name: /open my vault/i })
+    expect(sampleBtn).toBeDisabled()
+    expect(openBtn).not.toBeDisabled()
+  })
+
+  it('does not show the FolderPicker by default', () => {
+    renderWithRouter(<LandingPage />)
+    expect(
+      screen.queryByRole('heading', { name: /open your vault/i }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('opens the FolderPicker when "Open my vault" is clicked', async () => {
+    renderWithRouter(<LandingPage />)
+    await userEvent.click(
+      screen.getByRole('button', { name: /open my vault/i }),
+    )
+    expect(
+      await screen.findByRole('heading', { name: /open your vault/i }),
+    ).toBeInTheDocument()
   })
 })

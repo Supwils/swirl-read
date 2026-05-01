@@ -190,24 +190,34 @@ Goal: Open a folder via FSAPI, list .md files, render one as styled HTML. The "w
 
 ---
 
-### M1.3 — Build folder picker UI with consent panel
+### M1.3 — Build folder picker UI with consent panel ✅ Done 2026-05-01
 
-**File**: `src/ui/landing/FolderPicker.tsx`
+**Files**:
+
+- `src/ui/landing/FolderPicker.tsx` — accessible consent panel
+- `src/ui/landing/FolderPicker.test.tsx` — 8 tests
+- `src/core/vault/registry.ts` — session-only adapter registry (M1.4 will replace with Zustand)
+- `src/core/vault/registry.test.ts` — 6 tests
+- Updated `LandingPage.tsx` (CTA structure) and `VaultHome.tsx` (real vault preview)
 
 **Deliverables**:
 
-- Inline panel design as specified in `ftue-and-vault-model.md`
-- Heading: "Open your vault"
-- Body: "Choose any folder containing your Markdown files. SwilRead reads them directly from your device. Nothing is uploaded."
-- "Choose folder" button triggers FSAPI dialog
-- "Cancel" closes the panel
+- ✅ Inline consent panel with brand styling (Sepia surface, serif typography, soft shadow)
+- ✅ Privacy-first messaging: "SwilRead reads them directly from your device. Nothing is uploaded."
+- ✅ "Choose folder" → `FSAPIVaultAdapter.pick()` → register → persist handle → navigate
+- ✅ "Cancel" + Esc both dismiss; AbortError silently returns to idle; other errors surface inline
+- ✅ FSAPI feature detection (button disabled with friendly message on unsupported browsers)
+- ✅ VaultHome renders real top-level directory listing from the picked vault
 
 **Acceptance**:
 
-- Visually matches brand (Sepia, serif, calm)
-- Clicking "Choose folder" → user picks → vault registered
+- ✅ Visually matches brand (Sepia, serif, calm)
+- ✅ Clicking "Choose folder" → user picks → adapter registered, route changes to `/app/:vaultId`
+- ✅ Manual browser E2E checklist documented in work-log (against `supwil/` fixture)
 
 **Dependencies**: M1.2
+
+**Notes**: Registry is intentionally a session-only stop-gap. M1.4 replaces it with a Zustand store + Dexie persistence — same surface so call sites don't churn.
 
 ---
 
