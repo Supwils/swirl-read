@@ -25,8 +25,11 @@ The product is fully designed. These documents tell you HOW to build it.
 - ✅ **M1.1** — `VaultFileSystem` interface + path utilities (34 unit tests)
 - ✅ **M1.2** — `FSAPIVaultAdapter` (32 unit tests with FSAPI mock)
 - ✅ **M1.3** — Folder picker UI + session vault registry; pick→register→navigate flow works end-to-end
-- ✅ **M1.4** — Zustand `useVaultStore` + Dexie persistence; registry shim deleted (98 tests passing)
-- 🔜 **M1.5** — Markdown rendering pipeline (basic CommonMark + GFM)
+- ✅ **M1.4** — Zustand `useVaultStore` + Dexie persistence; registry shim deleted
+- ✅ **M1.5** — Markdown rendering pipeline (CommonMark + GFM + frontmatter + sanitization)
+- ✅ **M1.6** — DocumentPage renders real Markdown end-to-end (126 tests passing)
+- ✅ **Milestone 1 complete** — first real render from a real vault works
+- 🔜 **M2.1** — `ReadingShell` layout + scroll progress bar
 
 ## Before Coding
 

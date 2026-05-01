@@ -4,6 +4,117 @@
 
 ---
 
+## 2026-05-01 · M1.5 + M1.6 · Markdown Pipeline + DocumentPage (the wow moment)
+
+**Status**: ✅ Done — first end-to-end render of real Markdown content
+
+### What was built
+
+The first time SwilRead actually renders a Markdown document in the browser. Everything before this was scaffolding; this milestone produces real product value.
+
+**Files created**:
+
+- `src/core/render/pipeline.ts` — `renderMarkdown(source, components?) → ReactNode` and `createMarkdownProcessor()`. Pipeline: `remark-parse → remark-frontmatter → remark-gfm → remark-rehype → rehype-sanitize → hast-util-to-jsx-runtime`.
+- `src/core/render/pipeline.test.tsx` — 22 tests across CommonMark, GFM, frontmatter, sanitization, edge cases.
+- `src/ui/reading-shell/DocumentPage.test.tsx` — 6 integration tests (render, missing vault, missing file, JSON fallback, header).
+
+**Files modified**:
+
+- `src/ui/reading-shell/DocumentPage.tsx` — replaces placeholder with real reader: pulls adapter from store, calls `readText`, dispatches MD vs non-MD, renders into `.swilread-prose` container.
+- `src/styles/globals.css` — added a complete `.swilread-prose` ruleset: theme-aware typography for headings, paragraphs, lists, blockquotes, code blocks, tables, links, hr, images, task list checkboxes.
+- `src/app/router.test.tsx` — updated DocumentPage assertion to expect the new missing-vault state instead of the old placeholder text.
+
+### Pipeline architecture (M1.5)
+
+- **Plugins**: `remark-parse` (CommonMark) → `remark-frontmatter` (strip YAML/TOML so it doesn't render as text) → `remark-gfm` (tables, task lists, strikethrough, autolinks) → `remark-rehype` (mdast → hast) → `rehype-sanitize` (XSS protection with `id` allow-listed on headings for future TOC anchoring) → `hast-util-to-jsx-runtime` (hast → React tree).
+- **Synchronous by design**. All current plugins support `runSync`. If we add an async plugin (e.g. dual-theme Shiki in M3.12), the function becomes async — call sites must adapt.
+- **`components` parameter** on `renderMarkdown` lets callers replace specific tag mappings (e.g. an internal `Link` wrapper for wikilinks in M3.3) without restructuring the pipeline.
+- **Sanitizer extends GitHub schema**, only adding `id` to headings. Wikilink/callout/embed schemas extend further in M3.x.
+
+### DocumentPage architecture (M1.6)
+
+Six explicit render states — no spinner-forever bugs:
+
+```
+idle           → before useEffect runs
+loading        → readText pending
+rendered       → success path; branches on isMd for MD vs raw fallback
+missing-vault  → adapter not in registry (e.g. user reloaded)
+missing-file   → adapter loaded but path doesn't exist
+error          → permission denied or other read failure
+```
+
+Non-Markdown files fall through to a styled `<pre>` block so the app still renders something useful even before the M7 universal reader. JSON / config files look reasonable as plain text.
+
+### Prose styles (the visual identity)
+
+Scoped `.swilread-prose` so chrome (header, settings) doesn't accidentally inherit reader typography. Highlights:
+
+- 18 px serif body, 1.7 line-height, 720 px max width (≈68 chars per line)
+- Theme-aware via CSS variables — same component, four themes
+- Generous vertical rhythm (`> * + *` rule for 1.4 em margin between blocks)
+- H2 has a bottom border (visual hierarchy) using `var(--color-border)`
+- Tables get hover-row tinting via `color-mix()` (modern CSS)
+- Blockquotes use a left accent rule in the theme accent color
+- Task list checkboxes use `accent-color` for theme matching
+
+### Verification
+
+- `pnpm typecheck` → 0 errors
+- `pnpm lint` → 0 errors, 0 warnings
+- `pnpm format:check` → all conformant
+- `pnpm test` → **126 passing** (was 98; +22 pipeline, +6 DocumentPage)
+- `pnpm build` → 896 ms; bundle 179.08 KB gzipped JS (was 128 KB; +51 KB for the unified ecosystem). Within 250 KB budget but tightening; M9.1 will look at code-splitting.
+
+Live dev-server smoke test: HMR successfully applied all changes; route `/app/{vaultId}/{path}` resolves and renders.
+
+### Manual browser E2E (now possible end-to-end)
+
+1. `pnpm dev`, open `localhost:5173/`
+2. "Open my vault" → consent panel → Choose folder → pick `/Users/supwils/supwilsoft/supwil/`
+3. Lands on `/app/supwil-XXXX` showing the top-level directory listing (M1.3 already shipped this)
+4. **Manually navigate** to e.g. `/app/supwil-XXXX/knowledge/软件/前端/react.md` (no clickable nav yet — link wiring is M4.x)
+5. Page renders the React notes in **Sepia + Source Serif** with proper headings, code blocks, lists, quotes — looks like a typeset book
+
+This is the M1 proof-of-concept moment. Everything from M0.1 onward exists to make this render correctly.
+
+### Issues / Notes
+
+- **`hast` types missing on first build**: TypeScript needs `@types/hast` separately. Installed as devDep.
+- **`toJsxRuntime` return type**: ESLint's `no-unsafe-return` rule flags it because React 19's JSX namespace types are too loose to satisfy the strict checker. Annotated with two narrowly-scoped eslint-disables and a comment explaining the trust boundary. Acceptable trade-off — alternatives (custom type predicates, `as` casting through `unknown`) are uglier and don't add safety.
+- **Test race**: initial DocumentPage test waited for `getByRole('heading', level: 1, name: /react/i)` — but the page header `<h1>` always says "knowledge/react.md" (matches /react/i too). `waitFor` returned before the markdown rendered. Fixed by waiting for the H2 "Hooks" — only the rendered MD produces it.
+- **Bundle composition shifted**: 564 KB raw / 179 KB gzipped. The unified plugin set is heavy but tree-shakable; likely won't grow much more from custom plugin work in M3.x. Vite warned about >500 KB chunks; ignoring for now (M9.1 is the perf pass).
+
+### Bundle composition
+
+| Asset                    | Size (gzipped) |
+| ------------------------ | -------------- |
+| Application JS           | 179.08 KB      |
+| CSS (incl. prose styles) | 4.89 KB        |
+| Self-hosted font woff2   | ~131 KB (lazy) |
+| **Total initial paint**  | ~184 KB        |
+
+### Closing M1
+
+After this commit, **Milestone 1 is functionally complete**:
+
+| Task                           | Status |
+| ------------------------------ | ------ |
+| M1.1 VaultFileSystem interface | ✅     |
+| M1.2 FSAPIVaultAdapter         | ✅     |
+| M1.3 Folder picker UI          | ✅     |
+| M1.4 useVaultStore + Dexie     | ✅     |
+| M1.5 Markdown pipeline         | ✅     |
+| M1.6 DocumentPage real render  | ✅     |
+
+The user can pick a folder, navigate to a Markdown file via URL, and see it rendered in the brand reading experience. Next milestone (M2) layers the reading shell, themes via store, hover-summoned panels, and zen mode.
+
+### Next step
+
+**M2.1 — `ReadingShell` layout component** — extract the centered column + scroll behavior into a dedicated wrapper, add the top progress bar, prepare hover-zone scaffolding for M2.5.
+
+---
+
 ## 2026-05-01 · M1.4 · Zustand Vault Store + Dexie Schema
 
 **Status**: ✅ Done

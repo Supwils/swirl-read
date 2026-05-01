@@ -121,6 +121,172 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
+   Prose styles — rendered markdown content.
+   Scoped to `.swilread-prose` so they don't leak to UI chrome.
+   Tuned for reading: 65–72 ch line length, generous vertical rhythm,
+   theme-aware colors via semantic tokens.
+   ───────────────────────────────────────────────────────────────────────── */
+.swilread-prose {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  line-height: 1.7;
+  color: var(--color-text);
+}
+
+.swilread-prose > * + * {
+  margin-top: 1.4em;
+}
+
+.swilread-prose h1,
+.swilread-prose h2,
+.swilread-prose h3,
+.swilread-prose h4,
+.swilread-prose h5,
+.swilread-prose h6 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--color-text);
+  margin-top: 2em;
+  margin-bottom: 0.6em;
+}
+
+.swilread-prose h1 {
+  font-size: 2.2em;
+  margin-top: 0;
+}
+.swilread-prose h2 {
+  font-size: 1.7em;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 0.3em;
+}
+.swilread-prose h3 {
+  font-size: 1.35em;
+}
+.swilread-prose h4 {
+  font-size: 1.15em;
+}
+.swilread-prose h5,
+.swilread-prose h6 {
+  font-size: 1em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.swilread-prose a {
+  color: var(--color-link);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--color-link) 40%, transparent);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 150ms ease;
+}
+.swilread-prose a:hover {
+  text-decoration-color: var(--color-link);
+}
+
+.swilread-prose strong {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.swilread-prose em {
+  font-style: italic;
+}
+
+.swilread-prose code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  background: var(--color-code-bg);
+  color: var(--color-code-text);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+}
+
+.swilread-prose pre {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--color-code-bg);
+  color: var(--color-code-text);
+  padding: 1em 1.2em;
+  border-radius: 8px;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+.swilread-prose pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
+.swilread-prose blockquote {
+  border-left: 3px solid var(--color-accent);
+  padding-left: 1.2em;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.swilread-prose ul,
+.swilread-prose ol {
+  padding-left: 1.4em;
+}
+.swilread-prose ul {
+  list-style: disc;
+}
+.swilread-prose ol {
+  list-style: decimal;
+}
+.swilread-prose li + li {
+  margin-top: 0.3em;
+}
+.swilread-prose li > ul,
+.swilread-prose li > ol {
+  margin-top: 0.3em;
+}
+
+.swilread-prose hr {
+  border: 0;
+  height: 1px;
+  background: var(--color-border);
+  margin: 2.4em 0;
+}
+
+.swilread-prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.swilread-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+.swilread-prose th,
+.swilread-prose td {
+  padding: 0.55em 0.8em;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+}
+.swilread-prose th {
+  font-weight: 600;
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+}
+.swilread-prose tr:hover td {
+  background: color-mix(in srgb, var(--color-surface) 30%, transparent);
+}
+
+.swilread-prose del {
+  color: var(--color-text-muted);
+}
+
+.swilread-prose input[type='checkbox'] {
+  margin-right: 0.5em;
+  accent-color: var(--color-accent);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
    Base layer — reset and global defaults.
    ───────────────────────────────────────────────────────────────────────── */
 @layer base {

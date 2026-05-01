@@ -254,45 +254,55 @@ Goal: Open a folder via FSAPI, list .md files, render one as styled HTML. The "w
 
 ---
 
-### M1.5 — Build the markdown rendering pipeline (basic)
+### M1.5 — Build the markdown rendering pipeline (basic) ✅ Done 2026-05-01
 
-**File**: `src/core/render/pipeline.ts`
+**Files**: `src/core/render/pipeline.ts`, `src/core/render/pipeline.test.tsx`
 
 **Deliverables**:
 
-- `renderMarkdown(source: string): React.ReactNode` function
-- Uses unified pipeline: remark-parse → remark-gfm → remark-rehype → rehype-react
-- Returns React tree, not HTML string
+- ✅ `renderMarkdown(source, components?) → ReactNode` — synchronous pipeline producing a React tree
+- ✅ `createMarkdownProcessor()` for tests / future composition
+- ✅ Pipeline: remark-parse → remark-frontmatter → remark-gfm → remark-rehype → rehype-sanitize → hast-util-to-jsx-runtime
+- ✅ Sanitization with extended schema (heading `id` allowed for future TOC anchoring)
 
 **Acceptance**:
 
-- Parsing a simple `# Hello\n\nWorld` produces correct React elements
-- Tables, task lists, strikethrough work (GFM)
+- ✅ CommonMark fully covered (headings, paragraphs, emphasis, lists, code, blockquotes, links, hr, Unicode)
+- ✅ GFM (tables, task lists with interactive checkboxes, strikethrough, autolinks)
+- ✅ Frontmatter (YAML and TOML) stripped from output, no leakage as text
+- ✅ XSS sanitization (raw `<script>` removed)
+- ✅ 22 tests passing
 
 **Dependencies**: M0.1
 
+**Notes**: Used `hast-util-to-jsx-runtime` directly (smaller than `rehype-react`). Ships a `components` parameter for callers to override specific HTML tags later.
+
 ---
 
-### M1.6 — Build `DocumentPage` to render a real file
+### M1.6 — Build `DocumentPage` to render a real file ✅ Done 2026-05-01
 
-**File**: `src/ui/reading-shell/DocumentPage.tsx`
+**Files**: `src/ui/reading-shell/DocumentPage.tsx`, `src/ui/reading-shell/DocumentPage.test.tsx`, prose styles in `src/styles/globals.css`
 
 **Deliverables**:
 
-- Reads file path from URL params
-- Calls `activeVaultFs.readText(path)`
-- Pipes through `renderMarkdown`
-- Renders inside a centered container (max-width 720px, centered, sepia background)
+- ✅ Reads file path from URL params (vaultId + splat)
+- ✅ Calls `vault.readText(path)` via `getAdapter(vaultId)` from store
+- ✅ Pipes Markdown through `renderMarkdown`; non-MD falls through to a styled `<pre>`
+- ✅ Renders inside a centered 720 px column with `.swilread-prose` typography
+- ✅ Six explicit render states: idle / loading / rendered / missing-vault / missing-file / error
+- ✅ Complete prose styles (headings, lists, blockquotes, code blocks, tables, links, hr, images, task list checkboxes) — all theme-aware via CSS variables
 
 **Acceptance**:
 
-- Navigate to `/app/:vaultId/knowledge/软件/前端/react.md` (or similar real file)
-- See the rendered Markdown in Sepia theme
-- Long content scrolls smoothly
+- ✅ `/app/:vaultId/knowledge/软件/前端/react.md` renders the Markdown in Sepia theme
+- ✅ Long content scrolls (browser-native; no virtualization yet — M9.1)
+- ✅ Six tests covering all render states
 
 **Dependencies**: M1.4, M1.5
 
-**This is the "Milestone 1 done" check**: Wilson can see his own knowledge note rendered beautifully.
+**This was the "Milestone 1 done" check** — Wilson can pick his vault and see his own knowledge notes rendered beautifully. Confirmed via dev-server HMR cycle and integration tests.
+
+**Note**: No clickable navigation between files yet — that's M3.3 (wikilink resolution) + M4.3 (file tree).
 
 ---
 

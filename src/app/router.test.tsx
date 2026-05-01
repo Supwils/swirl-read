@@ -56,10 +56,12 @@ describe('production route tree', () => {
 
   it('renders DocumentPage with file path at /app/:vaultId/*', () => {
     renderAt('/app/my-knowledge/career/me/me.md')
-    expect(screen.getByText(/document page · placeholder/i)).toBeInTheDocument()
+    // Vault not registered → DocumentPage shows the missing-vault state
     expect(
-      screen.getByRole('heading', { level: 2, name: /my-knowledge/i }),
+      screen.getByText(/not registered in the current session/i),
     ).toBeInTheDocument()
+    // The vault id and file path appear in the page header
+    expect(screen.getByText('my-knowledge')).toBeInTheDocument()
     expect(screen.getByText('career/me/me.md')).toBeInTheDocument()
   })
 })
