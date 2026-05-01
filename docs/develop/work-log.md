@@ -4,6 +4,89 @@
 
 ---
 
+## 2026-05-01 · git init + M0.4 · Routing Scaffold
+
+**Status**: ✅ Done
+
+### What was built
+
+#### git init
+
+Repository initialized on `main` branch with hardened `.gitignore` (categorized: deps, build, caches, TS, tests, editors, OS, logs, secrets, local-only). First commit covers M0.1–M0.3 with milestone-tagged message.
+
+#### M0.4 — React Router v7 routing scaffold
+
+**Files created**:
+
+- `src/app/router.tsx` — `createBrowserRouter` with route tree
+- `src/app/AppShell.tsx` — layout component with header + `<Outlet />`
+- `src/ui/landing/LandingPage.tsx` — wordmark + tagline + "Enter the app" link (moved from App.tsx)
+- `src/ui/reading-shell/VaultHome.tsx` — placeholder reading vaultId from URL
+- `src/ui/reading-shell/DocumentPage.tsx` — placeholder reading vaultId + splat path
+- `src/ui/reading-shell/NoVaultSelected.tsx` — `/app` index placeholder
+
+**Files modified**:
+
+- `src/App.tsx` — reduced to thin `<RouterProvider>` wrapper
+- `src/App.test.tsx` — removed (replaced by per-component tests)
+
+**Tests added**:
+
+- `src/ui/landing/LandingPage.test.tsx` — 4 tests (wordmark, both taglines, link href)
+- `src/app/router.test.tsx` — 4 tests (each route renders correct placeholder; `createMemoryRouter` for testability)
+
+### Route tree
+
+```
+/                        → LandingPage
+/app                     → AppShell
+  ├─ (index)             → NoVaultSelected
+  ├─ :vaultId            → VaultHome
+  └─ :vaultId/*          → DocumentPage
+```
+
+### Architecture decisions
+
+- **`createBrowserRouter` + `RouterProvider`** — the data-router API. Supports loaders/actions later; cleaner than legacy `<BrowserRouter>`.
+- **`AppShell` as parent route with `<Outlet />`** — header persists across vault pages; child routes mount in the outlet.
+- **Splat (`*`) for file paths** — file paths within a vault contain `/`; React Router's splat captures arbitrary depth into `params['*']`.
+- **`NoVaultSelected` extracted to its own file** — fast-refresh requires single-export-component files. Inline placeholder triggered ESLint warning; extracting it kept lint at zero warnings.
+- **Per-component test files** — colocated with components; `MemoryRouter` wraps components that use Router hooks; `createMemoryRouter` used to test the full route tree.
+
+### Verification
+
+- `pnpm typecheck` → 0 errors
+- `pnpm lint` → 0 errors, 0 warnings
+- `pnpm format:check` → all files conformant
+- `pnpm test` → 8/8 tests passing in 89ms
+- `pnpm build` → 527ms; 91.29 KB gzipped JS + 3.57 KB CSS
+
+### Issues / Notes
+
+- **Vite 5/7 type conflict surfaced during `pnpm build`**: vitest 2.x bundled vite 5 types, conflicting with our top-level vite 7. Fix: upgraded `vitest` and `@vitest/ui` to v3 (which bundles vite 7). Build clean afterward.
+- **react-refresh ESLint warning** on first router.tsx draft (mixed component + non-component exports). Fix: extracted `NoVaultSelected` to its own file. Lint back to zero warnings.
+- **Bundle growth**: 91 KB gzipped (vs 60 KB before). The +31 KB is React Router. Within budget (250 KB target for initial JS).
+
+### Versions installed
+
+| Package      | Version |
+| ------------ | ------- |
+| react-router | 7.14.2  |
+| vitest       | 3.2.4   |
+| @vitest/ui   | 3.2.4   |
+
+### Next step
+
+**M0.5 — Self-host fonts (Source Serif 4, Inter, JetBrains Mono)**
+
+- Place woff2 files in `public/fonts/`
+- Add `@font-face` declarations to `globals.css`
+- `<link rel="preload">` for the most common weights to avoid FOUC
+- Verify wordmark renders in actual Source Serif (not the fallback Georgia)
+- Chinese fallback to system fonts (思源宋体 deferred to M9.3)
+
+---
+
 ## 2026-05-01 · M0.3 · Lint + Format + Test Toolchain
 
 **Status**: ✅ Done
@@ -47,19 +130,19 @@ Industrial-grade dev tooling: ESLint 9 flat config with type-aware rules, Pretti
 
 ### Versions installed
 
-| Package                       | Version |
-| ----------------------------- | ------- |
-| eslint                        | 9.39.4  |
-| typescript-eslint             | 8.59.1  |
-| eslint-plugin-react-hooks     | 5.2.0   |
-| eslint-plugin-react-refresh   | 0.4.26  |
-| eslint-config-prettier        | 9.1.2   |
-| prettier                      | 3.8.3   |
-| vitest                        | 2.1.9   |
-| @testing-library/react        | 16.3.2  |
-| @testing-library/jest-dom     | 6.9.1   |
-| @testing-library/user-event   | 14.6.1  |
-| jsdom                         | 25.0.1  |
+| Package                     | Version |
+| --------------------------- | ------- |
+| eslint                      | 9.39.4  |
+| typescript-eslint           | 8.59.1  |
+| eslint-plugin-react-hooks   | 5.2.0   |
+| eslint-plugin-react-refresh | 0.4.26  |
+| eslint-config-prettier      | 9.1.2   |
+| prettier                    | 3.8.3   |
+| vitest                      | 2.1.9   |
+| @testing-library/react      | 16.3.2  |
+| @testing-library/jest-dom   | 6.9.1   |
+| @testing-library/user-event | 14.6.1  |
+| jsdom                       | 25.0.1  |
 
 ### Issues / Notes
 

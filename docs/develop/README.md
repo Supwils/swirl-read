@@ -19,7 +19,8 @@ The product is fully designed. These documents tell you HOW to build it.
 - ✅ **M0.1** — Project bootstrap (Vite + React 19 + TS strict)
 - ✅ **M0.2** — Tailwind v4 + brand tokens + 4-theme architecture
 - ✅ **M0.3** — ESLint 9 + Prettier + Vitest + RTL; unified `pnpm check` pipeline
-- 🔜 **M0.4** — Routing scaffold (React Router v7)
+- ✅ **M0.4** — React Router v7 scaffold; 4 placeholder routes; 8 tests passing
+- 🔜 **M0.5** — Self-host fonts (Source Serif 4, Inter, JetBrains Mono)
 
 ## Before Coding
 

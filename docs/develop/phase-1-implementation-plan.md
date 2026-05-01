@@ -85,23 +85,27 @@ Goal: A working dev environment with our chosen stack. Renders "Hello SwilRead" 
 
 ---
 
-### M0.4 — Set up routing (React Router v7)
+### M0.4 — Set up routing (React Router v7) ✅ Done 2026-05-01
 
 **Deliverables**:
 
-- Routes:
+- ✅ React Router 7.14.2 installed
+- ✅ Routes:
   - `/` → `LandingPage` placeholder
-  - `/app` → `AppShell` placeholder
+  - `/app` → `AppShell` (with `NoVaultSelected` index)
   - `/app/:vaultId` → `VaultHome` placeholder
-  - `/app/:vaultId/*` → `DocumentPage` placeholder
-- Each placeholder renders its name and the URL params
-- `src/app/router.tsx` defines the route tree
+  - `/app/:vaultId/*` → `DocumentPage` placeholder (splat captures file path)
+- ✅ `src/app/router.tsx` defines the route tree using `createBrowserRouter`
+- ✅ Per-component tests + full route-tree test (8/8 passing)
 
 **Acceptance**:
 
-- All routes navigable; correct component renders for each
+- ✅ All routes navigable; correct component renders for each
+- ✅ Test coverage for landing + each route in tree
 
 **Dependencies**: M0.1
+
+**Notes**: Vitest upgraded to v3 to resolve vite 5/7 type conflict. `NoVaultSelected` extracted to its own file for fast-refresh compliance. See work log for details.
 
 ---
 
