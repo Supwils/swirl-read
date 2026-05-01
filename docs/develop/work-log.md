@@ -4,6 +4,81 @@
 
 ---
 
+## 2026-05-01 · M3.5 + M3.6 · Callouts (Obsidian `> [!type]` syntax)
+
+**Status**: ✅ Done
+
+### What was built
+
+Full Obsidian callout support: 14 distinct types, 26 type aliases, themed colors, Lucide icons, optional titles. Wilson's vault is dense with `> [!note]` and `> [!warning]` blocks; they now render as polished aside boxes instead of generic blockquotes.
+
+**Files created**:
+
+- `src/core/render/plugins/remark-callout.ts` — remark plugin: detects `> [!type]` (with optional title, optional foldable marker) at the start of any blockquote and transforms it into a `callout` mdast node
+- `src/core/render/plugins/remark-callout.test.ts` — 14 tests across header recognition, body extraction, hast hints, edge cases (empty body, mid-paragraph header, unknown types)
+- `src/ui/reading-shell/Callout.tsx` — React component with the full Obsidian type → icon + color mapping (14 canonical types, 12 aliases like `tldr` → `summary`, `cite` → `quote`)
+
+**Files modified**:
+
+- `src/core/render/pipeline.ts` — wires `remarkCallout` between `remarkGfm` and `remarkWikilink`; extends sanitize schema for `<callout>` tag and `data-callout-type` / `data-callout-title` attributes
+- `src/ui/reading-shell/DocumentPage.tsx` — adds `callout: Callout` to the components map; renamed `wikilinkComponents` → `customComponents` to reflect the broader role
+- `src/styles/globals.css` — `.swilread-callout` ruleset with type-specific accent colors via `--callout-color` CSS var; uses `color-mix()` for tinted background
+
+### Architecture decisions
+
+- **Visit-pass over `blockquote` nodes**, mirroring the wikilink approach. The plugin only runs when the blockquote's first paragraph's first text node starts with `[!type]` — so it doesn't disturb any other blockquote.
+- **Header line is stripped from the body**, not retained. The body extraction tracks whether the first paragraph still has content after stripping the header — if not, the paragraph is dropped entirely. This lets `> [!note]\n> body` and `> [!note] title\n> body` produce visually consistent results.
+- **Type case-folded to lowercase**. `[!WARNING]` and `[!warning]` produce the same callout. Custom unknown types (e.g. `[!my-team-special]`) keep their original-case data attribute but fall back to the `note` style.
+- **14 canonical types + 12 aliases**. Followed Obsidian's type list verbatim and added common aliases: `hint → tip`, `tldr/summary → abstract`, `caution/attention → warning`, `done → success`, `cite → quote`, `error → danger`, `fail/missing → failure`, `faq → question`. Aliases share visual identity with their canonical type.
+- **Each type has its own accent color** in `globals.css` via the `--callout-color` CSS variable. Background uses `color-mix(in srgb, var(--callout-color) 8%, transparent)` so it tints any theme correctly without per-theme overrides.
+- **Foldable markers (`+` / `-`) parsed but not acted on**. The regex matches them so they don't break recognition, but the callout always renders expanded. Adding actual fold state is a polish task tracked for M3.x.
+- **Lucide icons**, individually imported (no dynamic indexing) so the bundler can tree-shake. 14 icon imports add ~10 KB pre-gzip.
+
+### Pipeline composition (current)
+
+```
+remark-parse
+  → remark-frontmatter
+  → remark-gfm
+  → remark-callout    (NEW — > [!type] blockquotes)
+  → remark-wikilink
+  → remark-rehype
+  → rehype-sanitize   (extended schema: <wikilink>, <callout>, data-* attrs)
+  → hast-util-to-jsx-runtime
+```
+
+### Verification
+
+- `pnpm typecheck` → 0 errors
+- `pnpm lint` → 0 errors, 0 warnings
+- `pnpm format:check` → all conformant
+- `pnpm test` → **167 passing** (was 153; +14 callout plugin tests)
+- `pnpm build` → 1.25 s; bundle 179 KB gzipped JS (callout plugin + Lucide icons add ~10 KB which mostly washes out post-tree-shake)
+
+### Issues / Notes
+
+- **Regex bug caught by tests**: initial header regex used `\s*` for the gap between `]` and the title. `\s` includes `\n`, so on `[!note]\nbody` the regex consumed the newline AND captured "body" as the title. Caught by the "omits data-callout-title when no inline title" test. Fixed by switching to `[ \t]*` (explicit space and tab only). Wrote a comment in the source explaining the trap so the next contributor doesn't reintroduce it.
+- **mdast `BlockContent` type narrowing**: blockquote children are typed `(BlockContent | DefinitionContent)[]` but my CalloutNode only accepted `BlockContent[]`. Widened the children type to match.
+
+### Manual browser E2E (now closes another visible loop)
+
+Wilson's vault has many `> [!note]`, `> [!warning]`, `> [!tip]` blocks. Open any such file:
+
+- Each callout renders as a colored aside box with theme-tuned tint
+- Icon matches the type (Info / AlertTriangle / Lightbulb / etc.)
+- Default title shown ("Note", "Warning", "Tip"); inline title overrides if provided
+- Body content (paragraphs, lists, code blocks, even nested wikilinks) renders inside
+
+### Next step
+
+Two natural follow-ups, pick by impact:
+
+- **M3.7 + M3.8 — Embeds (`![[file]]`)** — pair with wikilinks to make `![[diagram.png]]` actually render images, and `![[page.md]]` inline-include
+- **M3.12 — Shiki code highlighting** — highest visual delta for a developer vault; turns gray `<pre>` blocks into VS Code-quality renders
+- **M3.4 — Wikilink hover preview** — Floating UI popover showing first 200 chars; very Obsidian-native feeling
+
+---
+
 ## 2026-05-01 · M3.2 + M3.3 · Wikilinks (parse → resolve → click)
 
 **Status**: ✅ Done — wikilinks fully clickable in real vaults

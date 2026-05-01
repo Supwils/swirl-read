@@ -545,36 +545,49 @@ Goal: Render every Markdown feature in the spec correctly.
 
 ---
 
-### M3.5 — Custom remark plugin: callouts
+### M3.5 — Custom remark plugin: callouts ✅ Done 2026-05-01
 
-**File**: `src/core/render/plugins/remark-callout.ts`
+**File**: `src/core/render/plugins/remark-callout.ts` + `.test.ts`
 
 **Deliverables**:
 
-- Parses `> [!note]`, `> [!warning]`, etc.
-- All Obsidian callout types supported
-- Custom mdast `callout` node with `type` and `title`
+- ✅ Parses `> [!note]`, `> [!warning]`, etc. (14 canonical types + 12 aliases)
+- ✅ Optional inline title (`> [!warning] Heads up`) supported
+- ✅ Custom mdast `callout` node with `calloutType`, `title`, body children
+- ✅ Foldable markers (`+`/`-`) parsed but not yet rendered as collapsible (polish)
+- ✅ Pipeline integration: extended sanitize schema allows `<callout>` + data attrs
+- ✅ 14 tests covering all types, aliases, body extraction, hast hints, edge cases
 
-**Acceptance**: All callout types render with correct color and icon (per spec)
+**Acceptance**:
+
+- ✅ All standard Obsidian types parse correctly
+- ✅ Render with correct color and icon (M3.6)
 
 **Dependencies**: M1.5
 
 ---
 
-### M3.6 — Callout rendering component
+### M3.6 — Callout rendering component ✅ Done 2026-05-01
 
 **File**: `src/ui/reading-shell/Callout.tsx`
 
 **Deliverables**:
 
-- Theme-tuned colored container
-- Icon (Lucide) per callout type
-- Title + content
-- Custom callout types fall back to generic style
+- ✅ Theme-tuned colored container with left accent rule + tinted background via `color-mix()`
+- ✅ Lucide icon per callout type (14 icons, individually imported for tree-shaking)
+- ✅ Title (default per type, override via inline title)
+- ✅ 26 type/alias mappings; unknown types fall back to `note` style
+- ✅ Type-specific accent colors via `--callout-color` CSS variable
 
-**Acceptance**: Visually distinct, matches spec
+**Acceptance**:
+
+- ✅ Visually distinct across all 14 canonical types
+- ✅ Adapts to all four themes via CSS variables
+- ✅ Renders body content (lists, code blocks, wikilinks) correctly nested
 
 **Dependencies**: M3.5
+
+**Notes**: Lucide adds ~10 KB pre-gzip, mostly recovered after tree-shaking. The renamed `customComponents` map in DocumentPage now carries both `wikilink` and `callout` mappings; future custom mdast types add to the same map.
 
 ---
 

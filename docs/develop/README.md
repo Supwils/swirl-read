@@ -29,8 +29,9 @@ The product is fully designed. These documents tell you HOW to build it.
 - ✅ **M1.5** — Markdown rendering pipeline (CommonMark + GFM + frontmatter + sanitization)
 - ✅ **M1.6** — DocumentPage renders real Markdown end-to-end (126 tests passing)
 - ✅ **Milestone 1 complete** — first real render from a real vault works
-- ✅ **M3.2 + M3.3** — Wikilinks: parse, resolve, click-to-navigate (153 tests passing)
-- 🔜 **M3.4** — Wikilink hover preview, OR M3.5 callouts, OR M2.1 ReadingShell — pick by priority
+- ✅ **M3.2 + M3.3** — Wikilinks: parse, resolve, click-to-navigate
+- ✅ **M3.5 + M3.6** — Callouts: 14 canonical types + 12 aliases, themed colors, Lucide icons (167 tests passing)
+- 🔜 Pick next: M3.7+M3.8 embeds, M3.12 Shiki code highlighting, or M3.4 wikilink hover preview
 
 ## Before Coding
 

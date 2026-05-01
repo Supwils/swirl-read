@@ -10,6 +10,7 @@ import {
 import { renderMarkdown } from '@/core/render/pipeline'
 import { getAdapter } from '@/stores/vault-store'
 import { Wikilink } from './Wikilink'
+import { Callout } from './Callout'
 import { WikilinkContext } from './wikilink-context'
 
 type LoadState =
@@ -20,11 +21,12 @@ type LoadState =
   | { kind: 'missing-file' }
   | { kind: 'error'; message: string }
 
-const wikilinkComponents = {
+const customComponents = {
   // hast-util-to-jsx-runtime accepts custom tag names via lowercase keys.
-  // Our remark-wikilink plugin emits an `<wikilink>` element which we map
-  // to the React component below.
+  // Our remark plugins emit `<wikilink>` / `<callout>` elements; we map
+  // them to React components here.
   wikilink: Wikilink,
+  callout: Callout,
 }
 
 export function DocumentPage() {
@@ -72,7 +74,7 @@ export function DocumentPage() {
       .then((raw) => {
         if (cancelled) return
         const md = isMarkdown(filePath)
-        const content = md ? renderMarkdown(raw, wikilinkComponents) : null
+        const content = md ? renderMarkdown(raw, customComponents) : null
         setState({ kind: 'rendered', content, isMd: md, raw })
       })
       .catch((err: unknown) => {

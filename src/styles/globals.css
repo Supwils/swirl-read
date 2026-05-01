@@ -286,6 +286,88 @@
   accent-color: var(--color-accent);
 }
 
+/* Callouts ─────────────────────────────────────────────────────────── */
+.swilread-prose .swilread-callout {
+  --callout-color: var(--color-accent);
+  --callout-bg: color-mix(in srgb, var(--callout-color) 8%, transparent);
+  border-left: 4px solid var(--callout-color);
+  background: var(--callout-bg);
+  border-radius: 6px;
+  padding: 0.9em 1.1em 1em;
+  margin: 1.4em 0;
+}
+
+.swilread-prose .swilread-callout__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-weight: 600;
+  color: var(--callout-color);
+  font-size: 0.95em;
+  margin-bottom: 0.5em;
+}
+
+.swilread-prose .swilread-callout__icon {
+  flex-shrink: 0;
+}
+
+.swilread-prose .swilread-callout__title {
+  letter-spacing: 0.01em;
+}
+
+.swilread-prose .swilread-callout__body > *:first-child {
+  margin-top: 0;
+}
+.swilread-prose .swilread-callout__body > *:last-child {
+  margin-bottom: 0;
+}
+.swilread-prose .swilread-callout__body > * + * {
+  margin-top: 0.7em;
+}
+
+/* Type-specific accent colors. Tuned per theme via --color-accent layering;
+   for now we use distinct hues so types are differentiable across themes. */
+.swilread-prose .callout--note,
+.swilread-prose .callout--info {
+  --callout-color: #4a8bd1;
+}
+.swilread-prose .callout--tip {
+  --callout-color: #2e9b6b;
+}
+.swilread-prose .callout--important {
+  --callout-color: #b659c9;
+}
+.swilread-prose .callout--success {
+  --callout-color: #2e9b6b;
+}
+.swilread-prose .callout--question {
+  --callout-color: #9c6ad1;
+}
+.swilread-prose .callout--warning {
+  --callout-color: #d9923a;
+}
+.swilread-prose .callout--failure {
+  --callout-color: #c95757;
+}
+.swilread-prose .callout--danger {
+  --callout-color: #d14545;
+}
+.swilread-prose .callout--bug {
+  --callout-color: #d14545;
+}
+.swilread-prose .callout--example {
+  --callout-color: #9c6ad1;
+}
+.swilread-prose .callout--quote {
+  --callout-color: var(--color-text-muted);
+}
+.swilread-prose .callout--abstract {
+  --callout-color: #4ba6a3;
+}
+.swilread-prose .callout--todo {
+  --callout-color: #4a8bd1;
+}
+
 /* Wikilinks ─────────────────────────────────────────────────────────── */
 .swilread-prose .swilread-wikilink {
   text-decoration: none;

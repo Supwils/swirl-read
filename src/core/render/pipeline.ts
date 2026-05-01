@@ -25,6 +25,7 @@ import {
   type Components,
 } from 'hast-util-to-jsx-runtime'
 import remarkWikilink from './plugins/remark-wikilink'
+import remarkCallout from './plugins/remark-callout'
 
 /**
  * Sanitize schema. Built off the rehype-sanitize default (a GitHub-style
@@ -36,7 +37,7 @@ import remarkWikilink from './plugins/remark-wikilink'
  */
 const schema: typeof defaultSchema = {
   ...defaultSchema,
-  tagNames: [...(defaultSchema.tagNames ?? []), 'wikilink'],
+  tagNames: [...(defaultSchema.tagNames ?? []), 'wikilink', 'callout'],
   attributes: {
     ...defaultSchema.attributes,
     h1: [...(defaultSchema.attributes?.h1 ?? []), 'id'],
@@ -46,6 +47,7 @@ const schema: typeof defaultSchema = {
     h5: [...(defaultSchema.attributes?.h5 ?? []), 'id'],
     h6: [...(defaultSchema.attributes?.h6 ?? []), 'id'],
     wikilink: ['data-target', 'data-alias', 'data-heading', 'data-block-id'],
+    callout: ['data-callout-type', 'data-callout-title'],
   },
 }
 
@@ -55,6 +57,7 @@ export function createMarkdownProcessor(): Processor {
     .use(remarkParse)
     .use(remarkFrontmatter, ['yaml', 'toml'])
     .use(remarkGfm)
+    .use(remarkCallout)
     .use(remarkWikilink)
     .use(remarkRehype, { allowDangerousHtml: false })
     .use(rehypeSanitize, schema) as unknown as Processor
