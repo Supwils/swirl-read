@@ -27,6 +27,7 @@
     "@fontsource/inter": "^5.2.8",
     "@fontsource/jetbrains-mono": "^5.2.8",
     "@fontsource/source-serif-4": "^5.2.9",
+    "idb-keyval": "^6.2.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router": "^7.14.2"

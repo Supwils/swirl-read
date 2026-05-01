@@ -4,6 +4,91 @@
 
 ---
 
+## 2026-05-01 · M1.2 · FSAPIVaultAdapter
+
+**Status**: ✅ Done (unit-tested; manual browser E2E pending in M1.3)
+
+### What was built
+
+The first concrete `VaultFileSystem` adapter — wraps a real File System Access API directory handle.
+
+**Files created**:
+
+- `src/core/vault/id.ts` — `slugify()` and `generateVaultId()` (Unicode-aware, URL-safe slugs + 4-char base36 suffix)
+- `src/core/vault/id.test.ts` — 11 tests (unicode, length cap, fallback, randomness)
+- `src/core/vault/fsapi-types.ts` — type augmentation for `Window.showDirectoryPicker` and `FileSystemHandle.{queryPermission,requestPermission}` (not in default lib.dom)
+- `src/core/vault/fsapi-adapter.ts` — `FSAPIVaultAdapter` class (~250 LOC)
+- `src/core/vault/fsapi-adapter.test.ts` — 21 tests covering identity, list, walk, readText, readBinary, stat, permissions
+- `src/core/vault/handle-storage.ts` — idb-keyval-backed persistence for directory handles (4 functions: save/load/delete/list)
+- `src/core/vault/__test-helpers__/mock-fs.ts` — pure in-memory FSAPI mock (used by adapter tests; also useful for sample vault later)
+
+**Files modified**:
+
+- `src/core/vault/index.ts` — barrel export updated with new public surface
+- `tsconfig.app.json` — added `DOM.AsyncIterable` to lib for `for await...of` on `dir.values()`
+- `eslint.config.js` — added `__test-helpers__` override to disable `require-await` (mocks must be `async` for shape but bodies are sync)
+
+### Adapter design highlights
+
+- **Two construction paths**: `FSAPIVaultAdapter.pick()` (interactive picker, fresh ID) vs `FSAPIVaultAdapter.fromHandle(handle, opts?)` (restore with explicit ID).
+- **No internal persistence**. The adapter does NOT call `saveHandle`. The Zustand store (M1.4) orchestrates handle ↔ ID ↔ persistence.
+- **Lazy walk**. `walk()` is `async function*` and recurses depth-first via `dir.values()`. Large vaults stream; we never materialize a full list.
+- **Blob URL caching**. `getBlobURL(path)` caches per-path. `dispose()` revokes all URLs (call when unloading a vault).
+- **Typed errors**. Adapter catches `DOMException` from FSAPI and rethrows as `VaultFileNotFoundError` / `VaultPermissionDeniedError` / `VaultReadError`. Callers branch on `instanceof`, not message.
+- **Sort order in `list()`**: directories first, then files; both case-insensitive `localeCompare` (so `index.md` precedes `README.md`, matching most users' mental model).
+
+### Persistence helper (`handle-storage.ts`)
+
+- Uses `idb-keyval` (already in tech-stack) — single key/value store keyed by `VaultId`.
+- Directory handles ARE structured-cloneable in modern browsers; IndexedDB stores them across reloads.
+- The browser still revokes the permission grant per session — `requestPermission()` must be re-called from a user gesture on first read after page load. This is unavoidable per WHATWG; documented in the JSDoc.
+- Separate from the future Dexie store (M1.4 / M6.1) because the schema here is trivial and the lifecycle differs (handles vs metadata).
+
+### Test strategy
+
+Real FSAPI is browser-only and complex; we built a complete in-memory mock (`mock-fs.ts`) that:
+
+- Implements only the surface the adapter actually calls (kind, name, values, getDirectoryHandle, getFileHandle, getFile().text/arrayBuffer/size/lastModified, queryPermission, requestPermission)
+- Throws `DOMException` with `name: 'NotFoundError'` for missing children — matches real FSAPI error shape so the adapter's error mapping is exercised
+- Builds from a nested object literal → tests stay readable
+
+This lets us cover walk-recursion, Unicode paths, error mapping, sorting, and permission flow — all without a browser.
+
+### Verification
+
+- `pnpm typecheck` → 0 errors
+- `pnpm lint` → 0 errors, 0 warnings
+- `pnpm format:check` → all conformant
+- `pnpm test` → **77 passing** (was 45; +32 from id.test.ts and fsapi-adapter.test.ts)
+- `pnpm build` → 546 ms; bundle 91 KB gzipped JS (idb-keyval is ~1 KB, negligible)
+
+### What's NOT covered yet
+
+- **Real-browser end-to-end test** — requires a UI to trigger `showDirectoryPicker()`. Will be exercised in M1.3 (folder picker UI) and M1.6 (render a real file).
+- **`getBlobURL` in jsdom** — `URL.createObjectURL` works in jsdom but isn't a real blob; intentionally not tested in unit tests.
+- **Handle serialization through IndexedDB** — jsdom's IDB shim doesn't accept `FileSystemDirectoryHandle` (it's a host object). Will be exercised live in M1.3.
+
+### Issues / Notes
+
+- TypeScript's `lib.dom.d.ts` declares `kind: 'file' | 'directory'` on the base `FileSystemHandle` and doesn't override on subtypes, so `if (handle.kind === 'directory')` does NOT narrow to `FileSystemDirectoryHandle`. Worked around with a single explicit cast in `walkRecursive`. Documented inline.
+- `showDirectoryPicker` and the permission API methods are not in stock `lib.dom.d.ts` — augmented in `fsapi-types.ts`. Imported (side-effect) at top of adapter file so the global types load whenever the adapter is referenced.
+
+### Next step
+
+**M1.3 — Folder picker UI with consent panel**
+
+`src/ui/landing/FolderPicker.tsx`:
+
+- Inline panel slide-up before the FSAPI dialog (privacy-first messaging)
+- Calls `FSAPIVaultAdapter.pick()` on user gesture
+- Routes to `/app/:vaultId` on success
+- Handles `AbortError` (user cancels) gracefully
+- Manual browser test against `/Users/supwils/supwilsoft/supwil/`
+
+This is the first task that proves M1.2 works in a real browser.
+
+---
+
 ## 2026-05-01 · Audit Remediation Pass
 
 **Status**: ✅ Done

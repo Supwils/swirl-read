@@ -40,3 +40,15 @@ export {
   isImage,
   isWithin,
 } from './path'
+
+export { slugify, generateVaultId } from './id'
+
+export { FSAPIVaultAdapter } from './fsapi-adapter'
+export type { FSAPIVaultAdapterInit } from './fsapi-adapter'
+
+export {
+  saveHandle,
+  loadHandle,
+  deleteHandle,
+  listHandleIds,
+} from './handle-storage'

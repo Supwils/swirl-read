@@ -23,7 +23,8 @@ The product is fully designed. These documents tell you HOW to build it.
 - ✅ **M0.5** — Self-hosted fonts (Source Serif 4, Inter, JetBrains Mono) via @fontsource
 - ✅ **Milestone 0 complete** — project bootstrap done
 - ✅ **M1.1** — `VaultFileSystem` interface + path utilities (34 unit tests)
-- 🔜 **M1.2** — `FSAPIVaultAdapter` (real File System Access API implementation)
+- ✅ **M1.2** — `FSAPIVaultAdapter` (32 unit tests with FSAPI mock); browser E2E pending in M1.3
+- 🔜 **M1.3** — Folder picker UI with consent panel
 
 ## Before Coding
 

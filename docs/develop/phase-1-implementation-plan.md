@@ -159,25 +159,34 @@ Goal: Open a folder via FSAPI, list .md files, render one as styled HTML. The "w
 
 ---
 
-### M1.2 — Implement `FSAPIVaultAdapter`
+### M1.2 — Implement `FSAPIVaultAdapter` ✅ Done 2026-05-01
 
-**File**: `src/core/vault/fsapi-adapter.ts`
+**Files**:
+
+- `src/core/vault/fsapi-adapter.ts` — main adapter
+- `src/core/vault/fsapi-types.ts` — type augmentation for `showDirectoryPicker` / permission API
+- `src/core/vault/id.ts` — vault ID generator (slugify + base36 suffix)
+- `src/core/vault/handle-storage.ts` — idb-keyval-backed handle persistence
+- `src/core/vault/__test-helpers__/mock-fs.ts` — in-memory FSAPI mock for tests
+- `src/core/vault/{id,fsapi-adapter}.test.ts` — 32 new tests
 
 **Deliverables**:
 
-- Class `FSAPIVaultAdapter` implementing `VaultFileSystem`
-- Uses `window.showDirectoryPicker()` and `FileSystemDirectoryHandle`
-- Persists handle to IndexedDB for re-opening
-- `walk()` lazily yields files (don't materialize a full list)
-- `readText()` and `readBinary()` work as specified
-- `getBlobURL()` creates and caches blob URLs
+- ✅ `FSAPIVaultAdapter` class implementing `VaultFileSystem`
+- ✅ `static pick()` for interactive picker; `static fromHandle()` for restore
+- ✅ `walk()` lazily yields files via async generator (no full-list materialization)
+- ✅ `readText` / `readBinary` / `stat` / `list` / `getBlobURL` / permission API
+- ✅ Persistence via idb-keyval (`saveHandle` / `loadHandle` / `deleteHandle` / `listHandleIds`) — separate from adapter so the orchestration store (M1.4) owns the lifecycle
+- ✅ Typed error mapping (FSAPI `DOMException` → `VaultFileNotFoundError` etc)
 
 **Acceptance**:
 
-- Can pick `/Users/supwils/supwilsoft/supwil/` and walk it
-- `readText('index.md')` returns the file contents
+- ✅ Unit-tested with 21 adapter tests + 11 id tests against an in-memory mock that implements the FSAPI surface
+- ⏸️ Real-browser E2E pending UI in M1.3 (`/Users/supwils/supwilsoft/supwil/` walkthrough is the manual check)
 
 **Dependencies**: M1.1
+
+**Notes**: TypeScript narrowing on `handle.kind` doesn't work because lib.dom doesn't redeclare `kind` on subtype interfaces; worked around with an explicit cast in `walkRecursive`. `DOM.AsyncIterable` added to tsconfig.app.json `lib`.
 
 ---
 

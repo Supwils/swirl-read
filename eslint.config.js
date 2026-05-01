@@ -77,6 +77,16 @@ export default tseslint.config(
       '@typescript-eslint/no-non-null-assertion': 'off',
     },
   },
+  // Test helpers — mock objects mirror async interfaces, so `async` is
+  // mandatory for shape, but the bodies are synchronous. Disable
+  // require-await here.
+  {
+    files: ['**/__test-helpers__/**/*.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
   // Config files: don't require type-check
   {
     files: ['*.config.{js,ts}', 'eslint.config.js'],
