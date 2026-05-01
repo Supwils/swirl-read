@@ -70,7 +70,7 @@ describe('DocumentPage — markdown rendering', () => {
 
   it('renders nested markdown with headings, lists, and code blocks', async () => {
     await registerSampleVault()
-    renderAt('/app/supwil-doc/knowledge/react.md')
+    const { container } = renderAt('/app/supwil-doc/knowledge/react.md')
 
     // Wait for an element only the rendered markdown produces — page
     // header alone matches /react/i so we'd race the loading state.
@@ -79,10 +79,18 @@ describe('DocumentPage — markdown rendering', () => {
         screen.getByRole('heading', { level: 2, name: /hooks/i }),
       ).toBeInTheDocument()
     })
-    expect(screen.getByText('useState')).toBeInTheDocument()
-    expect(
-      screen.getByText('const [count, setCount] = useState(0)'),
-    ).toBeInTheDocument()
+    // List items appear as their own list elements
+    const listItems = container.querySelectorAll('ul li')
+    const itemTexts = Array.from(listItems).map((li) => li.textContent)
+    expect(itemTexts).toContain('useState')
+    expect(itemTexts).toContain('useEffect')
+    expect(itemTexts).toContain('useMemo')
+
+    // Shiki tokenizes the code into per-token spans; assert against the
+    // <pre>'s aggregated textContent rather than searching for a single span.
+    const pre = container.querySelector('pre')
+    expect(pre).not.toBeNull()
+    expect(pre?.textContent).toContain('const [count, setCount] = useState(0)')
   })
 
   it('shows missing-vault state when vault id is unknown', async () => {

@@ -219,6 +219,51 @@
   border-radius: 0;
 }
 
+/* Shiki dual-theme: pre carries inline CSS vars `--shiki-light` and
+   `--shiki-dark`. We pick which to display via the active SwilRead theme.
+   Selector: `pre[style*="--shiki-light"]` matches any Shiki-rendered block.
+   Sepia + Light themes use the light Shiki theme; Dark + OLED use dark. */
+.theme-sepia .swilread-prose pre[style*='--shiki-light'],
+.theme-sepia .swilread-prose pre[style*='--shiki-light'] span,
+.theme-light .swilread-prose pre[style*='--shiki-light'],
+.theme-light .swilread-prose pre[style*='--shiki-light'] span {
+  color: var(--shiki-light);
+  background-color: var(--shiki-light-bg, var(--color-code-bg));
+  font-style: var(--shiki-light-font-style);
+  font-weight: var(--shiki-light-font-weight);
+  text-decoration: var(--shiki-light-text-decoration);
+}
+.theme-dark .swilread-prose pre[style*='--shiki-dark'],
+.theme-dark .swilread-prose pre[style*='--shiki-dark'] span,
+.theme-oled .swilread-prose pre[style*='--shiki-dark'],
+.theme-oled .swilread-prose pre[style*='--shiki-dark'] span {
+  color: var(--shiki-dark);
+  background-color: var(--shiki-dark-bg, var(--color-code-bg));
+  font-style: var(--shiki-dark-font-style);
+  font-weight: var(--shiki-dark-font-weight);
+  text-decoration: var(--shiki-dark-text-decoration);
+}
+@media (prefers-color-scheme: dark) {
+  .theme-auto .swilread-prose pre[style*='--shiki-dark'],
+  .theme-auto .swilread-prose pre[style*='--shiki-dark'] span {
+    color: var(--shiki-dark);
+    background-color: var(--shiki-dark-bg, var(--color-code-bg));
+    font-style: var(--shiki-dark-font-style);
+    font-weight: var(--shiki-dark-font-weight);
+    text-decoration: var(--shiki-dark-text-decoration);
+  }
+}
+@media (prefers-color-scheme: light) {
+  .theme-auto .swilread-prose pre[style*='--shiki-light'],
+  .theme-auto .swilread-prose pre[style*='--shiki-light'] span {
+    color: var(--shiki-light);
+    background-color: var(--shiki-light-bg, var(--color-code-bg));
+    font-style: var(--shiki-light-font-style);
+    font-weight: var(--shiki-light-font-weight);
+    text-decoration: var(--shiki-light-text-decoration);
+  }
+}
+
 .swilread-prose blockquote {
   border-left: 3px solid var(--color-accent);
   padding-left: 1.2em;

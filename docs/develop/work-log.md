@@ -4,6 +4,65 @@
 
 ---
 
+## 2026-05-01 · M3.12 · Shiki Code Highlighting (pipeline becomes async)
+
+**Status**: ✅ Done
+
+### What was built
+
+Shiki — same TextMate grammars VS Code uses — wired into the pipeline. Code blocks now render with proper syntax highlighting in all four themes via dual-theme CSS variables. The architectural cost: `renderMarkdown` is now async (predicted by the architecture doc as the moment this would happen).
+
+**Files modified**:
+
+- `src/core/render/pipeline.ts` — added `@shikijs/rehype` between `remark-rehype` and `rehype-sanitize`; `renderMarkdown` returns `Promise<ReactNode>`. Sanitize schema extended for Shiki output (style + className on pre/code/span).
+- `src/ui/reading-shell/DocumentPage.tsx` — refactored useEffect to use a typed inner `async function loadAndRender(...)` that awaits both `readText` and `renderMarkdown`. Cancellation flag checked at every async boundary.
+- `src/core/render/pipeline.test.tsx` — all tests now async; added a Shiki output detection test (CSS var signature) and a graceful-fallback test for unknown languages.
+- `src/ui/reading-shell/DocumentPage.test.tsx` — list-item assertions use `<li>` queries; code-block assertions check `<pre>` textContent (Shiki tokenizes per-token, breaking single-element text matches).
+- `src/styles/globals.css` — Shiki-specific theme CSS using attribute selector `pre[style*="--shiki-light"]`; routes `--shiki-light`/`--shiki-dark` to actual `color` based on active SwilRead theme.
+
+### Architecture decisions
+
+- **Async pipeline** committed. The architecture doc had flagged this as the inflection point; M3.12 is when it lands. DocumentPage already awaits `readText`; awaiting `renderMarkdown` is the same shape.
+- **Dual-theme via CSS variables** (`defaultColor: false` in rehype-shiki). Shiki emits `style="--shiki-light: #xxx; --shiki-dark: #xxx;"` on each token. Our CSS picks per active theme. One render, both themes visible — no re-highlight on theme switch.
+- **`github-light` + `vitesse-dark`** as the theme pair. github-light reads cleanly on cream/paper backgrounds (Sepia + Light). vitesse-dark is a literary-flavored dark theme by Anthony Fu; sits well with Dark + OLED.
+- **Curated 27-language bundle**, code-split. Vite reports 30+ tiny grammar chunks (~0.4 KB gzipped each), lazy-loaded on first use of each language.
+- **Sanitize schema simplified** — original draft used regex-restricted className lists. Easier to allow `className` outright on pre/code/span (CSS class names cannot execute). `style` attribute also allowed because Shiki uses inline `style="color:#xxx"` for token colors.
+- **CSS attribute selector instead of class** — Shiki with `defaultColor: false` doesn't add `class="shiki"`. The inline `style="--shiki-light: ..."` is itself a stable signal. `pre[style*="--shiki-light"]` matches every Shiki block without runtime gymnastics.
+- **Graceful unknown-language fallback** — `\`\`\`xyz`with unknown language emits plain`<pre>`, no error.
+
+### Verification
+
+- `pnpm typecheck` → 0 errors
+- `pnpm lint` → 0 errors, 0 warnings
+- `pnpm format:check` → all conformant
+- `pnpm test` → **168 passing** (was 167; +1 Shiki fallback test)
+- `pnpm build` → 1.89 s; main bundle **223 KB gzipped** (was 179 KB; +44 KB for Shiki core + two themes). Language grammars code-split into 30+ tiny chunks.
+
+### Issues / Notes
+
+- **Test brittleness from Shiki tokenization**: `getByText('useState')` produced "multiple elements found" because Shiki splits the keyword into a token span. Rule of thumb: code-block content tests must use `pre.textContent.toContain()`, never `getByText` on tokens.
+- **Bundle watch**: 223 KB gzipped initial JS. Within 250 KB budget but ~90% of it. M9.1 perf pass should look at: deferring Shiki load until first code block render, dropping one theme if dual can be done with `color-scheme`, or trimming the language list.
+
+### Pipeline composition (current)
+
+```
+remark-parse
+  → remark-frontmatter
+  → remark-gfm
+  → remark-callout
+  → remark-wikilink
+  → remark-rehype
+  → rehype-shiki        (NEW — dual themes, lazy grammars)
+  → rehype-sanitize     (extended for Shiki style + class)
+  → hast-util-to-jsx-runtime
+```
+
+### Next step
+
+Recommend **M2.3 — theme switcher store**: Shiki's dual-theme work is invisible until users can switch themes. Wiring up the store + a header toggle lets the polish actually show. Other candidates: M3.7+M3.8 embeds, M3.9 highlights, M3.4 wikilink hover preview.
+
+---
+
 ## 2026-05-01 · M3.5 + M3.6 · Callouts (Obsidian `> [!type]` syntax)
 
 **Status**: ✅ Done

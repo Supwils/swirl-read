@@ -69,15 +69,17 @@ export function DocumentPage() {
     }
     let cancelled = false
     setState({ kind: 'loading' })
-    void vault
-      .readText(filePath)
-      .then((raw) => {
+
+    async function loadAndRender(v: typeof vault): Promise<void> {
+      if (!v) return
+      try {
+        const raw = await v.readText(filePath)
         if (cancelled) return
         const md = isMarkdown(filePath)
-        const content = md ? renderMarkdown(raw, customComponents) : null
+        const content = md ? await renderMarkdown(raw, customComponents) : null
+        if (cancelled) return
         setState({ kind: 'rendered', content, isMd: md, raw })
-      })
-      .catch((err: unknown) => {
+      } catch (err) {
         if (cancelled) return
         if (err instanceof VaultFileNotFoundError) {
           setState({ kind: 'missing-file' })
@@ -87,7 +89,10 @@ export function DocumentPage() {
           kind: 'error',
           message: err instanceof Error ? err.message : String(err),
         })
-      })
+      }
+    }
+
+    void loadAndRender(vault)
     return () => {
       cancelled = true
     }

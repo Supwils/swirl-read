@@ -27,6 +27,7 @@
     "@fontsource/inter": "^5.2.8",
     "@fontsource/jetbrains-mono": "^5.2.8",
     "@fontsource/source-serif-4": "^5.2.9",
+    "@shikijs/rehype": "^1.29.2",
     "dexie": "^4.4.2",
     "hast-util-to-jsx-runtime": "^2.3.6",
     "idb-keyval": "^6.2.2",
@@ -39,6 +40,7 @@
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.2",
+    "shiki": "^1.29.2",
     "unified": "^11.0.5",
     "unist-util-visit": "^5.1.0",
     "zustand": "^5.0.12"

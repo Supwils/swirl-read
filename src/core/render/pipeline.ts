@@ -1,13 +1,20 @@
 /**
- * Markdown rendering pipeline (basic).
+ * Markdown rendering pipeline.
  *
- * Handles CommonMark + GFM + frontmatter detection. Returns a React node
- * tree, not an HTML string, so the host can compose it directly.
+ * Pipeline steps (async because of Shiki — see note below):
  *
- * Custom plugins (wikilinks, callouts, embeds, highlights) and rich
- * features (math, syntax highlighting, mermaid) land in M3.x. This file
- * is intentionally narrow — it's the pipeline's foundation, designed to
- * accept additional plugins without restructuring.
+ *   remark-parse
+ *     → remark-frontmatter
+ *     → remark-gfm
+ *     → remark-callout       (custom, M3.5)
+ *     → remark-wikilink      (custom, M3.2)
+ *     → remark-rehype
+ *     → rehype-shiki         (M3.12 — async; promotes pipeline to async)
+ *     → rehype-sanitize      (extended schema for our custom tags + Shiki styles)
+ *     → hast-util-to-jsx-runtime
+ *
+ * The `renderMarkdown` function returns `Promise<ReactNode>`. Callers must
+ * `await` it (DocumentPage already does, in its useEffect.then handler).
  */
 
 import { Fragment, type ReactNode } from 'react'
@@ -19,6 +26,7 @@ import remarkGfm from 'remark-gfm'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkRehype from 'remark-rehype'
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
+import rehypeShiki from '@shikijs/rehype'
 import {
   toJsxRuntime,
   type Jsx,
@@ -28,12 +36,12 @@ import remarkWikilink from './plugins/remark-wikilink'
 import remarkCallout from './plugins/remark-callout'
 
 /**
- * Sanitize schema. Built off the rehype-sanitize default (a GitHub-style
- * allowlist) and extended where SwilRead's renderer needs it.
- *
- * For now we only widen by adding `id` to headings (so the table-of-
- * contents M4.6 can deep-link to sections). Wikilink/callout/embed
- * extensions update this schema in M3.x.
+ * Sanitize schema. Built off the rehype-sanitize default and extended to
+ * allow:
+ *   - `id` on headings (TOC anchoring, M4.6)
+ *   - `<wikilink>` tag with our data attrs (M3.3)
+ *   - `<callout>` tag with our data attrs (M3.6)
+ *   - `style` + `class` on Shiki output (M3.12)
  */
 const schema: typeof defaultSchema = {
   ...defaultSchema,
@@ -48,8 +56,55 @@ const schema: typeof defaultSchema = {
     h6: [...(defaultSchema.attributes?.h6 ?? []), 'id'],
     wikilink: ['data-target', 'data-alias', 'data-heading', 'data-block-id'],
     callout: ['data-callout-type', 'data-callout-title'],
+    // Shiki emits inline color/background-color via style + token classes.
+    // Allow className broadly here — class strings cannot execute and
+    // restricting them via regex breaks Shiki's class composition.
+    pre: [
+      ...(defaultSchema.attributes?.pre ?? []),
+      'style',
+      'tabindex',
+      'className',
+    ],
+    code: [...(defaultSchema.attributes?.code ?? []), 'style', 'className'],
+    span: [...(defaultSchema.attributes?.span ?? []), 'style', 'className'],
   },
 }
+
+/**
+ * Languages we ship out of the box. Anything not in this list still renders
+ * (Shiki falls back to plain text); add to this array to enable highlighting.
+ *
+ * Tuned for Wilson's developer vault — keep in sync with `tech-stack.md`.
+ */
+const SHIKI_LANGS = [
+  'typescript',
+  'tsx',
+  'javascript',
+  'jsx',
+  'python',
+  'rust',
+  'go',
+  'java',
+  'cpp',
+  'c',
+  'csharp',
+  'ruby',
+  'swift',
+  'kotlin',
+  'bash',
+  'shell',
+  'sh',
+  'sql',
+  'json',
+  'yaml',
+  'toml',
+  'css',
+  'html',
+  'markdown',
+  'md',
+  'diff',
+  'dockerfile',
+] as const
 
 /** Build the unified processor. Exported for tests / future composition. */
 export function createMarkdownProcessor(): Processor {
@@ -60,33 +115,39 @@ export function createMarkdownProcessor(): Processor {
     .use(remarkCallout)
     .use(remarkWikilink)
     .use(remarkRehype, { allowDangerousHtml: false })
+    .use(rehypeShiki, {
+      themes: {
+        light: 'github-light',
+        dark: 'vitesse-dark',
+      },
+      langs: [...SHIKI_LANGS],
+      defaultColor: false, // emit CSS vars for both themes; we pick via prefers
+    })
     .use(rehypeSanitize, schema) as unknown as Processor
 }
 
 const defaultProcessor = createMarkdownProcessor()
 
-/**
- * Render a Markdown source string to a React tree.
- *
- * Synchronous: every plugin in the current pipeline supports `runSync`.
- * If we add an async plugin later (e.g. Shiki dual-theme), this returns a
- * Promise instead — callers should be prepared (use Suspense or refactor
- * the call site).
- */
 const jsxRuntimeOptions = {
   Fragment,
   jsx: jsx as Jsx,
   jsxs: jsxs as Jsx,
 } satisfies { Fragment: typeof Fragment; jsx: Jsx; jsxs: Jsx }
 
-export function renderMarkdown(
+/**
+ * Render a Markdown source string to a React tree.
+ *
+ * Asynchronous because Shiki's grammar loading is async. Callers must
+ * `await` the result (DocumentPage handles this in its `.then` chain).
+ */
+export async function renderMarkdown(
   source: string,
   components?: Partial<Components>,
-): ReactNode {
+): Promise<ReactNode> {
   const mdast = defaultProcessor.parse(source)
-  const hast = defaultProcessor.runSync(mdast) as HastRoot
-  // toJsxRuntime returns JSX.Element. React 19's JSX namespace surface
-  // confuses no-unsafe-* rules; we trust the library's return type here.
+  const hast = (await defaultProcessor.run(mdast)) as HastRoot
+  // toJsxRuntime returns JSX.Element; React 19's loose JSX typings confuse
+  // strict no-unsafe-* rules, so we trust the library's return shape here.
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const tree = toJsxRuntime(hast, {
     ...jsxRuntimeOptions,
