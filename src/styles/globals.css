@@ -1,6 +1,17 @@
 @import 'tailwindcss';
 
 /* ─────────────────────────────────────────────────────────────────────────
+   Self-hosted fonts (latin subsets only; CJK falls back to system fonts).
+   Imported before @theme so font-family stacks resolve immediately.
+   ───────────────────────────────────────────────────────────────────────── */
+@import '@fontsource/source-serif-4/latin-400.css';
+@import '@fontsource/source-serif-4/latin-400-italic.css';
+@import '@fontsource/source-serif-4/latin-600.css';
+@import '@fontsource/inter/latin-400.css';
+@import '@fontsource/inter/latin-500.css';
+@import '@fontsource/jetbrains-mono/latin-400.css';
+
+/* ─────────────────────────────────────────────────────────────────────────
    Brand tokens — register as Tailwind theme so `bg-brand-cream` etc work.
    These are CONSTANTS. They never change with theme switching.
    ───────────────────────────────────────────────────────────────────────── */

@@ -4,6 +4,84 @@
 
 ---
 
+## 2026-05-01 · M0.5 · Self-Hosted Fonts
+
+**Status**: ✅ Done
+
+### What was built
+
+Three self-hosted typography families: Source Serif 4 (default reading), Inter (UI sans), JetBrains Mono (code). Latin subsets only — CJK falls back to system fonts (思源宋体 deferred to M9.3 per the implementation plan).
+
+**Approach: `@fontsource` packages** (not manual woff2 download)
+
+- `@fontsource/source-serif-4@5.2.9` — Adobe's open-source serif designed for long-form reading
+- `@fontsource/inter@5.x` — modern UI sans with excellent screen rendering
+- `@fontsource/jetbrains-mono@5.x` — distinctive monospace with strong glyphs
+
+**CSS imports added to `src/styles/globals.css`** (before `@theme` so font-families resolve immediately):
+
+```css
+@import '@fontsource/source-serif-4/latin-400.css';
+@import '@fontsource/source-serif-4/latin-400-italic.css';
+@import '@fontsource/source-serif-4/latin-600.css';
+@import '@fontsource/inter/latin-400.css';
+@import '@fontsource/inter/latin-500.css';
+@import '@fontsource/jetbrains-mono/latin-400.css';
+```
+
+### Architecture decisions
+
+- **`@fontsource` over manual woff2 download** — npm-managed, version-controlled, predictable. Vite hashes filenames and bundles them; no manual `public/fonts/` dance. Supports tree-shaking unused weights.
+- **Latin subsets only** — Cyrillic, Greek, Vietnamese, etc. unused in our UI chrome. Total font weight: ~130 KB woff2 (split across 6 files, loaded async). User's vault Chinese content rendered via system 思源宋体/PingFang fallback in stack.
+- **Three weights × serif** — 400 (body), 400-italic (taglines, callouts), 600 (wordmark, headings). No 700 — 600 is strong enough; brand voice is "literary, not aggressive."
+- **Two weights × Inter** — 400 (body UI), 500 (button labels). Skip 600+ to keep bundle lean.
+- **One weight × JetBrains Mono** — 400 only. Code is monospace, not "weighted" expression.
+- **`font-display: swap`** (default in @fontsource) — browser renders fallback (Georgia/system) immediately, swaps to web font when loaded. Brief FOUT acceptable; no FOIT (invisible-text flash).
+- **No `<link rel="preload">` injected** — Vite hashes file paths at build time, breaking static preload tags. FOUT is brief enough to skip preload optimization in MVP. Revisit in M9 if perceived as a problem.
+- **`.woff` legacy fallback files included** — @fontsource ships both woff2 and woff. Modern browsers (our targets) use woff2; .woff sits unused on CDN. Acceptable bundle waste.
+
+### Verification
+
+- `pnpm typecheck` → 0 errors
+- `pnpm lint` → 0 errors, 0 warnings
+- `pnpm format:check` → all conformant
+- `pnpm test` → 8/8 passing
+- `pnpm build` → 584 ms; bundle now includes 6 woff2 (~130 KB total) loaded async; main JS bundle unchanged (91 KB gzipped)
+- Dev server smoke test: HTTP GET on `/source-serif-4-latin-400-normal.woff2` → 200, 20088 bytes (matches build output)
+
+### Bundle impact
+
+| Asset                           | Size        |
+| ------------------------------- | ----------- |
+| Source Serif 4 latin-400        | 20.09 KB    |
+| Source Serif 4 latin-400-italic | 20.09 KB    |
+| Source Serif 4 latin-600        | 21.53 KB    |
+| Inter latin-400                 | 23.66 KB    |
+| Inter latin-500                 | 24.27 KB    |
+| JetBrains Mono latin-400        | 21.17 KB    |
+| **Total woff2**                 | **~131 KB** |
+
+These load asynchronously after the initial JS/CSS — no blocking impact on time-to-interactive.
+
+### Issues / Notes
+
+- None blocking. FOUT (brief Georgia → Source Serif swap) is the trade-off chosen. Looks fine in browser.
+
+### Next step
+
+**M1.1 — Define `VaultFileSystem` interface**
+
+End of Milestone 0 (project bootstrap). Begin Milestone 1 (first real render).
+
+`src/core/vault/types.ts`:
+
+- Types: `VaultFile`, `VaultDirectory`, `VaultEntry`
+- Interface: `VaultFileSystem` with `id`, `name`, `list`, `walk`, `readText`, `readBinary`, `getBlobURL`, `hasPermission`, `requestPermission`
+
+This is the foundational abstraction. Every adapter (FSAPI, Sample, future Tauri) implements this interface. The rest of the app only sees the interface.
+
+---
+
 ## 2026-05-01 · git init + M0.4 · Routing Scaffold
 
 **Status**: ✅ Done

@@ -20,7 +20,9 @@ The product is fully designed. These documents tell you HOW to build it.
 - ✅ **M0.2** — Tailwind v4 + brand tokens + 4-theme architecture
 - ✅ **M0.3** — ESLint 9 + Prettier + Vitest + RTL; unified `pnpm check` pipeline
 - ✅ **M0.4** — React Router v7 scaffold; 4 placeholder routes; 8 tests passing
-- 🔜 **M0.5** — Self-host fonts (Source Serif 4, Inter, JetBrains Mono)
+- ✅ **M0.5** — Self-hosted fonts (Source Serif 4, Inter, JetBrains Mono) via @fontsource
+- ✅ **Milestone 0 complete** — project bootstrap done
+- 🔜 **M1.1** — Define `VaultFileSystem` interface (start of Milestone 1)
 
 ## Before Coding
 

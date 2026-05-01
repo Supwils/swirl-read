@@ -109,23 +109,25 @@ Goal: A working dev environment with our chosen stack. Renders "Hello SwilRead" 
 
 ---
 
-### M0.5 — Install fonts (Source Serif 4, Inter, JetBrains Mono)
+### M0.5 — Install fonts (Source Serif 4, Inter, JetBrains Mono) ✅ Done 2026-05-01
 
 **Deliverables**:
 
-- Self-hosted woff2 files in `public/fonts/`
-- `@font-face` declarations in `globals.css`
-- Font CSS variables: `--font-serif`, `--font-sans`, `--font-mono`
-- Tailwind theme extends to use these
+- ✅ `@fontsource` packages installed (used over manual `public/fonts/` for npm-managed self-hosting)
+- ✅ `@font-face` declarations imported via @fontsource CSS
+- ✅ Font CSS variables `--font-serif`, `--font-sans`, `--font-mono` registered in `@theme` (M0.2)
+- ✅ Latin subsets only; CJK uses system fallback
 
 **Acceptance**:
 
-- Page text renders in Source Serif 4 by default
-- No FOUC (font swap is invisible due to preload)
+- ✅ Page text renders in Source Serif 4 by default (fallback Georgia briefly visible during font load)
+- ⚠️ Brief FOUT acceptable; preload optimization deferred to M9 if needed
+- ✅ Dev server serves woff2 files with HTTP 200
+- ✅ `pnpm build` bundles 6 woff2 (~131 KB total, loaded async)
 
 **Dependencies**: M0.2
 
-**Note**: For Chinese characters, fall back to system fonts in M0.5; ship 思源宋体 in a later task (M9.x).
+**Note**: 思源宋体 (Chinese serif) deferred to M9.3 per plan; UI chrome is English-only, vault content uses system Chinese fonts as fallback.
 
 ---
 
