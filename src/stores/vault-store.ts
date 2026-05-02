@@ -17,7 +17,52 @@
 
 import { create } from 'zustand'
 import { db, metaToStored, storedToMeta } from '@/core/persistence/db'
+import { deleteHandle } from '@/core/vault'
+import { invalidateBacklinks } from '@/core/navigation/backlinks'
+import { useReaderStore } from '@/stores/reader-store'
 import type { VaultFileSystem, VaultId, VaultMeta } from '@/core/vault'
+
+// Cache-invalidation imports for `removeVault` are dynamic (see the
+// inline helper below). Static imports here would pull every per-vault
+// cache module into the eager main bundle — including MiniSearch
+// (~6 KB gz) for full-text search. The palette chunk is the only place
+// that should be paying that cost; the invalidators are rare-use and
+// small enough that a couple of dynamic imports during removal are
+// fine. `invalidateBacklinks` lives in `core/` and has no heavy deps,
+// so it stays static.
+
+/**
+ * Lazy-fire cache invalidation for a vault. Each cache module is
+ * dynamic-imported so the static dep graph from `vault-store` to
+ * `removeVault → minisearch` doesn't drag heavy modules into main.
+ * Failures are swallowed — invalidation runs after Dexie rows are
+ * already gone, so a missed in-memory entry is at most a stale read,
+ * not data loss.
+ */
+async function invalidateVaultCachesLazy(id: VaultId): Promise<void> {
+  await Promise.all([
+    import('@/ui/file-tree/file-tree-cache')
+      .then((m) => {
+        m.invalidateFileTreeListings(id)
+      })
+      .catch(() => undefined),
+    import('@/ui/reading-shell/tag-index-cache')
+      .then((m) => {
+        m.invalidateTagIndex(id)
+      })
+      .catch(() => undefined),
+    import('@/ui/command-palette/walked-files-cache')
+      .then((m) => {
+        m.invalidateWalkedFiles(id)
+      })
+      .catch(() => undefined),
+    import('@/ui/command-palette/full-text-cache')
+      .then((m) => {
+        m.invalidateFullTextIndex(id)
+      })
+      .catch(() => undefined),
+  ])
+}
 
 const ACTIVE_VAULT_ID_PREF_KEY = 'activeVaultId'
 
@@ -110,11 +155,62 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   },
 
   async removeVault(id) {
+    // Persisted state — fan out across every Dexie table that holds
+    // per-vault rows so re-registering the same folder later doesn't
+    // resurrect stale recents / scroll memory / backlinks. Each table
+    // gets its own try/catch so a single failure (permission revoked
+    // mid-cleanup, schema mismatch on an old client) doesn't block the
+    // vault removal itself.
     await db.vaults.delete(id)
-    adapters.delete(id)
     if (get().activeVaultId === id) {
       await db.preferences.delete(ACTIVE_VAULT_ID_PREF_KEY)
     }
+    await Promise.all([
+      db.recentFiles
+        .where('vaultId')
+        .equals(id)
+        .delete()
+        .catch(() => 0),
+      db.scrollPositions
+        .where('vaultId')
+        .equals(id)
+        .delete()
+        .catch(() => 0),
+      db.backlinks
+        .where('vaultId')
+        .equals(id)
+        .delete()
+        .catch(() => 0),
+    ])
+    // FSAPI handle persists in idb-keyval (separate store from Dexie).
+    try {
+      await deleteHandle(id)
+    } catch {
+      /* non-fatal — orphan handle gets cleaned up by autoRestore later */
+    }
+
+    // Adapter eviction. `dispose()` revokes any cached blob: URLs the
+    // adapter handed out for image/video/audio embeds so the underlying
+    // File objects can be garbage-collected. Adapters without resources
+    // (sample / future Tauri) implement dispose as a no-op or omit it.
+    const evicted = adapters.get(id)
+    if (evicted?.dispose) {
+      try {
+        evicted.dispose()
+      } catch {
+        /* dispose failure shouldn't block removal */
+      }
+    }
+    adapters.delete(id)
+
+    // In-memory caches that key by vault id. Drop them so a later
+    // re-registration of the same id starts from a clean slate; the
+    // Dexie-backed sources have already been cleared above.
+    invalidateBacklinks(id)
+    useReaderStore.getState().forgetVault(id)
+    // Heavy / lazy caches: don't block removal on these resolving.
+    void invalidateVaultCachesLazy(id)
+
     set((state) => ({
       registeredVaults: state.registeredVaults.filter((v) => v.id !== id),
       activeVaultId: state.activeVaultId === id ? null : state.activeVaultId,

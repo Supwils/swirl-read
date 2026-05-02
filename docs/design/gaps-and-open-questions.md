@@ -31,29 +31,30 @@ This document is intentionally honest about what we don't know yet, where the pr
 
 ### OQ-02: Editing Boundary
 
-**Decision (2026-05-01)**: **Phased approach — strict read-only in MVP, inline preview-mode text editing in Phase 2, in-app annotations integrated as a UX feature.**
+**Decision (2026-05-01)**: **Phased approach — strict read-only in Phase 1, current-document lightweight source editing in Phase 2, in-app annotations integrated as a UX feature.**
 
 **Phase-by-phase plan**:
 
-**MVP (Phase 0-1)** — Strict read-only:
+**Phase 1** — Strict read-only:
 
-- No editing whatsoever
-- "Open in external editor" button (VS Code / Obsidian / system default) for when user needs to fix something
-- Focus 100% on the reading experience
+- No editing UI
+- Optional "Open in external editor" path for users who need a full authoring environment
+- Focus 100% on proving the reading experience
 
-**Phase 2 — Inline preview-mode text editing**:
+**Phase 2 — Lightweight source edit for the current document**:
 
-- Click directly on rendered text to edit it (WYSIWYG on the preview, NOT raw markdown)
-- **Text-only edits**: fix typos, tweak wording within existing paragraphs/list items/headings
-- **No structural changes**: cannot add/remove headings, change list types, create new blocks, insert images, etc.
-- User never sees raw markdown — they see a beautiful rendered page that happens to be editable
-- On save: re-serialize the edited text back into the original markdown structure, preserving formatting
+- Enter an `Edit` mode from the rendered document; switch to a plain Markdown text editor for that file
+- **Text-oriented edits only**: fix typos, tweak wording, replace phrases, adjust links, update frontmatter values
+- **No workspace authoring features**: no file create/delete, no drag/drop media authoring, no block handles, no structural page builder
+- The editor is temporary and subordinate to reading: save, re-render, return to the reading view
+- Browser implementation should request `readwrite` permission only when needed, not up front
 
-**Why this constraint is brilliant technically**:
+**Why this constraint is the right one technically**:
 
-- Limiting edits to "text within existing nodes" means we don't need a full ProseMirror/TipTap setup
-- Each block is `contenteditable`; on blur, we diff the text and patch the source markdown
-- No AST manipulation, no complex undo stacks — just text patches
+- We avoid reverse-mapping rendered HTML back into Markdown source
+- A simple source editor plus `writeText()` on the active file is enough for the target workflow
+- We do not need ProseMirror/TipTap, AST-to-source patching, or a block schema just to support typo fixes and sentence-level revisions
+- It preserves the architecture's file-first nature: Markdown remains the source of truth
 
 **Phase 2 — Annotations (in-app, not sidecar files)**:
 
@@ -66,10 +67,11 @@ This document is intentionally honest about what we don't know yet, where the pr
 
 **What we explicitly will NOT do**:
 
-- Raw markdown editing (that's Obsidian's job)
+- Multi-pane writing workspace
 - Block-level structural editing (insert image, change heading level, reorder blocks)
 - File creation / deletion within the app
-- Auto-complete for wikilinks while editing
+- Rich-text / WYSIWYG document authoring
+- Auto-complete for wikilinks while editing (initially)
 
 **Status**: Decided 2026-05-01.
 
@@ -209,9 +211,13 @@ Different PKM tools use slightly different wikilink syntax:
 - Most web-based doc readers (Notion published pages, GitBook) are read-only and users don't complain
 - However, Markdown readers that tried to be read-only (e.g., early Typora versions) eventually added editing
 
-**The mitigation**: Make the "Open in editor" path extremely fast. If fixing a typo requires 2 clicks (click "Edit in VS Code" → file opens at the right line), most users will accept it.
+**The mitigation**:
 
-**Status**: Monitor user feedback post-launch. Don't preemptively add editing.
+- In Phase 1, make the "Open in editor" path extremely fast
+- In Phase 2, add a lightweight current-file text edit mode for quick repairs so the user does not have to context-switch for every typo
+- Keep the boundary strict enough that SwilRead does not become another general-purpose editor
+
+**Status**: Decision updated — Phase 1 still ships read-only; Phase 2 adds limited quick-edit capability.
 
 ---
 
@@ -309,12 +315,12 @@ Google's NotebookLM does AI Q&A over uploaded documents and is well-resourced. I
 
 ## Summary: Critical Decisions Before Building
 
-| Decision         | Options                              | Recommendation                                                                      | Status                |
-| ---------------- | ------------------------------------ | ----------------------------------------------------------------------------------- | --------------------- |
-| Platform         | Web FSAPI vs. Tauri                  | Web first, Tauri later (abstract the FS layer)                                      | ✅ Decided 2026-04-30 |
-| Editing          | None / minimal / annotations         | Phased: strict read-only MVP → preview-mode WYSIWYG text edits + in-app annotations | ✅ Decided 2026-05-01 |
-| AI backend       | Local (transformers.js) / API        | User-selectable; skip for MVP                                                       | Defer                 |
-| License          | MIT vs. AGPL                         | MIT                                                                                 | Decided               |
-| Chinese search   | Intl.Segmenter / jieba-wasm / n-gram | Intl.Segmenter                                                                      | Recommended           |
-| Mobile           | Not in v1 / iCloud / native app      | Not in v1                                                                           | Defer                 |
-| Wikilink formats | Single parser / adapter pattern      | Adapter pattern                                                                     | Design early          |
+| Decision         | Options                              | Recommendation                                                                                    | Status                |
+| ---------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------- | --------------------- |
+| Platform         | Web FSAPI vs. Tauri                  | Web first, Tauri later (abstract the FS layer)                                                    | ✅ Decided 2026-04-30 |
+| Editing          | None / minimal / annotations         | Phased: Phase 1 read-only → Phase 2 lightweight current-document source edit + in-app annotations | ✅ Decided 2026-05-01 |
+| AI backend       | Local (transformers.js) / API        | User-selectable; skip for MVP                                                                     | Defer                 |
+| License          | MIT vs. AGPL                         | MIT                                                                                               | Decided               |
+| Chinese search   | Intl.Segmenter / jieba-wasm / n-gram | Intl.Segmenter                                                                                    | Recommended           |
+| Mobile           | Not in v1 / iCloud / native app      | Not in v1                                                                                         | Defer                 |
+| Wikilink formats | Single parser / adapter pattern      | Adapter pattern                                                                                   | Design early          |

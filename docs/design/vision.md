@@ -64,6 +64,8 @@ This repo is accessed through:
 > SwilRead is a **local-first, read-optimized interface** for Markdown knowledge systems.
 >
 > It turns any folder of Markdown files into a beautiful, navigable, AI-augmented reading experience — without uploading your data to any cloud, without requiring a complex setup, and without trying to replace the tools you already use to write.
+>
+> When you need to fix a typo, tighten a sentence, or update a paragraph while reading, SwilRead may briefly enter a lightweight text-edit mode for the current document. It is still a reader first, not an all-day writing workspace.
 
 ---
 
@@ -98,13 +100,14 @@ SwilRead picks the first.
 
 Being explicit about this prevents scope creep:
 
-| It is NOT               | Why this boundary matters                                                                        |
-| ----------------------- | ------------------------------------------------------------------------------------------------ |
-| A note-taking app       | You already have one. SwilRead reads what you wrote.                                             |
-| An Obsidian replacement | Obsidian wins at editing, linking while writing, and plugin ecosystem. SwilRead wins at reading. |
-| A cloud knowledge base  | Notion, Confluence, GitBook exist. SwilRead is local-first by design.                            |
-| A second brain builder  | Building your knowledge base is out of scope. Reading it is the entire scope.                    |
-| An AI chatbot           | AI is a feature to enhance reading and recall, not the main product surface.                     |
+| It is NOT                  | Why this boundary matters                                                                                                            |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| A note-taking app          | You already have one. SwilRead reads what you wrote.                                                                                 |
+| An Obsidian replacement    | Obsidian wins at editing, linking while writing, and plugin ecosystem. SwilRead wins at reading.                                     |
+| A cloud knowledge base     | Notion, Confluence, GitBook exist. SwilRead is local-first by design.                                                                |
+| A second brain builder     | Building your knowledge base is out of scope. Reading it is the entire scope.                                                        |
+| A full authoring workspace | SwilRead may support quick text repairs, but long-form writing, heavy restructuring, and knowledge-base management belong elsewhere. |
+| An AI chatbot              | AI is a feature to enhance reading and recall, not the main product surface.                                                         |
 
 ---
 
@@ -152,6 +155,15 @@ AI features are additive, not central:
 Target: open the app, select a folder, start reading. No config file required, no plugin installation, no account creation.
 
 Advanced features (AI, custom vault structure, themes) are opt-in and non-blocking.
+
+### 6. Edit Only to Protect Reading Flow
+
+Editing is allowed only when it preserves the reader's momentum:
+
+- Fixing typos, wording, links, and short passages inside the current file is in scope
+- Editing should feel like a temporary mode entered from reading and exited back to reading
+- Source text is acceptable; a full block editor, WYSIWYG layout system, or database-like authoring model is not
+- Multi-file writing workflows, content creation surfaces, and structural note management remain outside the product center
 
 ---
 

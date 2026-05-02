@@ -26,7 +26,17 @@ describe('production route tree', () => {
     const app = routes.find((r) => r.path === '/app')
     expect(
       app?.children?.map((c) => ('index' in c ? '<index>' : c.path)),
-    ).toEqual(['<index>', ':vaultId', ':vaultId/*'])
+    ).toEqual(['<index>', ':vaultId'])
+    // The vaultId route now wraps a layout (VaultLayout) with its own
+    // index (VaultHome) and splat child (DocumentPage).
+    const vaultRoute = app?.children?.find(
+      (c) => !('index' in c) && c.path === ':vaultId',
+    )
+    expect(
+      (vaultRoute && 'children' in vaultRoute ? vaultRoute.children : [])?.map(
+        (c) => ('index' in c ? '<index>' : c.path),
+      ),
+    ).toEqual(['<index>', '*'])
   })
 
   it('renders LandingPage at /', () => {
@@ -39,31 +49,34 @@ describe('production route tree', () => {
   it('renders AppShell with no-vault placeholder at /app', () => {
     renderAt('/app')
     expect(screen.getByText(/no vault selected/i)).toBeInTheDocument()
-    // AppShell header now contains the SwilRead wordmark + ThemeSwitcher
+    // AppShell header contains the SwilRead wordmark + settings trigger
     expect(screen.getByRole('link', { name: /swilread/i })).toBeInTheDocument()
-    expect(screen.getByRole('combobox')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /open settings/i }),
+    ).toBeInTheDocument()
   })
 
-  it('renders VaultHome with vaultId at /app/:vaultId', () => {
+  it('renders VaultHome with vaultId at /app/:vaultId', async () => {
     renderAt('/app/my-knowledge')
-    expect(screen.getByText(/vault home/i)).toBeInTheDocument()
+    // Unregistered vault shows the M6.3 reauthorize prompt with the
+    // vault id as the heading. The 'no-handle' branch resolves
+    // asynchronously after listHandleIds().
     expect(
-      screen.getByRole('heading', { level: 2, name: /my-knowledge/i }),
+      await screen.findByRole('heading', { level: 2, name: /my-knowledge/i }),
     ).toBeInTheDocument()
-    // Unregistered vault shows the missing-state message
     expect(
-      screen.getByText(/not registered in the current session/i),
+      await screen.findByText(/no saved handle for this vault/i),
     ).toBeInTheDocument()
   })
 
-  it('renders DocumentPage with file path at /app/:vaultId/*', () => {
+  it('renders DocumentPage with file path at /app/:vaultId/*', async () => {
     renderAt('/app/my-knowledge/career/me/me.md')
-    // Vault not registered → DocumentPage shows the missing-vault state
+    // Vault not registered → DocumentPage shows the M6.3 reauthorize prompt
+    // (the heading repeats the vault id alongside the page header).
     expect(
-      screen.getByText(/not registered in the current session/i),
+      await screen.findByRole('heading', { level: 2, name: /my-knowledge/i }),
     ).toBeInTheDocument()
-    // The vault id and file path appear in the page header
-    expect(screen.getByText('my-knowledge')).toBeInTheDocument()
+    // The file path appears in the document page header.
     expect(screen.getByText('career/me/me.md')).toBeInTheDocument()
   })
 })

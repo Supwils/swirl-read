@@ -139,11 +139,12 @@ We do NOT use:
 
 ---
 
-## Markdown Editor (Phase 2 — not in MVP)
+## Markdown Editing Surface (Phase 2 — not in MVP)
 
-For future inline preview-mode WYSIWYG:
+For future lightweight current-document source editing:
 
-- **TipTap** (ProseMirror-based) — when needed in Phase 2
+- **CodeMirror 6** — preferred choice for a calm, text-first Markdown editor with search, replace, history, and keyboard shortcuts
+- Keep the editing surface single-document and source-based; no ProseMirror / TipTap authoring stack unless the product boundary changes substantially
 - Not installed in Phase 1
 
 ---

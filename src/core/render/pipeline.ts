@@ -7,7 +7,10 @@
  *     → remark-frontmatter
  *     → remark-gfm
  *     → remark-callout       (custom, M3.5)
+ *     → remark-embed         (custom, M3.7 — must run before wikilink)
  *     → remark-wikilink      (custom, M3.2)
+ *     → remark-highlight     (custom, M3.9 — `==text==`)
+ *     → remark-mermaid       (custom, M3.13 — diverts ```mermaid` from Shiki)
  *     → remark-rehype
  *     → rehype-shiki         (M3.12 — async; promotes pipeline to async)
  *     → rehype-sanitize      (extended schema for our custom tags + Shiki styles)
@@ -23,6 +26,7 @@ import type { Root as HastRoot } from 'hast'
 import { unified, type Processor } from 'unified'
 import remarkParse from 'remark-parse'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkRehype from 'remark-rehype'
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
@@ -34,6 +38,11 @@ import {
 } from 'hast-util-to-jsx-runtime'
 import remarkWikilink from './plugins/remark-wikilink'
 import remarkCallout from './plugins/remark-callout'
+import remarkEmbed from './plugins/remark-embed'
+import remarkHighlight from './plugins/remark-highlight'
+import remarkMermaid from './plugins/remark-mermaid'
+import remarkTag from './plugins/remark-tag'
+import remarkMathShim from './plugins/remark-math-shim'
 
 /**
  * Sanitize schema. Built off the rehype-sanitize default and extended to
@@ -41,11 +50,26 @@ import remarkCallout from './plugins/remark-callout'
  *   - `id` on headings (TOC anchoring, M4.6)
  *   - `<wikilink>` tag with our data attrs (M3.3)
  *   - `<callout>` tag with our data attrs (M3.6)
+ *   - `<vault-embed>` tag with our data attrs (M3.8)
+ *   - `<mark>` tag for highlights (M3.9 — not in GitHub default schema)
+ *   - `<mermaid-diagram>` tag with `data-source` attr (M3.13)
+ *   - `<tag>` element with `data-tag` (M3.14)
+ *   - `<math-inline>` / `<math-block>` with `data-source` (M3.11)
  *   - `style` + `class` on Shiki output (M3.12)
  */
 const schema: typeof defaultSchema = {
   ...defaultSchema,
-  tagNames: [...(defaultSchema.tagNames ?? []), 'wikilink', 'callout'],
+  tagNames: [
+    ...(defaultSchema.tagNames ?? []),
+    'wikilink',
+    'callout',
+    'vault-embed',
+    'mark',
+    'mermaid-diagram',
+    'tag',
+    'math-inline',
+    'math-block',
+  ],
   attributes: {
     ...defaultSchema.attributes,
     h1: [...(defaultSchema.attributes?.h1 ?? []), 'id'],
@@ -56,6 +80,17 @@ const schema: typeof defaultSchema = {
     h6: [...(defaultSchema.attributes?.h6 ?? []), 'id'],
     wikilink: ['data-target', 'data-alias', 'data-heading', 'data-block-id'],
     callout: ['data-callout-type', 'data-callout-title'],
+    'vault-embed': [
+      'data-target',
+      'data-kind',
+      'data-display',
+      'data-heading',
+      'data-block-id',
+    ],
+    'mermaid-diagram': ['data-source'],
+    tag: ['data-tag'],
+    'math-inline': ['data-source'],
+    'math-block': ['data-source'],
     // Shiki emits inline color/background-color via style + token classes.
     // Allow className broadly here — class strings cannot execute and
     // restricting them via regex breaks Shiki's class composition.
@@ -108,22 +143,39 @@ const SHIKI_LANGS = [
 
 /** Build the unified processor. Exported for tests / future composition. */
 export function createMarkdownProcessor(): Processor {
-  return unified()
-    .use(remarkParse)
-    .use(remarkFrontmatter, ['yaml', 'toml'])
-    .use(remarkGfm)
-    .use(remarkCallout)
-    .use(remarkWikilink)
-    .use(remarkRehype, { allowDangerousHtml: false })
-    .use(rehypeShiki, {
-      themes: {
-        light: 'github-light',
-        dark: 'vitesse-dark',
-      },
-      langs: [...SHIKI_LANGS],
-      defaultColor: false, // emit CSS vars for both themes; we pick via prefers
-    })
-    .use(rehypeSanitize, schema) as unknown as Processor
+  return (
+    unified()
+      .use(remarkParse)
+      .use(remarkFrontmatter, ['yaml', 'toml'])
+      .use(remarkGfm)
+      // Math BEFORE the inline-text plugins so `$E = mc^2$` parses as
+      // math first; a stray `$` inside body text never participates in
+      // wikilink/tag/highlight matching anyway, but keeping math first
+      // avoids any surprise interaction with future plugins.
+      .use(remarkMath)
+      .use(remarkMathShim)
+      .use(remarkCallout)
+      .use(remarkEmbed)
+      .use(remarkWikilink)
+      .use(remarkHighlight)
+      // Tags after wikilinks so a `[[link]]` containing `#tag` doesn't get
+      // double-rewritten (wikilink builds its own children — tags inside
+      // are part of its hChildren, not of any text node we still visit).
+      .use(remarkTag)
+      // Mermaid: must run before remark-rehype so Shiki never processes
+      // ```mermaid blocks. The custom node hints `<mermaid-diagram>` to hast.
+      .use(remarkMermaid)
+      .use(remarkRehype, { allowDangerousHtml: false })
+      .use(rehypeShiki, {
+        themes: {
+          light: 'github-light',
+          dark: 'vitesse-dark',
+        },
+        langs: [...SHIKI_LANGS],
+        defaultColor: false, // emit CSS vars for both themes; we pick via prefers
+      })
+      .use(rehypeSanitize, schema) as unknown as Processor
+  )
 }
 
 const defaultProcessor = createMarkdownProcessor()

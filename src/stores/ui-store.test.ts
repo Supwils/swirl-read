@@ -4,6 +4,9 @@ import {
   DEFAULT_THEME,
   DEFAULT_FONT_SIZE,
   DEFAULT_LINE_HEIGHT,
+  DEFAULT_FILE_TREE_OPEN,
+  DEFAULT_TOC_OPEN,
+  DEFAULT_FRONTMATTER_DISPLAY,
   FONT_SIZE_MIN,
   FONT_SIZE_MAX,
   LINE_HEIGHT_MIN,
@@ -20,6 +23,11 @@ beforeEach(async () => {
     lineHeight: DEFAULT_LINE_HEIGHT,
     contentWidth: 'medium',
     zenMode: false,
+    fileTreeOpen: DEFAULT_FILE_TREE_OPEN,
+    tocOpen: DEFAULT_TOC_OPEN,
+    commandPaletteOpen: false,
+    shortcutsHelpOpen: false,
+    frontmatterDisplay: DEFAULT_FRONTMATTER_DISPLAY,
     ready: false,
   })
 })
@@ -110,6 +118,152 @@ describe('ui store — zenMode', () => {
     expect(useUIStore.getState().zenMode).toBe(true)
     useUIStore.getState().toggleZenMode()
     expect(useUIStore.getState().zenMode).toBe(false)
+  })
+})
+
+describe('ui store — fileTreeOpen (M4.3)', () => {
+  it('defaults to open', () => {
+    expect(useUIStore.getState().fileTreeOpen).toBe(DEFAULT_FILE_TREE_OPEN)
+  })
+
+  it('setFileTreeOpen writes to db', async () => {
+    await useUIStore.getState().setFileTreeOpen(false)
+    expect(useUIStore.getState().fileTreeOpen).toBe(false)
+    const row = await db.preferences.get('ui:fileTreeOpen')
+    expect(row?.value).toBe(false)
+  })
+
+  it('toggleFileTree flips and persists', async () => {
+    await useUIStore.getState().toggleFileTree()
+    expect(useUIStore.getState().fileTreeOpen).toBe(!DEFAULT_FILE_TREE_OPEN)
+    const row = await db.preferences.get('ui:fileTreeOpen')
+    expect(row?.value).toBe(!DEFAULT_FILE_TREE_OPEN)
+  })
+
+  it('init restores fileTreeOpen from db', async () => {
+    await db.preferences.put({ key: 'ui:fileTreeOpen', value: false })
+    useUIStore.setState({ ready: false })
+    await useUIStore.getState().init()
+    expect(useUIStore.getState().fileTreeOpen).toBe(false)
+  })
+
+  it('init falls back to default for invalid stored values', async () => {
+    await db.preferences.put({ key: 'ui:fileTreeOpen', value: 'yes' })
+    useUIStore.setState({ ready: false })
+    await useUIStore.getState().init()
+    expect(useUIStore.getState().fileTreeOpen).toBe(DEFAULT_FILE_TREE_OPEN)
+  })
+})
+
+describe('ui store — tocOpen (M4.6)', () => {
+  it('defaults to open', () => {
+    expect(useUIStore.getState().tocOpen).toBe(DEFAULT_TOC_OPEN)
+  })
+
+  it('setTocOpen writes to db', async () => {
+    await useUIStore.getState().setTocOpen(false)
+    expect(useUIStore.getState().tocOpen).toBe(false)
+    const row = await db.preferences.get('ui:tocOpen')
+    expect(row?.value).toBe(false)
+  })
+
+  it('toggleToc flips and persists', async () => {
+    await useUIStore.getState().toggleToc()
+    expect(useUIStore.getState().tocOpen).toBe(!DEFAULT_TOC_OPEN)
+    const row = await db.preferences.get('ui:tocOpen')
+    expect(row?.value).toBe(!DEFAULT_TOC_OPEN)
+  })
+
+  it('init restores tocOpen from db', async () => {
+    await db.preferences.put({ key: 'ui:tocOpen', value: false })
+    useUIStore.setState({ ready: false })
+    await useUIStore.getState().init()
+    expect(useUIStore.getState().tocOpen).toBe(false)
+  })
+
+  it('init falls back to default for invalid stored values', async () => {
+    await db.preferences.put({ key: 'ui:tocOpen', value: 'maybe' })
+    useUIStore.setState({ ready: false })
+    await useUIStore.getState().init()
+    expect(useUIStore.getState().tocOpen).toBe(DEFAULT_TOC_OPEN)
+  })
+})
+
+describe('ui store — commandPaletteOpen (M5.1)', () => {
+  it('defaults to closed', () => {
+    expect(useUIStore.getState().commandPaletteOpen).toBe(false)
+  })
+
+  it('setCommandPaletteOpen flips the flag without persisting', async () => {
+    useUIStore.getState().setCommandPaletteOpen(true)
+    expect(useUIStore.getState().commandPaletteOpen).toBe(true)
+    // Transient — never written to Dexie.
+    const row = await db.preferences.get('ui:commandPaletteOpen')
+    expect(row).toBeUndefined()
+  })
+
+  it('toggleCommandPalette flips the flag', () => {
+    useUIStore.getState().toggleCommandPalette()
+    expect(useUIStore.getState().commandPaletteOpen).toBe(true)
+    useUIStore.getState().toggleCommandPalette()
+    expect(useUIStore.getState().commandPaletteOpen).toBe(false)
+  })
+})
+
+describe('ui store — shortcutsHelpOpen (M9.4)', () => {
+  it('defaults to closed', () => {
+    expect(useUIStore.getState().shortcutsHelpOpen).toBe(false)
+  })
+
+  it('setShortcutsHelpOpen flips the flag without persisting', async () => {
+    useUIStore.getState().setShortcutsHelpOpen(true)
+    expect(useUIStore.getState().shortcutsHelpOpen).toBe(true)
+    const row = await db.preferences.get('ui:shortcutsHelpOpen')
+    expect(row).toBeUndefined()
+  })
+
+  it('toggleShortcutsHelp flips the flag', () => {
+    useUIStore.getState().toggleShortcutsHelp()
+    expect(useUIStore.getState().shortcutsHelpOpen).toBe(true)
+    useUIStore.getState().toggleShortcutsHelp()
+    expect(useUIStore.getState().shortcutsHelpOpen).toBe(false)
+  })
+})
+
+describe('ui store — frontmatterDisplay (M3.10)', () => {
+  it('defaults to metadata mode', () => {
+    expect(useUIStore.getState().frontmatterDisplay).toBe(
+      DEFAULT_FRONTMATTER_DISPLAY,
+    )
+  })
+
+  it('setFrontmatterDisplay persists', async () => {
+    await useUIStore.getState().setFrontmatterDisplay('raw')
+    expect(useUIStore.getState().frontmatterDisplay).toBe('raw')
+    const row = await db.preferences.get('ui:frontmatterDisplay')
+    expect(row?.value).toBe('raw')
+  })
+
+  it('init restores frontmatterDisplay from db', async () => {
+    await db.preferences.put({
+      key: 'ui:frontmatterDisplay',
+      value: 'hidden',
+    })
+    useUIStore.setState({ ready: false })
+    await useUIStore.getState().init()
+    expect(useUIStore.getState().frontmatterDisplay).toBe('hidden')
+  })
+
+  it('init falls back to default for invalid stored values', async () => {
+    await db.preferences.put({
+      key: 'ui:frontmatterDisplay',
+      value: 'not-a-mode',
+    })
+    useUIStore.setState({ ready: false })
+    await useUIStore.getState().init()
+    expect(useUIStore.getState().frontmatterDisplay).toBe(
+      DEFAULT_FRONTMATTER_DISPLAY,
+    )
   })
 })
 

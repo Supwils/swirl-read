@@ -138,6 +138,16 @@ export interface VaultFileSystem {
    * Must be called from a user gesture in browsers that require it.
    */
   requestPermission(): Promise<boolean>
+
+  /**
+   * Optional. Release any per-adapter resources held since construction
+   * (typically the cached `blob:` URLs handed out by `getBlobURL`).
+   *
+   * Called by the orchestration layer (`useVaultStore.removeVault`) when
+   * the adapter is being evicted. Safe no-op for adapters that don't
+   * cache anything (`SampleVaultAdapter`, future Tauri).
+   */
+  dispose?(): void
 }
 
 /* ─────────────────────────────────────────────────────────────────────────

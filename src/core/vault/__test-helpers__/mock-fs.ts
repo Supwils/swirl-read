@@ -29,6 +29,10 @@ function isLeafContent(value: unknown): value is string | Uint8Array {
 function makeFile(name: string, content: string | Uint8Array, modifiedAt = 0) {
   const bytes =
     typeof content === 'string' ? new TextEncoder().encode(content) : content
+  // jsdom's `File` is missing `.text()` / `.arrayBuffer()` (Vitest 3
+  // ships an older jsdom), so we hand-roll a duck-typed File. A test-
+  // only `URL.createObjectURL` shim in `setup-tests.ts` recognises this
+  // shape so embed tests still get a `blob:` src.
   return {
     name,
     size: bytes.byteLength,
@@ -38,7 +42,6 @@ function makeFile(name: string, content: string | Uint8Array, modifiedAt = 0) {
       return new TextDecoder().decode(bytes)
     },
     async arrayBuffer(): Promise<ArrayBuffer> {
-      // Return a fresh copy so tests can't accidentally see internal mutation
       const out = new ArrayBuffer(bytes.byteLength)
       new Uint8Array(out).set(bytes)
       return out

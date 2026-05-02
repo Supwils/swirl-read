@@ -5,7 +5,7 @@ import {
   getActiveAdapter,
   __resetAdaptersForTests,
 } from './vault-store'
-import { __resetDbForTests } from '@/core/persistence/db'
+import { __resetDbForTests, db } from '@/core/persistence/db'
 import type { VaultFileSystem } from '@/core/vault'
 
 function fakeAdapter(id: string, name = id): VaultFileSystem {
@@ -147,6 +147,128 @@ describe('vault store — removeVault', () => {
     await useVaultStore.getState().removeVault('keep-1111')
     expect(useVaultStore.getState().activeVaultId).toBe('drop-2222')
     expect(useVaultStore.getState().registeredVaults).toHaveLength(1)
+  })
+
+  it('calls adapter.dispose() to revoke blob URLs (audit fix B1)', async () => {
+    const dispose = vi.fn()
+    const adapter: VaultFileSystem = {
+      ...fakeAdapter('blob-vault'),
+      dispose,
+    }
+    await useVaultStore.getState().registerVault(adapter)
+
+    await useVaultStore.getState().removeVault('blob-vault')
+
+    expect(dispose).toHaveBeenCalledTimes(1)
+    expect(getAdapter('blob-vault')).toBeNull()
+  })
+
+  it('survives an adapter whose dispose() throws', async () => {
+    const adapter: VaultFileSystem = {
+      ...fakeAdapter('throw-vault'),
+      dispose: () => {
+        throw new Error('boom')
+      },
+    }
+    await useVaultStore.getState().registerVault(adapter)
+
+    await expect(
+      useVaultStore.getState().removeVault('throw-vault'),
+    ).resolves.toBeUndefined()
+    expect(getAdapter('throw-vault')).toBeNull()
+  })
+
+  it('drops in-memory reader-store entries via forgetVault (audit fix)', async () => {
+    const adapter = fakeAdapter('mem-target')
+    await useVaultStore.getState().registerVault(adapter)
+    // Seed in-memory state without going through Dexie (reader-store
+    // tests cover the persistent path; here we only verify the
+    // forget-on-remove invariant).
+    const { useReaderStore } = await import('@/stores/reader-store')
+    useReaderStore.setState({
+      recentByVault: {
+        'mem-target': [
+          {
+            vaultId: 'mem-target',
+            path: 'a.md',
+            openedAt: new Date(0),
+          },
+        ],
+      },
+      scrollByVault: {
+        'mem-target': {
+          'a.md': {
+            vaultId: 'mem-target',
+            path: 'a.md',
+            scrollY: 100,
+            updatedAt: new Date(0),
+          },
+        },
+      },
+      ready: true,
+    })
+
+    await useVaultStore.getState().removeVault('mem-target')
+
+    expect(
+      useReaderStore.getState().recentByVault['mem-target'],
+    ).toBeUndefined()
+    expect(
+      useReaderStore.getState().scrollByVault['mem-target'],
+    ).toBeUndefined()
+  })
+
+  it('also wipes per-vault rows from recentFiles, scrollPositions, backlinks (audit fix)', async () => {
+    const adapter = fakeAdapter('audit-target')
+    await useVaultStore.getState().registerVault(adapter)
+
+    // Seed orphan rows that would have leaked under the old behavior.
+    await db.recentFiles.put({
+      id: JSON.stringify(['audit-target', 'note.md']),
+      vaultId: 'audit-target',
+      path: 'note.md',
+      openedAtMs: 1_000,
+    })
+    await db.scrollPositions.put({
+      id: JSON.stringify(['audit-target', 'note.md']),
+      vaultId: 'audit-target',
+      path: 'note.md',
+      scrollY: 480,
+      updatedAtMs: 1_000,
+    })
+    await db.backlinks.put({
+      id: JSON.stringify(['audit-target', 'src.md', 'dst.md']),
+      vaultId: 'audit-target',
+      sourcePath: 'src.md',
+      targetPath: 'dst.md',
+      rawTarget: 'dst',
+      context: '…',
+      updatedAtMs: 1_000,
+    })
+
+    // Sibling vault rows should NOT be touched.
+    await db.recentFiles.put({
+      id: JSON.stringify(['other', 'a.md']),
+      vaultId: 'other',
+      path: 'a.md',
+      openedAtMs: 1_000,
+    })
+
+    await useVaultStore.getState().removeVault('audit-target')
+
+    expect(
+      await db.recentFiles.where('vaultId').equals('audit-target').count(),
+    ).toBe(0)
+    expect(
+      await db.scrollPositions.where('vaultId').equals('audit-target').count(),
+    ).toBe(0)
+    expect(
+      await db.backlinks.where('vaultId').equals('audit-target').count(),
+    ).toBe(0)
+    // Sibling vault row stays intact.
+    expect(await db.recentFiles.where('vaultId').equals('other').count()).toBe(
+      1,
+    )
   })
 })
 

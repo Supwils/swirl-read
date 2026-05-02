@@ -129,6 +129,49 @@ describe('renderMarkdown — GitHub Flavored Markdown', () => {
     const a = container.querySelector('a')
     expect(a?.getAttribute('href')).toBe('https://anthropic.com')
   })
+
+  it('renders GFM footnotes with backref links (M3.1)', async () => {
+    const source = `Body with a reference.[^1]
+
+Another paragraph.[^longer]
+
+[^1]: Short footnote text.
+[^longer]: A longer footnote with **emphasis**.
+`
+    const { container } = await renderMd(source)
+    const section = container.querySelector('section.footnotes')
+    expect(section).not.toBeNull()
+    const items = section?.querySelectorAll('ol > li')
+    expect(items?.length).toBe(2)
+    const backref = section?.querySelector('a.data-footnote-backref')
+    expect(backref).not.toBeNull()
+    // The reference superscript in body text points at the footnote.
+    const ref = container.querySelector('sup > a[href^="#user-content-fn"]')
+    expect(ref).not.toBeNull()
+  })
+
+  it('marks task-list <ul> with the GFM contains-task-list class (M3.1)', async () => {
+    const { container } = await renderMd('- [ ] todo\n- [x] done')
+    const ul = container.querySelector('ul')
+    expect(ul?.className).toContain('contains-task-list')
+    const items = ul?.querySelectorAll('li.task-list-item')
+    expect(items?.length).toBe(2)
+  })
+
+  it('preserves table cell alignment as inline text-align style (M3.1)', async () => {
+    const source = `| L | C | R |
+| :- | :-: | -: |
+| a | b | c |
+`
+    const { container } = await renderMd(source)
+    const headerCells = container.querySelectorAll('thead th')
+    // remark-gfm + remark-rehype emit alignment as inline `style`
+    // (the HTML `align` attribute is deprecated). The CSS in
+    // globals.css can target either form; we assert the actual output.
+    expect(headerCells[0]?.getAttribute('style')).toContain('left')
+    expect(headerCells[1]?.getAttribute('style')).toContain('center')
+    expect(headerCells[2]?.getAttribute('style')).toContain('right')
+  })
 })
 
 describe('renderMarkdown — Frontmatter handling', () => {
@@ -172,6 +215,107 @@ describe('renderMarkdown — Sanitization', () => {
   it('preserves heading ids (allowed by extended schema)', async () => {
     const { container } = await renderMd('# Title')
     expect(container.querySelector('h1')).not.toBeNull()
+  })
+})
+
+describe('renderMarkdown — Embeds (M3.7)', () => {
+  it('emits a <vault-embed> element with kind="image" for image targets', async () => {
+    const { container } = await renderMd('![[diagram.png]]')
+    const embed = container.querySelector('vault-embed')
+    expect(embed).not.toBeNull()
+    expect(embed?.getAttribute('data-target')).toBe('diagram.png')
+    expect(embed?.getAttribute('data-kind')).toBe('image')
+  })
+
+  it('lifts a solitary embed to a top-level block (no <p> wrapper)', async () => {
+    const { container } = await renderMd('![[image.png]]')
+    // The embed should be a direct child of the prose root, not nested
+    // inside a <p> — matters for block-level renderers like markdown
+    // embeds (which render <aside>) so we don't produce <p><aside>.
+    const root = container.firstElementChild
+    expect(root?.tagName.toLowerCase()).toBe('vault-embed')
+  })
+
+  it('keeps inline embeds inside their paragraph', async () => {
+    const { container } = await renderMd('See ![[icon.png]] for details.')
+    const p = container.querySelector('p')
+    expect(p).not.toBeNull()
+    expect(p?.querySelector('vault-embed')).not.toBeNull()
+  })
+
+  it('preserves display + heading metadata for renderers', async () => {
+    const { container } = await renderMd('![[note.md#Hooks|Sidebar]]')
+    const embed = container.querySelector('vault-embed')
+    expect(embed?.getAttribute('data-display')).toBe('Sidebar')
+    expect(embed?.getAttribute('data-heading')).toBe('Hooks')
+    expect(embed?.getAttribute('data-kind')).toBe('markdown')
+  })
+})
+
+describe('renderMarkdown — Mermaid (M3.13)', () => {
+  it('emits a <mermaid-diagram> for a ```mermaid block', async () => {
+    const { container } = await renderMd('```mermaid\ngraph TD\nA-->B\n```')
+    const diagram = container.querySelector('mermaid-diagram')
+    expect(diagram).not.toBeNull()
+    expect(diagram?.getAttribute('data-source')).toBe('graph TD\nA-->B')
+  })
+
+  it('does not emit a Shiki <pre> for mermaid blocks', async () => {
+    const { container } = await renderMd('```mermaid\ngraph TD\nA-->B\n```')
+    const pre = container.querySelector('pre')
+    expect(pre).toBeNull()
+  })
+
+  it('still highlights other code blocks alongside mermaid', async () => {
+    const source = '```mermaid\ngraph TD\nA-->B\n```\n\n```ts\nconst x = 1\n```'
+    const { container } = await renderMd(source)
+    expect(container.querySelector('mermaid-diagram')).not.toBeNull()
+    expect(container.querySelector('pre')).not.toBeNull()
+  })
+})
+
+describe('renderMarkdown — Math (M3.11)', () => {
+  it('emits a <math-inline> for $inline$ syntax', async () => {
+    const { container } = await renderMd('Energy is $E = mc^2$ exactly.')
+    const el = container.querySelector('math-inline')
+    expect(el).not.toBeNull()
+    expect(el?.getAttribute('data-source')).toBe('E = mc^2')
+  })
+
+  it('emits a <math-block> for $$block$$ syntax', async () => {
+    const { container } = await renderMd('$$\n\\int_0^1 x^2 dx\n$$')
+    const el = container.querySelector('math-block')
+    expect(el).not.toBeNull()
+    expect(el?.getAttribute('data-source')).toBe('\\int_0^1 x^2 dx')
+  })
+
+  it('preserves raw LaTeX exactly inside data-source', async () => {
+    const { container } = await renderMd('$\\frac{a}{b + c}$')
+    expect(
+      container.querySelector('math-inline')?.getAttribute('data-source'),
+    ).toBe('\\frac{a}{b + c}')
+  })
+})
+
+describe('renderMarkdown — Highlights (M3.9)', () => {
+  it('renders ==text== as a <mark> element', async () => {
+    const { container } = await renderMd('Read the ==important== part.')
+    const mark = container.querySelector('mark')
+    expect(mark).not.toBeNull()
+    expect(mark?.textContent).toBe('important')
+  })
+
+  it('renders multiple highlights in one paragraph', async () => {
+    const { container } = await renderMd('==alpha== and ==beta==')
+    const marks = container.querySelectorAll('mark')
+    expect(marks).toHaveLength(2)
+    expect(marks[0]?.textContent).toBe('alpha')
+    expect(marks[1]?.textContent).toBe('beta')
+  })
+
+  it('survives the sanitize pass (mark is in our extended allow list)', async () => {
+    const { container } = await renderMd('==kept==')
+    expect(container.querySelector('mark')).not.toBeNull()
   })
 })
 

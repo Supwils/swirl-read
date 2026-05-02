@@ -33,7 +33,7 @@
 ## 决策日志
 
 - [x] **2026-04-30** — 平台：Web App（FSAPI）优先；Tauri 桌面版延后
-- [x] **2026-05-01** — 编辑边界：MVP 严格只读；Phase 2 引入 preview 上的 inline 文本 WYSIWYG 编辑（仅文本，不改结构）+ 应用内注释（IndexedDB，服务于其他功能）
+- [x] **2026-05-01** — 编辑边界：Phase 1 严格只读；Phase 2 引入当前文档的轻量 source edit（纯 Markdown 文本、仅修订，不做结构化创作）+ 应用内注释（IndexedDB，服务于其他功能）
 - [x] **2026-05-01** — 阅读布局：Option B 沉浸式单栏，hover 召唤 UI，⌘K 全局搜索，F 键禅模式
 - [x] **2026-05-01** — 主题：Sepia 默认 / Light / Dark / OLED 黑 / Auto 跟随系统；衬线字体（Source Serif + 思源宋体）默认
 - [x] **2026-05-01** — 导航哲学：混合模式（Map 首页 + ⌘K 多模式命令栏 + 语义分组文件树）；index.md → README.md → home.md 自动检测；⌘K 默认显示最近 5 个文件；图谱视图延后到 Phase 3 + AI 加持版本

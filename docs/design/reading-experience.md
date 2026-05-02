@@ -12,7 +12,7 @@ This document captures the visual and interaction design of the core reading exp
 
 SwilRead is to Markdown vaults what Kindle is to ebooks: a tool that disappears so the content can take center stage. Every UI decision must serve immersion. Anything that pulls the reader's attention away from the text is a defect.
 
-This is the opposite of an editor. An editor surrounds the content with tools. SwilRead surrounds the content with whitespace.
+This is the opposite of an editor-first app. An editor surrounds the content with tools. SwilRead surrounds the content with whitespace. If editing exists, it must be subordinate to reading and short-lived.
 
 ---
 
@@ -212,6 +212,27 @@ Five themes shipping with v1:
 - Subtle rounded corners (4px)
 - Click to expand full-screen lightbox
 - Captions (from alt text or italic line below) styled distinctly
+
+### Quick Edit Mode (Phase 2)
+
+- Enter from the current document only, via an `Edit` action in the top hover toolbar
+- Switch the page from rendered reading view to a clean source-text editor for the same file
+- Preserve the same theme, typography scale, and overall calm visual tone; this is a repair surface, not an IDE
+- Support only text-oriented operations in MVP of editing:
+  - fix typos
+  - rewrite sentences
+  - update links and frontmatter values
+  - find / replace within the current file
+- Primary actions:
+  - `Save` — writes the Markdown file, re-renders, returns to reading mode
+  - `Cancel` — abandons the draft and returns to reading mode
+  - `Esc` — closes transient UI first; if clean, exits edit mode
+- Explicit non-goals:
+  - no block handles
+  - no slash menu
+  - no drag/drop media insertion
+  - no multi-file editing
+  - no WYSIWYG reconstruction of Markdown structure
 
 ---
 

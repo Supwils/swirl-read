@@ -1,7 +1,8 @@
-import { useContext, type ReactNode } from 'react'
+import { useContext, useState, type ComponentType, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { resolveWikilink } from '@/core/navigation/wikilink-resolver'
 import { WikilinkContext } from './wikilink-context'
+import type { VaultId, VaultPath } from '@/core/vault'
 
 interface WikilinkProps {
   'data-target'?: string
@@ -24,6 +25,11 @@ interface WikilinkProps {
  * If the index hasn't loaded yet (`null`) we render in a "pending" style
  * that's still readable — the link upgrades to clickable when the index
  * arrives.
+ *
+ * M9.1 perf: the resolved branch defaults to a plain `<Link>` and only
+ * dynamic-imports the heavier `WikilinkPreview` (Floating UI runtime ~17KB
+ * gz) the first time the user hovers a link. A reader who never hovers
+ * never downloads the popover machinery.
  */
 export function Wikilink(props: WikilinkProps): ReactNode {
   const ctx = useContext(WikilinkContext)
@@ -69,12 +75,87 @@ export function Wikilink(props: WikilinkProps): ReactNode {
   const to = `/app/${ctx.vaultId}/${resolved}${hash}`
 
   return (
-    <Link
+    <ResolvedWikilink
       to={to}
-      className="swilread-wikilink swilread-wikilink--resolved"
-      data-target={target}
+      resolved={resolved}
+      vaultId={ctx.vaultId}
+      dataTarget={target}
     >
       {label}
+    </ResolvedWikilink>
+  )
+}
+
+interface ResolvedProps {
+  to: string
+  resolved: VaultPath
+  vaultId: VaultId
+  dataTarget: string
+  children: ReactNode
+}
+
+// Module-scoped cache — first hover anywhere on the page triggers the
+// import; every subsequent <ResolvedWikilink> instance reuses the loaded
+// module synchronously.
+let previewPromise: Promise<ComponentType<PreviewComponentProps>> | null = null
+
+interface PreviewComponentProps {
+  to: string
+  resolved: VaultPath
+  vaultId: VaultId
+  dataTarget: string
+  className?: string
+  children: ReactNode
+}
+
+function loadPreview(): Promise<ComponentType<PreviewComponentProps>> {
+  previewPromise ??= import('./WikilinkPreview').then((m) => m.WikilinkPreview)
+  return previewPromise
+}
+
+function ResolvedWikilink({
+  to,
+  resolved,
+  vaultId,
+  dataTarget,
+  children,
+}: ResolvedProps): ReactNode {
+  const [Preview, setPreview] =
+    useState<ComponentType<PreviewComponentProps> | null>(null)
+
+  if (Preview) {
+    return (
+      <Preview
+        to={to}
+        resolved={resolved}
+        vaultId={vaultId}
+        dataTarget={dataTarget}
+        className="swilread-wikilink swilread-wikilink--resolved"
+      >
+        {children}
+      </Preview>
+    )
+  }
+
+  return (
+    <Link
+      to={to}
+      data-target={dataTarget}
+      className="swilread-wikilink swilread-wikilink--resolved"
+      onMouseEnter={() => {
+        void loadPreview().then((Component) => {
+          setPreview(() => Component)
+        })
+      }}
+      onFocus={() => {
+        // Keyboard users get the same upgrade path so they don't lose the
+        // preview affordance.
+        void loadPreview().then((Component) => {
+          setPreview(() => Component)
+        })
+      }}
+    >
+      {children}
     </Link>
   )
 }

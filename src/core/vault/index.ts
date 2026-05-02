@@ -46,6 +46,9 @@ export { slugify, generateVaultId } from './id'
 export { FSAPIVaultAdapter } from './fsapi-adapter'
 export type { FSAPIVaultAdapterInit } from './fsapi-adapter'
 
+export { walkAllFiles } from './walk-files'
+export type { WalkOptions } from './walk-files'
+
 export {
   saveHandle,
   loadHandle,

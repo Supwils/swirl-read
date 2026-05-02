@@ -1,20 +1,33 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { afterEach, describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { LandingPage } from './LandingPage'
+import { __resetAdaptersForTests, useVaultStore } from '@/stores/vault-store'
+import { __resetDbForTests } from '@/core/persistence/db'
 
 function renderWithRouter(ui: React.ReactElement) {
   return render(<MemoryRouter>{ui}</MemoryRouter>)
 }
 
 describe('LandingPage', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await __resetDbForTests()
+    __resetAdaptersForTests()
+    useVaultStore.setState({
+      registeredVaults: [],
+      activeVaultId: null,
+      ready: true,
+    })
     Object.defineProperty(window, 'showDirectoryPicker', {
       configurable: true,
       writable: true,
       value: vi.fn(),
     })
+  })
+
+  afterEach(() => {
+    __resetAdaptersForTests()
   })
 
   it('renders the brand wordmark', () => {
@@ -38,13 +51,13 @@ describe('LandingPage', () => {
     ).toBeInTheDocument()
   })
 
-  it('renders both CTAs (sample vault disabled, open vault enabled)', () => {
+  it('renders both CTAs (M8.3: sample vault now enabled)', () => {
     renderWithRouter(<LandingPage />)
     const sampleBtn = screen.getByRole('button', {
       name: /try with sample vault/i,
     })
     const openBtn = screen.getByRole('button', { name: /open my vault/i })
-    expect(sampleBtn).toBeDisabled()
+    expect(sampleBtn).not.toBeDisabled()
     expect(openBtn).not.toBeDisabled()
   })
 
@@ -63,5 +76,97 @@ describe('LandingPage', () => {
     expect(
       await screen.findByRole('heading', { name: /open your vault/i }),
     ).toBeInTheDocument()
+  })
+
+  it('registers the sample vault when "Try with sample vault" is clicked (M8.3)', async () => {
+    renderWithRouter(<LandingPage />)
+    await userEvent.click(
+      screen.getByRole('button', { name: /try with sample vault/i }),
+    )
+    // The store's registerVault is async; flush by waiting for state update.
+    await new Promise((resolve) => setTimeout(resolve, 10))
+    const ids = useVaultStore.getState().registeredVaults.map((v) => v.id)
+    expect(ids).toContain('sample-reading-in-the-age-of-ai')
+  })
+
+  describe('returning user state (M6.4)', () => {
+    it('shows the recents list when vaults are registered', () => {
+      useVaultStore.setState({
+        registeredVaults: [
+          {
+            id: 'va',
+            name: 'Vault Alpha',
+            registeredAt: new Date(0),
+            lastOpenedAt: new Date(),
+          },
+          {
+            id: 'vb',
+            name: 'Vault Beta',
+            registeredAt: new Date(0),
+            lastOpenedAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
+          },
+        ],
+        activeVaultId: null,
+        ready: true,
+      })
+
+      renderWithRouter(<LandingPage />)
+
+      expect(screen.getByText('Your vaults')).toBeInTheDocument()
+      expect(
+        screen.getByRole('link', { name: /vault alpha/i }),
+      ).toHaveAttribute('href', '/app/va')
+      expect(screen.getByRole('link', { name: /vault beta/i })).toHaveAttribute(
+        'href',
+        '/app/vb',
+      )
+    })
+
+    it('hides the fresh-user CTAs when vaults exist', () => {
+      useVaultStore.setState({
+        registeredVaults: [
+          {
+            id: 'va',
+            name: 'Vault Alpha',
+            registeredAt: new Date(0),
+            lastOpenedAt: new Date(),
+          },
+        ],
+        activeVaultId: null,
+        ready: true,
+      })
+
+      renderWithRouter(<LandingPage />)
+
+      expect(
+        screen.queryByRole('button', { name: /try with sample vault/i }),
+      ).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole('button', { name: /open my vault/i }),
+      ).not.toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: /open another vault/i }),
+      ).toBeInTheDocument()
+    })
+
+    it('caps the recents list at 5 entries', () => {
+      useVaultStore.setState({
+        registeredVaults: Array.from({ length: 8 }, (_, i) => ({
+          id: `v${String(i)}`,
+          name: `Vault ${String(i)}`,
+          registeredAt: new Date(0),
+          lastOpenedAt: new Date(0),
+        })),
+        activeVaultId: null,
+        ready: true,
+      })
+
+      renderWithRouter(<LandingPage />)
+
+      const list = screen
+        .getByText('Your vaults')
+        .parentElement?.querySelectorAll('a')
+      expect(list?.length).toBe(5)
+    })
   })
 })

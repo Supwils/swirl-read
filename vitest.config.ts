@@ -14,6 +14,7 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/setup-tests.ts'],
     css: true,
+    exclude: ['**/node_modules/**', '**/dist/**', '**/.pnpm-store/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
