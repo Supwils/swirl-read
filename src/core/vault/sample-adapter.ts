@@ -14,6 +14,7 @@
 import {
   VaultFileNotFoundError,
   VaultReadError,
+  VaultWriteError,
   type VaultDirectory,
   type VaultEntry,
   type VaultFile,
@@ -204,6 +205,29 @@ export class SampleVaultAdapter implements VaultFileSystem {
   // eslint-disable-next-line @typescript-eslint/require-await
   async requestPermission(): Promise<boolean> {
     return true
+  }
+
+  /**
+   * Phase 2: the sample vault is a read-only fixture bundled with the
+   * app. Writing would only mutate in-memory state that vanishes on
+   * reload, which is more confusing than helpful — fail loudly so the
+   * editor surface can route the user to "open my vault" instead.
+   */
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async writeText(path: VaultPath, _content: string): Promise<void> {
+    throw new VaultWriteError(path, {
+      reason: 'Sample vault is read-only — open your own vault to edit',
+    })
+  }
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async hasWritePermission(): Promise<boolean> {
+    return false
+  }
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async requestWritePermission(): Promise<boolean> {
+    return false
   }
 
   dispose(): void {

@@ -23,6 +23,7 @@ import {
   VaultFileNotFoundError,
   VaultPermissionDeniedError,
   VaultReadError,
+  VaultWriteError,
 } from './types'
 import { generateVaultId } from './id'
 import { extname, joinPath, splitPath } from './path'
@@ -139,6 +140,59 @@ export class FSAPIVaultAdapter implements VaultFileSystem {
     const url = URL.createObjectURL(file)
     this.blobURLs.set(path, url)
     return url
+  }
+
+  /**
+   * Phase 2 — write UTF-8 text back to an existing file via the FSAPI
+   * writable-stream API. The file must already exist; we deliberately
+   * pass `create: false` so a typo'd path can't accidentally birth a
+   * new file from a save action.
+   *
+   * Cache invalidation: drop any blob URL for this path so the next
+   * `getBlobURL` reads the new bytes. The old URL stays alive in pages
+   * that captured it (browsers GC them when no DOM node references
+   * them); we revoke proactively to keep memory honest.
+   */
+  async writeText(path: VaultPath, content: string): Promise<void> {
+    const segments = splitPath(path)
+    const filename = segments.pop()
+    if (!filename) throw new VaultFileNotFoundError(path)
+    const dir = await this.resolveDirectoryHandle(segments.join('/'))
+    const fileHandle = await getFileChild(dir, filename, path)
+    try {
+      const writable = await fileHandle.createWritable()
+      try {
+        await writable.write(content)
+      } finally {
+        await writable.close()
+      }
+      const cached = this.blobURLs.get(path)
+      if (cached) {
+        URL.revokeObjectURL(cached)
+        this.blobURLs.delete(path)
+      }
+    } catch (cause) {
+      if (isPermissionDenied(cause)) {
+        throw new VaultPermissionDeniedError()
+      }
+      throw new VaultWriteError(path, { cause })
+    }
+  }
+
+  async hasWritePermission(): Promise<boolean> {
+    const state = await this.rootHandle.queryPermission({ mode: 'readwrite' })
+    return state === 'granted'
+  }
+
+  async requestWritePermission(): Promise<boolean> {
+    const queried = await this.rootHandle.queryPermission({
+      mode: 'readwrite',
+    })
+    if (queried === 'granted') return true
+    const requested = await this.rootHandle.requestPermission({
+      mode: 'readwrite',
+    })
+    return requested === 'granted'
   }
 
   /** Revoke all cached blob URLs. Call when the vault is being deactivated. */

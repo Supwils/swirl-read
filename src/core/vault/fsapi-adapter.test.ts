@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { FSAPIVaultAdapter } from './fsapi-adapter'
 import {
   VaultFileNotFoundError,
+  VaultWriteError,
   type VaultEntry,
   type VaultFile,
 } from './types'
@@ -214,5 +215,63 @@ describe('FSAPIVaultAdapter — permission', () => {
     const adapter = buildAdapter({ permission: 'prompt' })
     expect(await adapter.requestPermission()).toBe(true)
     expect(await adapter.hasPermission()).toBe(true)
+  })
+})
+
+describe('FSAPIVaultAdapter — writeText (Phase 2A)', () => {
+  it('writes utf-8 content back to an existing file', async () => {
+    const root = mockRoot('vault', { 'index.md': '# Original' })
+    const adapter = FSAPIVaultAdapter.fromHandle(root, {
+      id: 'v',
+      name: 'vault',
+    })
+    await adapter.writeText('index.md', '# Updated\n\nbody')
+    expect(await adapter.readText('index.md')).toBe('# Updated\n\nbody')
+  })
+
+  it('rejects with VaultFileNotFoundError when the path does not exist', async () => {
+    const root = mockRoot('vault', { 'index.md': '#' })
+    const adapter = FSAPIVaultAdapter.fromHandle(root, {
+      id: 'v',
+      name: 'vault',
+    })
+    await expect(
+      adapter.writeText('does/not/exist.md', '#'),
+    ).rejects.toBeInstanceOf(VaultFileNotFoundError)
+  })
+
+  it('rejects with VaultWriteError if createWritable rejects', async () => {
+    const root = mockRoot('vault', { 'index.md': '#' })
+    const adapter = FSAPIVaultAdapter.fromHandle(root, {
+      id: 'v',
+      name: 'vault',
+    })
+    // Patch the underlying file handle's createWritable to throw a generic
+    // failure (not a permission error) — adapter should wrap it.
+    const original = root.getFileHandle.bind(root)
+    Object.defineProperty(root, 'getFileHandle', {
+      configurable: true,
+      writable: true,
+      value: async (name: string) => {
+        const h = await original(name)
+        ;(h as { createWritable: () => Promise<unknown> }).createWritable =
+          () => Promise.reject(new Error('disk full'))
+        return h
+      },
+    })
+    await expect(adapter.writeText('index.md', 'x')).rejects.toBeInstanceOf(
+      VaultWriteError,
+    )
+  })
+
+  it('hasWritePermission tracks the readwrite query state', async () => {
+    const root = mockRoot('vault', { 'index.md': '#' })
+    const adapter = FSAPIVaultAdapter.fromHandle(root, {
+      id: 'v',
+      name: 'vault',
+    })
+    expect(await adapter.hasWritePermission()).toBe(false) // default 'prompt'
+    expect(await adapter.requestWritePermission()).toBe(true)
+    expect(await adapter.hasWritePermission()).toBe(true)
   })
 })

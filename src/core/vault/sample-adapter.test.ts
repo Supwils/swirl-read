@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { SampleVaultAdapter } from './sample-adapter'
-import { VaultFileNotFoundError } from './types'
+import { VaultFileNotFoundError, VaultWriteError } from './types'
 
 const SPEC = {
   id: 'sample',
@@ -66,5 +66,18 @@ describe('SampleVaultAdapter (M8.2)', () => {
     const v = new SampleVaultAdapter(SPEC)
     expect(await v.hasPermission()).toBe(true)
     expect(await v.requestPermission()).toBe(true)
+  })
+
+  it('writeText rejects with VaultWriteError because the sample is read-only (Phase 2A)', async () => {
+    const v = new SampleVaultAdapter(SPEC)
+    await expect(v.writeText('index.md', 'changed')).rejects.toBeInstanceOf(
+      VaultWriteError,
+    )
+  })
+
+  it('hasWritePermission is always false for the sample adapter', async () => {
+    const v = new SampleVaultAdapter(SPEC)
+    expect(await v.hasWritePermission()).toBe(false)
+    expect(await v.requestWritePermission()).toBe(false)
   })
 })

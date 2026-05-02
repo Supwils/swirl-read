@@ -27,6 +27,7 @@ export {
   VaultPermissionDeniedError,
   VaultFileNotFoundError,
   VaultReadError,
+  VaultWriteError,
 } from './types'
 
 export {

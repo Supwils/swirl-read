@@ -20,6 +20,7 @@ function fakeAdapter(id: string, name = id): VaultFileSystem {
     getBlobURL: vi.fn(),
     hasPermission: vi.fn().mockResolvedValue(true),
     requestPermission: vi.fn().mockResolvedValue(true),
+    writeText: vi.fn().mockResolvedValue(undefined),
   }
 }
 

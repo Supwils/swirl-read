@@ -113,6 +113,48 @@ export interface VaultFileSystem {
   readBinary(path: VaultPath): Promise<Uint8Array>
 
   /**
+   * Write UTF-8 text back to an existing file (Phase 2 lightweight editing).
+   *
+   * Phase 2 deliberately does not create new files, rename, delete, or
+   * mutate directories — `writeText` is the single mutation surface and
+   * must target an existing path.
+   *
+   * On FSAPI adapters the first call from a session may surface the
+   * read-write permission prompt; callers must invoke this from a user
+   * gesture in browsers that require it.
+   *
+   * Read-only adapters (e.g. `SampleVaultAdapter`) reject with
+   * `VaultWriteError` so the editor surface fails loudly rather than
+   * silently swallowing the user's edit.
+   *
+   * @throws {VaultFileNotFoundError} If the path does not exist.
+   * @throws {VaultPermissionDeniedError} If the user denies the
+   *   read-write permission prompt.
+   * @throws {VaultWriteError} For any other failure (quota, locked file,
+   *   read-only adapter, …).
+   */
+  writeText(path: VaultPath, content: string): Promise<void>
+
+  /**
+   * Whether the adapter is allowed to call `writeText`. Read-only
+   * adapters return `false` and never throw; FSAPI adapters check the
+   * persisted handle's `'readwrite'` mode.
+   *
+   * Optional — adapters that omit this are treated as read-only by the
+   * editor surface.
+   */
+  hasWritePermission?(): Promise<boolean>
+
+  /**
+   * Request read-write permission from the user. Must be called from a
+   * user gesture. Resolves to `true` if the adapter can subsequently
+   * call `writeText` without re-prompting.
+   *
+   * Optional for the same reason as `hasWritePermission`.
+   */
+  requestWritePermission?(): Promise<boolean>
+
+  /**
    * Get a stable `blob:` URL for a file. Suitable for `<img src=...>` in
    * rendered markdown.
    *
@@ -183,5 +225,28 @@ export class VaultReadError extends VaultError {
     options?: { cause?: unknown },
   ) {
     super(`Failed to read vault file: ${path}`, options)
+  }
+}
+
+/**
+ * A write operation failed for a reason other than not-found / permission.
+ *
+ * Examples: read-only adapter rejecting `writeText`, the FSAPI handle's
+ * underlying disk going read-only, quota exhausted, file locked by another
+ * process. Permission-denied (FSAPI prompt rejected) and missing-file are
+ * surfaced as their own typed errors so callers can branch cleanly.
+ */
+export class VaultWriteError extends VaultError {
+  override name = 'VaultWriteError'
+  constructor(
+    public readonly path: VaultPath,
+    options?: { cause?: unknown; reason?: string },
+  ) {
+    super(
+      options?.reason
+        ? `Failed to write vault file ${path}: ${options.reason}`
+        : `Failed to write vault file: ${path}`,
+      options?.cause === undefined ? undefined : { cause: options.cause },
+    )
   }
 }
