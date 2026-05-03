@@ -22,8 +22,9 @@
 
 import { Fragment, type ReactNode } from 'react'
 import { jsx, jsxs } from 'react/jsx-runtime'
-import type { Root as HastRoot } from 'hast'
+import type { Root as HastRoot, Element } from 'hast'
 import { unified, type Processor } from 'unified'
+import { visit } from 'unist-util-visit'
 import remarkParse from 'remark-parse'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
@@ -141,6 +142,23 @@ const SHIKI_LANGS = [
   'dockerfile',
 ] as const
 
+/** Open all non-anchor links in a new tab. Runs after rehype-sanitize so
+ *  target/rel bypass the sanitizer for these controlled values only. */
+function rehypeNewTabLinks() {
+  return (tree: HastRoot) => {
+    visit(tree, 'element', (node: Element) => {
+      if (node.tagName !== 'a') return
+      const href = node.properties?.href
+      if (typeof href !== 'string' || href.startsWith('#')) return
+      node.properties = {
+        ...node.properties,
+        target: '_blank',
+        rel: 'noopener noreferrer',
+      }
+    })
+  }
+}
+
 /** Build the unified processor. Exported for tests / future composition. */
 export function createMarkdownProcessor(): Processor {
   return (
@@ -174,7 +192,8 @@ export function createMarkdownProcessor(): Processor {
         langs: [...SHIKI_LANGS],
         defaultColor: false, // emit CSS vars for both themes; we pick via prefers
       })
-      .use(rehypeSanitize, schema) as unknown as Processor
+      .use(rehypeSanitize, schema)
+      .use(rehypeNewTabLinks) as unknown as Processor
   )
 }
 

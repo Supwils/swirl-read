@@ -65,6 +65,7 @@ The canonical test vault is the user's own knowledge OS at `/Users/supwils/supwi
 
 ## Working Conventions Learned On The Job
 
+- **Never commit or push without explicit user instruction.** Do not run `git commit` or `git push` (or any variant) unless the user explicitly asks. Finish all code changes first; wait for the user to say "commit" or "push".
 - **Gate every change** with `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build`. Lint runs at `--max-warnings 0` — even react-refresh advisories fail the build, so split helpers out of component files when needed (see `src/ui/reading-shell/file-renderer-utils.ts` for the pattern).
 - **Renderer chunks must stay lazy.** Mermaid, KaTeX, Shiki extra grammars, the command palette, the tags panel, the TOC, and the ShortcutsHelp overlay all sit in their own dynamic-import chunks. New heavy renderers must follow the same pattern (`MermaidDiagram` → `MermaidRenderer` is the canonical reference).
 - **Per-vault state is keyed by `vaultId`.** Recents, scroll memory, backlinks, tag index, walked files, file-tree listings, and full-text index all separate per vault and must invalidate on `removeVault` (`forgetVault()` / `invalidate*` helpers). Don't add a new per-vault cache without wiring its invalidator into the same fan-out.

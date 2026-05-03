@@ -77,6 +77,9 @@ interface VaultStoreState {
   activeVaultId: VaultId | null
   /** True after `init()` has finished loading from Dexie. */
   ready: boolean
+  /** Incremented each time an adapter is attached so components that
+   *  called getAdapter() too early can re-run their effects. */
+  adapterRevision: number
 }
 
 interface VaultStoreActions {
@@ -103,6 +106,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   registeredVaults: [],
   activeVaultId: null,
   ready: false,
+  adapterRevision: 0,
 
   async init() {
     if (get().ready) return
@@ -226,6 +230,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
 
   attachAdapter(adapter) {
     adapters.set(adapter.id, adapter)
+    set((s) => ({ adapterRevision: s.adapterRevision + 1 }))
   },
 }))
 

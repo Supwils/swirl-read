@@ -18,7 +18,7 @@ import { extractFrontmatter, type Frontmatter } from '@/core/render/frontmatter'
 import { renderMarkdown } from '@/core/render/pipeline'
 import { useReaderStore } from '@/stores/reader-store'
 import { useTabsStore } from '@/stores/tabs-store'
-import { getAdapter } from '@/stores/vault-store'
+import { getAdapter, useVaultStore } from '@/stores/vault-store'
 import { customComponents } from './document-components'
 
 export type LoadState =
@@ -54,6 +54,10 @@ export function useDocumentLoader({
   retryToken,
 }: UseDocumentLoaderParams): LoadState {
   const [state, setState] = useState<LoadState>({ kind: 'idle' })
+  // Re-run the load effect when an adapter is attached after page reload.
+  // autoRestoreVaults() races with the initial render; adapterRevision bumps
+  // on attachAdapter() so we don't stay stuck on missing-vault.
+  const adapterRevision = useVaultStore((s) => s.adapterRevision)
 
   useEffect(() => {
     if (!vaultId || !filePath) return
@@ -143,7 +147,9 @@ export function useDocumentLoader({
       cancelled = true
     }
     // retryToken bumps force a re-run after "Try again".
-  }, [vaultId, filePath, retryToken])
+    // adapterRevision bumps when autoRestoreVaults() attaches an adapter
+    // after the initial render — prevents getting stuck on missing-vault.
+  }, [vaultId, filePath, retryToken, adapterRevision])
 
   return state
 }
