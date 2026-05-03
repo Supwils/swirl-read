@@ -1,7 +1,7 @@
 /**
  * Drag-handle for resizing the left sidebar.
  *
- * Lives at the right edge of `.swilread-vault-layout__sidebar`. During a
+ * Lives at the right edge of `.swirlread-vault-layout__sidebar`. During a
  * drag we write the live width directly to the `--file-tree-width` CSS
  * variable on `<html>` for buttery 60 fps motion (no Zustand churn per
  * frame); on pointer-up we persist the final value through the store
@@ -131,7 +131,7 @@ export function SidebarResizeHandle(): ReactNode {
       aria-valuemin={FILE_TREE_WIDTH_MIN}
       aria-valuemax={FILE_TREE_WIDTH_MAX}
       aria-valuenow={fileTreeWidth}
-      className="swilread-vault-layout__sidebar-resize"
+      className="swirlread-vault-layout__sidebar-resize"
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}

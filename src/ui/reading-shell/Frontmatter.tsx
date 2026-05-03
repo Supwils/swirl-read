@@ -54,32 +54,32 @@ export function FrontmatterPanel({
 
   return (
     <section
-      className="swilread-frontmatter swilread-frontmatter--metadata"
+      className="swirlread-frontmatter swirlread-frontmatter--metadata"
       aria-label="Document metadata"
     >
       {meta.description && (
-        <p className="swilread-frontmatter__description">{meta.description}</p>
+        <p className="swirlread-frontmatter__description">{meta.description}</p>
       )}
       {(meta.date ?? meta.author ?? meta.tags.length > 0) && (
-        <ul className="swilread-frontmatter__meta">
+        <ul className="swirlread-frontmatter__meta">
           {meta.date && (
-            <li className="swilread-frontmatter__meta-item">
+            <li className="swirlread-frontmatter__meta-item">
               <Calendar size={13} aria-hidden="true" />
               <time>{meta.date}</time>
             </li>
           )}
           {meta.author && (
-            <li className="swilread-frontmatter__meta-item">
+            <li className="swirlread-frontmatter__meta-item">
               <User size={13} aria-hidden="true" />
               <span>{meta.author}</span>
             </li>
           )}
           {meta.tags.length > 0 && (
-            <li className="swilread-frontmatter__meta-item swilread-frontmatter__meta-item--tags">
+            <li className="swirlread-frontmatter__meta-item swirlread-frontmatter__meta-item--tags">
               <Tag size={13} aria-hidden="true" />
-              <ul className="swilread-frontmatter__tags">
+              <ul className="swirlread-frontmatter__tags">
                 {meta.tags.map((tag) => (
-                  <li key={tag} className="swilread-frontmatter__tag">
+                  <li key={tag} className="swirlread-frontmatter__tag">
                     {tag}
                   </li>
                 ))}
@@ -102,20 +102,20 @@ function RawFrontmatter({
 
   return (
     <section
-      className="swilread-frontmatter swilread-frontmatter--raw"
+      className="swirlread-frontmatter swirlread-frontmatter--raw"
       aria-label="Document frontmatter"
     >
-      <header className="swilread-frontmatter__raw-header">
-        <span className="swilread-frontmatter__raw-label">Frontmatter</span>
-        <span className="swilread-frontmatter__raw-format">
+      <header className="swirlread-frontmatter__raw-header">
+        <span className="swirlread-frontmatter__raw-label">Frontmatter</span>
+        <span className="swirlread-frontmatter__raw-format">
           {frontmatter.format}
         </span>
       </header>
-      <dl className="swilread-frontmatter__raw-list">
+      <dl className="swirlread-frontmatter__raw-list">
         {entries.map(([key, value]) => (
-          <div key={key} className="swilread-frontmatter__raw-row">
-            <dt className="swilread-frontmatter__raw-key">{key}</dt>
-            <dd className="swilread-frontmatter__raw-value">
+          <div key={key} className="swirlread-frontmatter__raw-row">
+            <dt className="swirlread-frontmatter__raw-key">{key}</dt>
+            <dd className="swirlread-frontmatter__raw-value">
               {formatFrontmatterValue(value)}
             </dd>
           </div>

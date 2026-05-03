@@ -13,7 +13,7 @@
 import { createStore, get, set, del, keys } from 'idb-keyval'
 import type { VaultId } from './types'
 
-const HANDLE_DB = 'swilread-vaults'
+const HANDLE_DB = 'swirlread-vaults'
 const HANDLE_STORE = 'directory-handles'
 
 const store = createStore(HANDLE_DB, HANDLE_STORE)

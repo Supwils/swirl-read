@@ -76,29 +76,29 @@ export function VaultSwitcher(): ReactNode {
 
   return (
     <>
-      <div className="swilread-vault-switcher">
+      <div className="swirlread-vault-switcher">
         <button
           ref={triggerRef}
           type="button"
-          className="swilread-vault-switcher__trigger"
+          className="swirlread-vault-switcher__trigger"
           aria-haspopup="menu"
           aria-expanded={open}
           aria-label="Switch vault"
           onClick={() => setOpen((p) => !p)}
         >
           <Library size={14} aria-hidden="true" />
-          <span className="swilread-vault-switcher__name">{triggerLabel}</span>
+          <span className="swirlread-vault-switcher__name">{triggerLabel}</span>
           <ChevronDown size={14} aria-hidden="true" />
         </button>
         {open && (
           <div
             ref={menuRef}
-            className="swilread-vault-switcher__menu"
+            className="swirlread-vault-switcher__menu"
             role="menu"
             aria-label="Registered vaults"
           >
             {vaults.length === 0 && (
-              <p className="swilread-vault-switcher__empty">
+              <p className="swirlread-vault-switcher__empty">
                 No vaults registered yet.
               </p>
             )}
@@ -109,12 +109,12 @@ export function VaultSwitcher(): ReactNode {
                 role="menuitem"
                 className={
                   vault.id === currentId
-                    ? 'swilread-vault-switcher__item is-active'
-                    : 'swilread-vault-switcher__item'
+                    ? 'swirlread-vault-switcher__item is-active'
+                    : 'swirlread-vault-switcher__item'
                 }
                 onClick={() => handleSwitch(vault.id)}
               >
-                <span className="swilread-vault-switcher__item-name">
+                <span className="swirlread-vault-switcher__item-name">
                   {vault.name}
                 </span>
                 {vault.id === currentId && (
@@ -122,11 +122,11 @@ export function VaultSwitcher(): ReactNode {
                 )}
               </button>
             ))}
-            <div className="swilread-vault-switcher__separator" />
+            <div className="swirlread-vault-switcher__separator" />
             <button
               type="button"
               role="menuitem"
-              className="swilread-vault-switcher__item swilread-vault-switcher__item--cta"
+              className="swirlread-vault-switcher__item swirlread-vault-switcher__item--cta"
               onClick={() => {
                 // Close the dropdown first so it doesn't sit visually
                 // stranded behind the FolderPicker modal.

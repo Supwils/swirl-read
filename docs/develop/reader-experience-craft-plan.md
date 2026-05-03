@@ -1,14 +1,14 @@
-# SwilRead — Reader Experience Craft Plan
+# SwirlRead — Reader Experience Craft Plan
 
 > Status: Proposed · Last updated: 2026-05-02
 
 This document turns the product principle "reading first" into concrete UI and interaction work.
 
-SwilRead should not win by having more features than Obsidian, GitHub, or VS Code preview. It should win because opening and reading a personal Markdown knowledge base feels calmer, clearer, and more natural than in those tools.
+SwirlRead should not win by having more features than Obsidian, GitHub, or VS Code preview. It should win because opening and reading a personal Markdown knowledge base feels calmer, clearer, and more natural than in those tools.
 
 The design target:
 
-> SwilRead is not a place where Markdown is merely rendered. It is a dedicated reading room for a user's own knowledge.
+> SwirlRead is not a place where Markdown is merely rendered. It is a dedicated reading room for a user's own knowledge.
 
 ---
 
@@ -299,7 +299,7 @@ When lightweight editing lands, make it feel like a reading repair mode.
 ### Changes
 
 - Add a quiet `Edit` action in the document toolbar
-- Use CodeMirror 6 with SwilRead theme variables
+- Use CodeMirror 6 with SwirlRead theme variables
 - Keep the editor in the same page context and reading width family
 - Show dirty state clearly but calmly
 - Save returns directly to rendered reading mode
@@ -338,9 +338,9 @@ This order keeps the work close to the current codebase and improves the daily r
 Use this prompt when asking another coding agent to implement the first experience pass:
 
 ```text
-You are working in /Users/supwils/supwilsoft/swil/swil-read.
+You are working in /Users/supwils/supwilsoft/swil/swirl-read.
 
-Goal: implement the first pass of SwilRead's reader-experience craft plan. The product must feel like a dedicated reading room for Markdown knowledge, not a generic file viewer.
+Goal: implement the first pass of SwirlRead's reader-experience craft plan. The product must feel like a dedicated reading room for Markdown knowledge, not a generic file viewer.
 
 Read these files first:
 - CLAUDE.md

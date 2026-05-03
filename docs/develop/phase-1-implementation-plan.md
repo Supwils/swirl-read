@@ -1,8 +1,8 @@
-# SwilRead — Phase 1 Implementation Plan
+# SwirlRead — Phase 1 Implementation Plan
 
 > Status: Ready to execute · Last updated: 2026-05-01
 
-This document is the **ordered task list** for delivering SwilRead v0.1 (Phase 1 MVP). Each task is self-contained and designed to be executable by an AI coding agent in one session.
+This document is the **ordered task list** for delivering SwirlRead v0.1 (Phase 1 MVP). Each task is self-contained and designed to be executable by an AI coding agent in one session.
 
 ## How to Use This Plan
 
@@ -16,16 +16,16 @@ This document is the **ordered task list** for delivering SwilRead v0.1 (Phase 1
 
 ## Milestone 0: Project Bootstrap
 
-Goal: A working dev environment with our chosen stack. Renders "Hello SwilRead" in the brand style.
+Goal: A working dev environment with our chosen stack. Renders "Hello SwirlRead" in the brand style.
 
 ### M0.1 — Initialize Vite + React + TypeScript project ✅ Done 2026-05-01
 
 **Deliverables**:
 
-- `package.json` with name `swil-read`, version `0.0.1`, license MIT
+- `package.json` with name `swirl-read`, version `0.0.1`, license MIT
 - `vite.config.ts` with `@/` path alias to `src/`
 - `tsconfig.json` with strict mode, `noUncheckedIndexedAccess`, ESNext target
-- Empty `src/main.tsx` and `src/App.tsx` rendering "SwilRead"
+- Empty `src/main.tsx` and `src/App.tsx` rendering "SwirlRead"
 - `.gitignore`, `.editorconfig`, `.nvmrc` (Node 22+)
 
 **Acceptance**:
@@ -203,7 +203,7 @@ Goal: Open a folder via FSAPI, list .md files, render one as styled HTML. The "w
 **Deliverables**:
 
 - ✅ Inline consent panel with brand styling (Sepia surface, serif typography, soft shadow)
-- ✅ Privacy-first messaging: "SwilRead reads them directly from your device. Nothing is uploaded."
+- ✅ Privacy-first messaging: "SwirlRead reads them directly from your device. Nothing is uploaded."
 - ✅ "Choose folder" → `FSAPIVaultAdapter.pick()` → register → persist handle → navigate
 - ✅ "Cancel" + Esc both dismiss; AbortError silently returns to idle; other errors surface inline
 - ✅ FSAPI feature detection (button disabled with friendly message on unsupported browsers)
@@ -288,7 +288,7 @@ Goal: Open a folder via FSAPI, list .md files, render one as styled HTML. The "w
 - ✅ Reads file path from URL params (vaultId + splat)
 - ✅ Calls `vault.readText(path)` via `getAdapter(vaultId)` from store
 - ✅ Pipes Markdown through `renderMarkdown`; non-MD falls through to a styled `<pre>`
-- ✅ Renders inside a centered 720 px column with `.swilread-prose` typography
+- ✅ Renders inside a centered 720 px column with `.swirlread-prose` typography
 - ✅ Six explicit render states: idle / loading / rendered / missing-vault / missing-file / error
 - ✅ Complete prose styles (headings, lists, blockquotes, code blocks, tables, links, hr, images, task list checkboxes) — all theme-aware via CSS variables
 
@@ -374,7 +374,7 @@ Goal: The immersive single-column experience with all 5 themes.
 
 - ✅ Changing theme in dropdown reflects instantly across body bg, prose, code, callouts
 - ✅ Settings persist across reloads
-- ✅ Typography CSS vars on `<html>` consumed by `.swilread-prose` and DocumentPage container
+- ✅ Typography CSS vars on `<html>` consumed by `.swirlread-prose` and DocumentPage container
 
 **Dependencies**: M2.2
 
@@ -441,7 +441,7 @@ Goal: The immersive single-column experience with all 5 themes.
 - ✅ Global F-key binding via `useZenModeHotkey()` mounted in `AppShell`. Refuses to fire when modifier keys are held (so `⌘F` / `Ctrl+F` browser-find still works) and inside text-entry surfaces (input/textarea/select/contenteditable)
 - ✅ Esc exits zen mode (only when zen is active — otherwise lets other Esc handlers receive the event)
 - ✅ Body class `zen-mode` applied via the existing `useApplyUIPrefs` effect (already wired in M2.3); the F-key hook just flips `useUIStore.zenMode`
-- ✅ Chrome-hiding CSS targets dedicated classes (`swilread-shell__header`, `swilread-vault-layout__sidebar`, `swilread-vault-layout__toc`) instead of fragile DOM-position selectors — survives layout refactors
+- ✅ Chrome-hiding CSS targets dedicated classes (`swirlread-shell__header`, `swirlread-vault-layout__sidebar`, `swirlread-vault-layout__toc`) instead of fragile DOM-position selectors — survives layout refactors
 - ✅ Reading content stays centered because the layout's `__content` flex grows to fill the freed space; the article's `max-width: var(--reader-content-width)` keeps the column measure intact
 - ✅ Callout headers and frontmatter titles stay visible — they're reading content, not chrome
 - ✅ `zenMode` remains session-scoped (not persisted) so a stuck zen state never survives a reload — same shape as M5.1's `commandPaletteOpen`
@@ -546,7 +546,7 @@ Goal: Render every Markdown feature in the spec correctly.
 
 - ✅ `[[career/me/me]]` resolves and navigates correctly
 - ✅ `[[nonexistent]]` shows broken state with tooltip
-- ✅ Three visual states styled in `.swilread-prose` for all four themes
+- ✅ Three visual states styled in `.swirlread-prose` for all four themes
 - ✅ End-to-end: clicking wikilinks in Wilson's vault navigates between notes
 
 **Dependencies**: M3.2
@@ -562,7 +562,7 @@ Goal: Render every Markdown feature in the spec correctly.
 - `src/ui/reading-shell/WikilinkPreview.tsx` — popover trigger + body
 - `src/core/render/preview-snippet.ts` + `.test.ts` — pure plain-text snippetizer (frontmatter/heading/code-fence stripping, wikilink/embed flattening, word-boundary truncation)
 - `src/ui/reading-shell/Wikilink.tsx` — resolved branch now delegates to `WikilinkPreview`
-- `src/styles/globals.css` — `.swilread-wikilink-preview*` rules using semantic tokens (themed for all four palettes)
+- `src/styles/globals.css` — `.swirlread-wikilink-preview*` rules using semantic tokens (themed for all four palettes)
 
 **Deliverables**:
 
@@ -662,7 +662,7 @@ Goal: Render every Markdown feature in the spec correctly.
 - `src/ui/reading-shell/EmbedNode.tsx` — kind-dispatched renderer
 - `src/ui/reading-shell/embed-context.ts` — depth stack + components map for nested renders
 - DocumentPage integration (custom components map + EmbedContext provider)
-- Embed CSS under `.swilread-embed*` (theme-aware)
+- Embed CSS under `.swirlread-embed*` (theme-aware)
 - Test-only `URL.createObjectURL` shim in `setup-tests.ts` (jsdom limitation)
 
 **Deliverables**:
@@ -697,7 +697,7 @@ Goal: Render every Markdown feature in the spec correctly.
 - ✅ Custom mdast `highlight` node carries the inner text and emits a real `<mark>` element via hast hint
 - ✅ Sanitize schema extended for `<mark>` (not in the GitHub default allow list)
 - ✅ `\S(...)\S` content anchor rejects `x == 5`-style comparisons (whitespace at either end)
-- ✅ Theme-tuned `.swilread-prose mark` styling: amber tint on light themes, deeper amber on Dark/OLED, with `box-decoration-break: clone` for clean wraps
+- ✅ Theme-tuned `.swirlread-prose mark` styling: amber tint on light themes, deeper amber on Dark/OLED, with `box-decoration-break: clone` for clean wraps
 - ✅ 11 plugin tests (basic, multiple, lazy, surrounding text, hast hints, Unicode, no-newline, empty, comparison guard, head/tail of paragraph) + 3 pipeline integration tests
 
 **Acceptance**: ✅ `==text==` renders with a theme-tuned highlight in all four themes; survives the sanitize pass.
@@ -717,7 +717,7 @@ Goal: Render every Markdown feature in the spec correctly.
 - `src/stores/ui-store.ts` — `frontmatterDisplay` pref ('metadata' | 'raw' | 'hidden') with persistence + defensive validation
 - `src/ui/reading-shell/DocumentPage.tsx` — extracts frontmatter once per file load, renders the panel above the prose
 - `src/ui/settings-panel/SettingsPanel.tsx` — segmented "Frontmatter" control
-- `src/styles/globals.css` — `.swilread-frontmatter*` styles for the metadata bar and the raw definition list
+- `src/styles/globals.css` — `.swirlread-frontmatter*` styles for the metadata bar and the raw definition list
 
 **Deliverables**:
 
@@ -811,7 +811,7 @@ _(Detailed deliverables moved to the M3.11 entry above — this stub left to pre
 - `src/ui/reading-shell/MermaidDiagram.tsx` — thin lazy wrapper sitting in the main bundle; dynamic-imports `MermaidRenderer` only when a diagram appears
 - `src/ui/reading-shell/MermaidDiagram.test.tsx` — 2 wrapper tests
 - `src/core/render/pipeline.ts` + `pipeline.test.tsx` — plug-in registration, sanitize schema entry for `<mermaid-diagram data-source>`, 3 integration tests
-- `src/styles/globals.css` — `.swilread-mermaid*` styles for the loaded SVG, the loading shimmer, and the source-fallback figure
+- `src/styles/globals.css` — `.swirlread-mermaid*` styles for the loaded SVG, the loading shimmer, and the source-fallback figure
 
 **Deliverables**:
 
@@ -1219,7 +1219,7 @@ Goal: Handle multiple vaults and returning users smoothly.
 
 **Deliverables**:
 
-- ✅ Header dropdown next to the SwilRead wordmark, only rendered when at least one vault is registered
+- ✅ Header dropdown next to the SwirlRead wordmark, only rendered when at least one vault is registered
 - ✅ Click expands a list of every registered vault with the active one marked (`Check` icon + `is-active` class)
 - ✅ "Open another vault…" CTA at the bottom triggers the existing `FolderPicker` and registers + persists the resulting handle (auto-restore wiring)
 - ✅ Custom dropdown (~80 LoC) rather than a new Radix package — click-outside, Esc-close, focus-return all handled inline. Saves the bundle cost
@@ -1448,7 +1448,7 @@ Goal: Beautiful landing experience and a curated sample vault.
 
 **Deliverables**:
 
-- Wordmark "SwilRead"
+- Wordmark "SwirlRead"
 - Tagline: "Read your knowledge. Beautifully."
 - Sub: "A reading sanctuary for the AI era."
 - Two CTAs: "Try with sample vault" / "Open my vault"
@@ -1522,7 +1522,7 @@ Goal: Beautiful landing experience and a curated sample vault.
 
 **Acceptance**:
 
-- SwilRead is usable in Chrome/Edge/Safari on a 13" laptop and on an Android tablet running desktop Chrome
+- SwirlRead is usable in Chrome/Edge/Safari on a 13" laptop and on an Android tablet running desktop Chrome
 - Sample vault renders correctly when window resized between 768px and 1920px
 - iPhone/iPad-Safari path is documented as known-broken and tracked as a Phase 3 task (not blocking v1 ship)
 
@@ -1606,7 +1606,7 @@ Goal: Beautiful landing experience and a curated sample vault.
 - `.github/workflows/ci.yml` — lint, type-check, test, build on PR
 - `.github/workflows/deploy.yml` — deploy to Vercel on main push
 
-**Acceptance**: CI green; main branch auto-deploys to swilread.app
+**Acceptance**: CI green; main branch auto-deploys to swirlread.app
 
 **Dependencies**: project bootstrapped on GitHub
 
@@ -1616,7 +1616,7 @@ Goal: Beautiful landing experience and a curated sample vault.
 
 **Deliverables**:
 
-- Domain live (`swilread.app`)
+- Domain live (`swirlread.app`)
 - HN Show HN post drafted
 - Twitter/X announcement drafted
 - Repo public
@@ -1641,7 +1641,7 @@ Goal: Beautiful landing experience and a curated sample vault.
 
 The user can:
 
-1. Open `swilread.app`
+1. Open `swirlread.app`
 2. Click "Open my vault"
 3. Pick `/Users/supwils/supwilsoft/supwil/`
 4. Navigate to a knowledge note like `knowledge/软件/前端/react.md`

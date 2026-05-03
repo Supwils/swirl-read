@@ -35,7 +35,7 @@ export function CsvRenderer({
 
   if (parsed.rows.length === 0) {
     return (
-      <p className="swilread-csv__status" role="status">
+      <p className="swirlread-csv__status" role="status">
         This file looks empty.
       </p>
     )
@@ -50,9 +50,9 @@ export function CsvRenderer({
   const showLoadMore = !showAll && (parsed.truncated || hiddenCount > 0)
 
   return (
-    <section className="swilread-csv" data-testid="csv-renderer">
-      <div className="swilread-csv__scroll" role="region" aria-label="Table">
-        <table className="swilread-csv__table">
+    <section className="swirlread-csv" data-testid="csv-renderer">
+      <div className="swirlread-csv__scroll" role="region" aria-label="Table">
+        <table className="swirlread-csv__table">
           <thead>
             <tr>
               {headers.map((cell, idx) => (
@@ -74,7 +74,7 @@ export function CsvRenderer({
         </table>
       </div>
 
-      <p className="swilread-csv__meta">
+      <p className="swirlread-csv__meta">
         {showAll || !parsed.truncated ? (
           <>
             {bodyRows.length} {bodyRows.length === 1 ? 'row' : 'rows'} ·{' '}
@@ -91,7 +91,7 @@ export function CsvRenderer({
             {' · '}
             <button
               type="button"
-              className="swilread-csv__load-more"
+              className="swirlread-csv__load-more"
               onClick={() => {
                 setShowAll(true)
               }}

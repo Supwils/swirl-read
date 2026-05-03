@@ -65,11 +65,11 @@ function Mount({
 
   if (!Renderer) {
     return display ? (
-      <div className="swilread-math swilread-math--loading" aria-busy="true">
+      <div className="swirlread-math swirlread-math--loading" aria-busy="true">
         Loading math…
       </div>
     ) : (
-      <span className="swilread-math swilread-math--loading" aria-busy="true">
+      <span className="swirlread-math swirlread-math--loading" aria-busy="true">
         …
       </span>
     )

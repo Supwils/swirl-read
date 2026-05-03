@@ -1,9 +1,9 @@
-# SwilRead
+# SwirlRead
 
 **Read your knowledge. Beautifully.**
 _A reading sanctuary for the AI era._
 
-SwilRead is a local-first, web-based, read-optimized interface for Markdown
+SwirlRead is a local-first, web-based, read-optimized interface for Markdown
 knowledge vaults. Open a folder, see your notes rendered with serif
 typography, navigate via wikilinks, find anything with `⌘K`. Your files
 never leave your device.
@@ -11,7 +11,7 @@ never leave your device.
 ## Why this exists
 
 Most Markdown apps were built for editing. They optimise for the writer.
-SwilRead does the opposite: it tries to make the **reading** part feel
+SwirlRead does the opposite: it tries to make the **reading** part feel
 calm, focused, and beautiful — closer to a book than a code editor.
 
 The bet is that reading your own knowledge — slowly, deliberately, in a
@@ -47,7 +47,7 @@ pnpm dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173). Click **Try with
-sample vault** to see SwilRead render seven interlinked Markdown notes,
+sample vault** to see SwirlRead render seven interlinked Markdown notes,
 or **Open my vault** to point at a real folder.
 
 The "Open my vault" CTA needs a Chromium-based browser (Chrome, Edge,

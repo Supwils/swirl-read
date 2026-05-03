@@ -5,8 +5,11 @@
  */
 
 import { lazy, Suspense, type ReactNode, type RefObject } from 'react'
+import { Pencil } from 'lucide-react'
 import type { WikilinkIndex } from '@/core/navigation/wikilink-resolver'
+import { useEditorStore } from '@/stores/editor-store'
 import { useUIStore } from '@/stores/ui-store'
+import { getAdapter } from '@/stores/vault-store'
 import { DirectoryListing } from './DirectoryListing'
 import { ReauthorizeVault } from './ReauthorizeVault'
 import { DocumentSkeleton } from './DocumentSkeleton'
@@ -16,6 +19,8 @@ import { WikilinkContext } from './wikilink-context'
 import { EmbedContext } from './embed-context'
 import { PlainTextRenderer } from './PlainTextRenderer'
 import { customComponents } from './document-components'
+import { DocNav } from './DocNav'
+import { useAdjacentFiles } from './use-adjacent-files'
 import type { LoadState } from './use-document-loader'
 
 // M9.1 perf pass: the M7 universal-file renderers are paid for on every
@@ -42,6 +47,14 @@ const UnsupportedRenderer = lazy(() =>
   })),
 )
 
+// Phase 2C: CodeMirror runtime + EditSurface chrome are quarantined in
+// their own chunk. Readers who never enter edit mode never download it.
+const DocumentEditSurface = lazy(() =>
+  import('./DocumentEditSurface').then((m) => ({
+    default: m.DocumentEditSurface,
+  })),
+)
+
 interface DocumentBodyViewProps {
   state: LoadState
   vaultId: string | undefined
@@ -50,6 +63,20 @@ interface DocumentBodyViewProps {
   proseRef: RefObject<HTMLDivElement | null>
   headerTitle: string
   setRetryToken: (fn: (n: number) => number) => void
+}
+
+/**
+ * True when an editor session is active and targets the file currently
+ * displayed by DocumentBodyView. Subscribes to the store so the surface
+ * swap triggers a re-render.
+ */
+function useIsEditingThisDocument(
+  vaultId: string | undefined,
+  filePath: string,
+): boolean {
+  const session = useEditorStore((s) => s.active)
+  if (!session || !vaultId) return false
+  return session.vaultId === vaultId && session.path === filePath
 }
 
 export function DocumentBodyView({
@@ -62,10 +89,30 @@ export function DocumentBodyView({
   setRetryToken,
 }: DocumentBodyViewProps): ReactNode {
   const frontmatterDisplay = useUIStore((s) => s.frontmatterDisplay)
+  const adjacent = useAdjacentFiles(vaultId, filePath)
+  const isEditing = useIsEditingThisDocument(vaultId, filePath)
 
   const ctxValue = vaultId
     ? { vaultId, currentPath: filePath, index: wikilinkIndex }
     : null
+
+  function exitEditMode(): void {
+    setRetryToken((n) => n + 1)
+  }
+
+  function startEditing(rawSource: string): void {
+    if (!vaultId || !filePath) return
+    useEditorStore.getState().enter(vaultId, filePath, rawSource)
+  }
+
+  // Edit mode is offered for Markdown documents whose adapter is not
+  // statically read-only. `isReadOnly` is a sync capability flag (see
+  // VaultFileSystem) so we can hide the affordance entirely on the
+  // sample vault rather than letting the user enter edit mode and
+  // bounce off a read-only error from the first save.
+  const adapter = vaultId ? getAdapter(vaultId) : null
+  const canEdit =
+    state.kind === 'rendered' && adapter !== null && !adapter.isReadOnly
 
   if (state.kind === 'directory' && vaultId) {
     return (
@@ -86,21 +133,34 @@ export function DocumentBodyView({
         maxWidth: 'var(--reader-content-width, 720px)',
       }}
     >
-      <header className="swilread-doc-header">
-        <h1 className="swilread-doc-header__title">
+      <header className="swirlread-doc-header">
+        <h1 className="swirlread-doc-header__title">
           {headerTitle || '(no file selected)'}
         </h1>
         {filePath && vaultId && (
           <p
-            className="swilread-doc-header__breadcrumb"
+            className="swirlread-doc-header__breadcrumb"
             aria-label="File location"
           >
-            <span className="swilread-doc-header__vault">{vaultId}</span>
-            <span aria-hidden="true" className="swilread-doc-header__sep">
+            <span className="swirlread-doc-header__vault">{vaultId}</span>
+            <span aria-hidden="true" className="swirlread-doc-header__sep">
               /
             </span>
-            <span className="swilread-doc-header__path">{filePath}</span>
+            <span className="swirlread-doc-header__path">{filePath}</span>
           </p>
+        )}
+        {canEdit && !isEditing && state.kind === 'rendered' && (
+          <button
+            type="button"
+            className="swirlread-doc-header__edit"
+            onClick={() => {
+              startEditing(state.raw)
+            }}
+            aria-label="Edit this document"
+          >
+            <Pencil size={13} aria-hidden="true" />
+            <span>Edit</span>
+          </button>
         )}
       </header>
 
@@ -111,9 +171,9 @@ export function DocumentBodyView({
       )}
 
       {state.kind === 'missing-file' && (
-        <div className="swilread-doc-empty" role="status">
-          <p className="swilread-doc-empty__title">File not found</p>
-          <p className="swilread-doc-empty__body">
+        <div className="swirlread-doc-empty" role="status">
+          <p className="swirlread-doc-empty__title">File not found</p>
+          <p className="swirlread-doc-empty__body">
             This path doesn&apos;t exist in the current vault. Check the file
             tree or pick another file from the command palette (⌘K).
           </p>
@@ -121,18 +181,18 @@ export function DocumentBodyView({
       )}
 
       {state.kind === 'error' && (
-        <div className="swilread-doc-empty" role="alert">
-          <p className="swilread-doc-empty__title">
+        <div className="swirlread-doc-empty" role="alert">
+          <p className="swirlread-doc-empty__title">
             Couldn&apos;t open this file
           </p>
-          <p className="swilread-doc-empty__body">
+          <p className="swirlread-doc-empty__body">
             Something went wrong while reading this file from the vault. Your
-            content is still on disk; this is a SwilRead-side problem.
+            content is still on disk; this is a SwirlRead-side problem.
           </p>
-          <div className="swilread-doc-empty__actions">
+          <div className="swirlread-doc-empty__actions">
             <button
               type="button"
-              className="swilread-doc-empty__action"
+              className="swirlread-doc-empty__action"
               onClick={() => {
                 setRetryToken((n) => n + 1)
               }}
@@ -140,14 +200,14 @@ export function DocumentBodyView({
               Try again
             </button>
           </div>
-          <details className="swilread-doc-empty__details">
+          <details className="swirlread-doc-empty__details">
             <summary>Technical details</summary>
-            <pre className="swilread-doc-empty__pre">{state.message}</pre>
+            <pre className="swirlread-doc-empty__pre">{state.message}</pre>
           </details>
         </div>
       )}
 
-      {state.kind === 'rendered' && ctxValue && (
+      {state.kind === 'rendered' && ctxValue && !isEditing && (
         <WikilinkContext.Provider value={ctxValue}>
           <FrontmatterPanel
             frontmatter={state.frontmatter}
@@ -159,7 +219,7 @@ export function DocumentBodyView({
               components: customComponents,
             }}
           >
-            <div ref={proseRef} className="swilread-prose">
+            <div ref={proseRef} className="swirlread-prose">
               {state.content}
             </div>
           </EmbedContext.Provider>
@@ -168,6 +228,16 @@ export function DocumentBodyView({
             currentPath={ctxValue.currentPath}
           />
         </WikilinkContext.Provider>
+      )}
+
+      {state.kind === 'rendered' && isEditing && vaultId && (
+        <Suspense fallback={null}>
+          <DocumentEditSurface
+            vaultId={vaultId}
+            path={filePath}
+            onExit={exitEditMode}
+          />
+        </Suspense>
       )}
 
       {state.kind === 'text' && <PlainTextRenderer source={state.raw} />}
@@ -211,6 +281,16 @@ export function DocumentBodyView({
           <UnsupportedRenderer file={state.file} />
         </Suspense>
       )}
+
+      {vaultId &&
+        state.kind !== 'idle' &&
+        state.kind !== 'loading' &&
+        state.kind !== 'missing-vault' &&
+        state.kind !== 'missing-file' &&
+        state.kind !== 'error' &&
+        state.kind !== 'directory' && (
+          <DocNav vaultId={vaultId} prev={adjacent.prev} next={adjacent.next} />
+        )}
     </article>
   )
 }

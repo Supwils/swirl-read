@@ -1,5 +1,5 @@
 {
-  "name": "swil-read",
+  "name": "swirl-read",
   "version": "0.0.1",
   "description": "Read your knowledge. Beautifully. A local-first Markdown reader and a reading sanctuary for the AI era.",
   "license": "MIT",
@@ -24,6 +24,12 @@
     "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test"
   },
   "dependencies": {
+    "@codemirror/commands": "^6.10.3",
+    "@codemirror/lang-markdown": "^6.5.0",
+    "@codemirror/language": "^6.12.3",
+    "@codemirror/search": "^6.7.0",
+    "@codemirror/state": "^6.6.0",
+    "@codemirror/view": "^6.41.1",
     "@floating-ui/react": "^0.27.19",
     "@fontsource/inter": "^5.2.8",
     "@fontsource/jetbrains-mono": "^5.2.8",

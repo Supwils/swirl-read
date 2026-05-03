@@ -115,7 +115,7 @@ export function TableOfContents(): ReactNode {
   if (headings.length === 0 && !hasContext) return null
 
   return (
-    <nav className="swilread-toc" aria-label="Document context">
+    <nav className="swirlread-toc" aria-label="Document context">
       {hasContext && (
         <ContextRail
           tags={context.tags}
@@ -124,9 +124,9 @@ export function TableOfContents(): ReactNode {
         />
       )}
       {headings.length > 0 && (
-        <div className="swilread-toc__group">
-          <p className="swilread-toc__title">On this page</p>
-          <ul className="swilread-toc__list">
+        <div className="swirlread-toc__group">
+          <p className="swirlread-toc__title">On this page</p>
+          <ul className="swirlread-toc__list">
             {headings.map((heading) => (
               <TocItem
                 key={heading.id}
@@ -155,23 +155,23 @@ function ContextRail({
 }): ReactNode {
   const selectTag = useTagStore((state) => state.selectTag)
   return (
-    <section className="swilread-toc__context" aria-label="Page context">
+    <section className="swirlread-toc__context" aria-label="Page context">
       {tags.length > 0 && (
         <div
-          className="swilread-toc__context-group"
+          className="swirlread-toc__context-group"
           aria-label="Tags on this page"
         >
           <Hash
-            className="swilread-toc__context-icon"
+            className="swirlread-toc__context-icon"
             size={11}
             aria-hidden="true"
           />
-          <ul className="swilread-toc__tag-list">
+          <ul className="swirlread-toc__tag-list">
             {tags.slice(0, 6).map((tag) => (
               <li key={tag}>
                 <button
                   type="button"
-                  className="swilread-toc__tag"
+                  className="swirlread-toc__tag"
                   onClick={() => selectTag(tag)}
                   aria-label={`Show files tagged #${tag}`}
                 >
@@ -180,7 +180,7 @@ function ContextRail({
               </li>
             ))}
             {tags.length > 6 && (
-              <li className="swilread-toc__tag-more" aria-hidden="true">
+              <li className="swirlread-toc__tag-more" aria-hidden="true">
                 +{String(tags.length - 6)}
               </li>
             )}
@@ -189,18 +189,18 @@ function ContextRail({
       )}
       {(backlinkCount > 0 || outgoingLinks > 0) && (
         <div
-          className="swilread-toc__context-counts"
+          className="swirlread-toc__context-counts"
           aria-label="Links to and from this page"
         >
           {backlinkCount > 0 && (
             <span
-              className="swilread-toc__count"
+              className="swirlread-toc__count"
               title={`${String(backlinkCount)} other note${
                 backlinkCount === 1 ? '' : 's'
               } link here`}
             >
               <MessageSquare
-                className="swilread-toc__context-icon"
+                className="swirlread-toc__context-icon"
                 size={11}
                 aria-hidden="true"
               />
@@ -209,13 +209,13 @@ function ContextRail({
           )}
           {outgoingLinks > 0 && (
             <span
-              className="swilread-toc__count"
+              className="swirlread-toc__count"
               title={`${String(outgoingLinks)} note${
                 outgoingLinks === 1 ? '' : 's'
               } referenced from this page`}
             >
               <LinkIcon
-                className="swilread-toc__context-icon"
+                className="swirlread-toc__context-icon"
                 size={11}
                 aria-hidden="true"
               />
@@ -284,14 +284,14 @@ function TocItem({ heading, active, indent }: TocItemProps): ReactNode {
 
   return (
     <li
-      className="swilread-toc__item"
+      className="swirlread-toc__item"
       data-level={heading.level}
       style={{ paddingLeft: `${indent * 12}px` }}
     >
       <a
         href={`#${heading.id}`}
         className={
-          active ? 'swilread-toc__link is-active' : 'swilread-toc__link'
+          active ? 'swirlread-toc__link is-active' : 'swirlread-toc__link'
         }
         aria-current={active ? 'location' : undefined}
         onClick={onClick}

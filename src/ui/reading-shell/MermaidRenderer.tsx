@@ -93,19 +93,22 @@ export function MermaidRenderer(props: MermaidRendererProps): ReactNode {
 
   if (state.kind === 'loading') {
     return (
-      <div className="swilread-mermaid swilread-mermaid--loading" role="status">
-        <span className="swilread-mermaid__status">Rendering diagram…</span>
+      <div
+        className="swirlread-mermaid swirlread-mermaid--loading"
+        role="status"
+      >
+        <span className="swirlread-mermaid__status">Rendering diagram…</span>
       </div>
     )
   }
 
   if (state.kind === 'error') {
     return (
-      <figure className="swilread-mermaid swilread-mermaid--error">
-        <figcaption className="swilread-mermaid__caption">
+      <figure className="swirlread-mermaid swirlread-mermaid--error">
+        <figcaption className="swirlread-mermaid__caption">
           Couldn&apos;t render this diagram. Showing source:
         </figcaption>
-        <pre className="swilread-mermaid__source">{source}</pre>
+        <pre className="swirlread-mermaid__source">{source}</pre>
       </figure>
     )
   }
@@ -117,7 +120,7 @@ export function MermaidRenderer(props: MermaidRendererProps): ReactNode {
   return (
     <div
       ref={containerRef}
-      className="swilread-mermaid"
+      className="swirlread-mermaid"
       dangerouslySetInnerHTML={{ __html: state.svg }}
     />
   )
@@ -139,7 +142,7 @@ async function renderDiagram(source: string, theme: Theme): Promise<string> {
     theme: THEME_MAP[theme],
   })
   // Mermaid requires a unique element id per render call.
-  const id = `swilread-mermaid-${String(++nextDiagramId)}`
+  const id = `swirlread-mermaid-${String(++nextDiagramId)}`
   const result = await mermaid.render(id, source)
   return result.svg
 }

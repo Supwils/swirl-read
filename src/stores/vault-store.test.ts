@@ -12,6 +12,7 @@ function fakeAdapter(id: string, name = id): VaultFileSystem {
   return {
     id,
     name,
+    isReadOnly: false,
     list: vi.fn(),
     walk: vi.fn(),
     stat: vi.fn(),

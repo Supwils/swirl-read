@@ -15,7 +15,7 @@ describe('App (production assembly)', () => {
   it('renders LandingPage at the default jsdom location', () => {
     render(<App />)
     expect(
-      screen.getByRole('heading', { level: 1, name: /swilread/i }),
+      screen.getByRole('heading', { level: 1, name: /swirlread/i }),
     ).toBeInTheDocument()
   })
 })

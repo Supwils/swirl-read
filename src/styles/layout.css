@@ -10,7 +10,7 @@
   --sidebar-gutter: 8px;
 }
 
-.swilread-shell__icon-button {
+.swirlread-shell__icon-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -26,15 +26,15 @@
     background-color 120ms ease,
     border-color 120ms ease;
 }
-.swilread-shell__icon-button:hover {
+.swirlread-shell__icon-button:hover {
   color: var(--color-text);
   background: color-mix(in srgb, var(--color-accent) 10%, transparent);
 }
-.swilread-shell__icon-button:focus-visible {
+.swirlread-shell__icon-button:focus-visible {
   outline: none;
   border-color: var(--color-accent);
 }
-.swilread-shell__icon-button[aria-pressed='true'] {
+.swirlread-shell__icon-button[aria-pressed='true'] {
   color: var(--color-accent);
 }
 
@@ -44,7 +44,7 @@
    icons off the screen. `min-width: 0` is required because the parent
    header is `flex-justify-between` — without it, a wide tab strip would
    refuse to shrink and squeeze the right tools. */
-.swilread-shell__tabs {
+.swirlread-shell__tabs {
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
@@ -60,11 +60,11 @@
      across the header; the strip is still scrollable via wheel/drag. */
   scrollbar-width: none;
 }
-.swilread-shell__tabs::-webkit-scrollbar {
+.swirlread-shell__tabs::-webkit-scrollbar {
   display: none;
 }
 
-.swilread-vault-layout {
+.swirlread-vault-layout {
   display: flex;
   align-items: flex-start;
   min-height: calc(100vh - var(--shell-header-height));
@@ -78,7 +78,7 @@
  * the persistent sidebars own the edges and the zones are display:none
  * so they don't fight for the same hover region.
  */
-.swilread-vault-layout__hover-zone {
+.swirlread-vault-layout__hover-zone {
   position: fixed;
   top: var(--shell-header-height);
   bottom: 0;
@@ -86,11 +86,11 @@
   z-index: 50;
 }
 
-.swilread-vault-layout__hover-zone--left {
+.swirlread-vault-layout__hover-zone--left {
   left: 0;
 }
 
-.swilread-vault-layout__hover-zone--right {
+.swirlread-vault-layout__hover-zone--right {
   right: 0;
 }
 
@@ -104,13 +104,13 @@
  * working mode renders it persistent.
  *
  * The double-class selector lifts specificity above the base
- * `.swilread-vault-layout__sidebar` rule (which sets `position: sticky`
+ * `.swirlread-vault-layout__sidebar` rule (which sets `position: sticky`
  * + `width` for the persistent treatment) so `position: fixed` actually
  * wins regardless of source order in the stylesheet. Without this, a
  * hover-summoned sidebar would silently fall back to sticky layout and
  * shove the article column sideways.
  */
-.swilread-vault-layout__sidebar.swilread-vault-layout__sidebar--floating {
+.swirlread-vault-layout__sidebar.swirlread-vault-layout__sidebar--floating {
   position: fixed;
   top: var(--shell-header-height);
   left: 0;
@@ -121,7 +121,7 @@
   background: var(--color-bg);
 }
 
-.swilread-vault-layout__toc.swilread-vault-layout__toc--floating {
+.swirlread-vault-layout__toc.swirlread-vault-layout__toc--floating {
   position: fixed;
   top: var(--shell-header-height);
   right: 0;
@@ -132,7 +132,7 @@
   background: var(--color-bg);
 }
 
-.swilread-vault-layout__sidebar {
+.swirlread-vault-layout__sidebar {
   position: sticky;
   top: var(--shell-header-height);
   align-self: flex-start;
@@ -156,7 +156,7 @@
    the seam; a 1 px accent hairline shows only on hover / focus / drag so
    the rest of the time the seam reads as a quiet border. Only mounted in
    working chrome mode + open sidebar (see VaultLayout.tsx). */
-.swilread-vault-layout__sidebar-resize {
+.swirlread-vault-layout__sidebar-resize {
   position: fixed;
   top: var(--shell-header-height);
   left: calc(var(--file-tree-width) - 4px);
@@ -173,7 +173,7 @@
      when the user drags on a trackpad. */
   touch-action: none;
 }
-.swilread-vault-layout__sidebar-resize::after {
+.swirlread-vault-layout__sidebar-resize::after {
   content: '';
   position: absolute;
   top: 0;
@@ -184,17 +184,17 @@
   opacity: 0;
   transition: opacity 120ms ease;
 }
-.swilread-vault-layout__sidebar-resize:hover::after,
-.swilread-vault-layout__sidebar-resize:focus-visible::after,
-.swilread-vault-layout__sidebar-resize[data-dragging='true']::after {
+.swirlread-vault-layout__sidebar-resize:hover::after,
+.swirlread-vault-layout__sidebar-resize:focus-visible::after,
+.swirlread-vault-layout__sidebar-resize[data-dragging='true']::after {
   opacity: 0.6;
 }
-.swilread-vault-layout__sidebar-resize:focus-visible {
+.swirlread-vault-layout__sidebar-resize:focus-visible {
   outline: none;
 }
 /* When a drag is in progress, lock the cursor globally so micro-jitter
    near the seam doesn't reset it to text/default mid-drag. */
-body:has(.swilread-vault-layout__sidebar-resize[data-dragging='true']) {
+body:has(.swirlread-vault-layout__sidebar-resize[data-dragging='true']) {
   cursor: col-resize !important;
   user-select: none;
 }
@@ -205,7 +205,7 @@ body:has(.swilread-vault-layout__sidebar-resize[data-dragging='true']) {
  * the tree is open so the React tree is identical across viewports —
  * pure CSS controls visibility.
  */
-.swilread-vault-layout__sidebar-backdrop {
+.swirlread-vault-layout__sidebar-backdrop {
   display: none;
   appearance: none;
   background: none;
@@ -221,7 +221,7 @@ body:has(.swilread-vault-layout__sidebar-resize[data-dragging='true']) {
    drawer mode uses. The small-viewport @media block below comes after
    this rule and re-introduces the dark overlay there, which is the
    right gesture for a phone-style drawer. */
-.swilread-vault-layout__sidebar-backdrop--floating {
+.swirlread-vault-layout__sidebar-backdrop--floating {
   display: block;
   position: fixed;
   top: var(--shell-header-height);
@@ -233,12 +233,12 @@ body:has(.swilread-vault-layout__sidebar-resize[data-dragging='true']) {
   cursor: default;
 }
 
-.swilread-vault-layout__content {
+.swirlread-vault-layout__content {
   flex: 1 1 auto;
   min-width: 0;
 }
 
-.swilread-vault-layout__toc {
+.swirlread-vault-layout__toc {
   position: sticky;
   top: var(--shell-header-height);
   align-self: flex-start;
@@ -266,7 +266,7 @@ body:has(.swilread-vault-layout__sidebar-resize[data-dragging='true']) {
  * as it was.
  */
 @media (max-width: 1024px) {
-  .swilread-vault-layout__sidebar {
+  .swirlread-vault-layout__sidebar {
     position: fixed;
     top: var(--shell-header-height);
     left: 0;
@@ -281,11 +281,11 @@ body:has(.swilread-vault-layout__sidebar-resize[data-dragging='true']) {
      resized 480 px sidebar into a phone-width viewport. Re-apply the
      drawer width with matching specificity so small viewports always
      respect `min(280px, 80vw)`. (Audit: A.H3) */
-  .swilread-vault-layout__sidebar.swilread-vault-layout__sidebar--floating {
+  .swirlread-vault-layout__sidebar.swirlread-vault-layout__sidebar--floating {
     width: min(280px, 80vw);
   }
 
-  .swilread-vault-layout__sidebar-backdrop {
+  .swirlread-vault-layout__sidebar-backdrop {
     display: block;
     position: fixed;
     top: var(--shell-header-height);
@@ -297,13 +297,69 @@ body:has(.swilread-vault-layout__sidebar-resize[data-dragging='true']) {
     cursor: pointer;
   }
 
-  .swilread-vault-layout__content {
+  .swirlread-vault-layout__content {
     width: 100%;
   }
 
   /* In drawer mode the sidebar floats over content and gets dismissed
      via the backdrop click — resizing it would only confuse. Hide. */
-  .swilread-vault-layout__sidebar-resize {
+  .swirlread-vault-layout__sidebar-resize {
     display: none;
   }
+}
+
+/* Doc navigation — prev / next file buttons at the bottom of the article */
+.swirlread-doc-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 1rem;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.swirlread-doc-nav__prev-slot,
+.swirlread-doc-nav__next-slot {
+  flex: 1;
+  display: flex;
+}
+
+.swirlread-doc-nav__next-slot {
+  justify-content: flex-end;
+}
+
+.swirlread-doc-nav__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  max-width: 100%;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition:
+    color 120ms ease,
+    border-color 120ms ease,
+    background 120ms ease;
+}
+
+.swirlread-doc-nav__btn:hover {
+  color: var(--color-text);
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+}
+
+.swirlread-doc-nav__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 22ch;
+}
+
+.swirlread-doc-nav__btn--next .swirlread-doc-nav__label {
+  text-align: right;
 }

@@ -3,7 +3,7 @@ import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-// All browsers SwilRead targets (File System Access API requirement) ship
+// All browsers SwirlRead targets (File System Access API requirement) ship
 // native color-mix() support: Chrome ≥ 111, Edge ≥ 111, Firefox ≥ 113,
 // Safari ≥ 16.2. Lightning CSS still wraps color-mix() in
 // @supports (color:color-mix(in lab,red,red)) guards during the compile step

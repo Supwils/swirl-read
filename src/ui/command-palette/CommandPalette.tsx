@@ -42,9 +42,9 @@ export function CommandPalette(): ReactNode {
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Portal>
-        <Dialog.Overlay className="swilread-cmdk__overlay" />
+        <Dialog.Overlay className="swirlread-cmdk__overlay" />
         <Dialog.Content
-          className="swilread-cmdk__content"
+          className="swirlread-cmdk__content"
           aria-label="Command palette"
           // Prevent Radix from auto-focusing its first focusable child;
           // cmdk's input below uses `autoFocus` and we want it to win.
@@ -108,41 +108,41 @@ function PaletteBody({ onSelect }: { onSelect: () => void }): ReactNode {
     <Command
       label="Command palette"
       shouldFilter={mode.kind === 'files'}
-      className="swilread-cmdk"
+      className="swirlread-cmdk"
     >
       <Command.Input
         autoFocus
         value={input}
         onValueChange={setInput}
         placeholder={placeholderFor(mode, currentVaultName, currentVaultId)}
-        className="swilread-cmdk__input"
+        className="swirlread-cmdk__input"
       />
-      <Command.List className="swilread-cmdk__list">
-        <Command.Empty className="swilread-cmdk__empty">
+      <Command.List className="swirlread-cmdk__list">
+        <Command.Empty className="swirlread-cmdk__empty">
           {emptyMessage(mode, recents.length, currentVaultId)}
         </Command.Empty>
 
         {mode.kind !== 'search' && recents.length > 0 && (
           <Command.Group
             heading="Recent files"
-            className="swilread-cmdk__group"
+            className="swirlread-cmdk__group"
           >
             {recents.map((item) => (
               <Command.Item
                 key={`recent::${item.vaultId}::${item.path}`}
                 value={`${item.vaultName} ${item.path}`}
                 onSelect={() => handleSelect(item.href)}
-                className="swilread-cmdk__item"
+                className="swirlread-cmdk__item"
               >
                 <Clock
-                  className="swilread-cmdk__item-icon"
+                  className="swirlread-cmdk__item-icon"
                   size={14}
                   aria-hidden="true"
                 />
-                <span className="swilread-cmdk__item-primary">
+                <span className="swirlread-cmdk__item-primary">
                   {basename(item.path)}
                 </span>
-                <span className="swilread-cmdk__item-secondary">
+                <span className="swirlread-cmdk__item-secondary">
                   {item.vaultName} · {item.path}
                 </span>
               </Command.Item>
@@ -153,7 +153,7 @@ function PaletteBody({ onSelect }: { onSelect: () => void }): ReactNode {
         {mode.kind !== 'search' && headingsActive && (
           <Command.Group
             heading="Headings (this document)"
-            className="swilread-cmdk__group"
+            className="swirlread-cmdk__group"
           >
             {headings.map((heading) => (
               <HeadingItem
@@ -168,7 +168,7 @@ function PaletteBody({ onSelect }: { onSelect: () => void }): ReactNode {
         {mode.kind !== 'search' && currentVaultId && sections.length > 0 && (
           <Command.Group
             heading={`Sections in ${currentVaultName ?? currentVaultId}`}
-            className="swilread-cmdk__group"
+            className="swirlread-cmdk__group"
           >
             {sections.map((section) => {
               if (!section.home) return null
@@ -179,17 +179,17 @@ function PaletteBody({ onSelect }: { onSelect: () => void }): ReactNode {
                   onSelect={() =>
                     handleSelect(`/app/${currentVaultId}/${section.home}`)
                   }
-                  className="swilread-cmdk__item"
+                  className="swirlread-cmdk__item"
                 >
                   <Library
-                    className="swilread-cmdk__item-icon"
+                    className="swirlread-cmdk__item-icon"
                     size={14}
                     aria-hidden="true"
                   />
-                  <span className="swilread-cmdk__item-primary">
+                  <span className="swirlread-cmdk__item-primary">
                     {section.directory.name}
                   </span>
-                  <span className="swilread-cmdk__item-secondary">
+                  <span className="swirlread-cmdk__item-secondary">
                     {section.home}
                   </span>
                 </Command.Item>
@@ -216,13 +216,13 @@ function PaletteBody({ onSelect }: { onSelect: () => void }): ReactNode {
           />
         )}
       </Command.List>
-      <footer className="swilread-cmdk__footer">
-        <span className="swilread-cmdk__hint">
-          <kbd className="swilread-cmdk__kbd">&gt;</kbd> full-text search
+      <footer className="swirlread-cmdk__footer">
+        <span className="swirlread-cmdk__hint">
+          <kbd className="swirlread-cmdk__kbd">&gt;</kbd> full-text search
         </span>
-        <kbd className="swilread-cmdk__kbd">↑↓</kbd> navigate
-        <kbd className="swilread-cmdk__kbd">↵</kbd> open
-        <kbd className="swilread-cmdk__kbd">esc</kbd> close
+        <kbd className="swirlread-cmdk__kbd">↑↓</kbd> navigate
+        <kbd className="swirlread-cmdk__kbd">↵</kbd> open
+        <kbd className="swirlread-cmdk__kbd">esc</kbd> close
       </footer>
     </Command>
   )

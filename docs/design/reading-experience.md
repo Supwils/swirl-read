@@ -1,4 +1,4 @@
-# SwilRead — Reading Experience Design
+# SwirlRead — Reading Experience Design
 
 > Status: Decided 2026-05-01 · Living document
 
@@ -10,9 +10,9 @@ This document captures the visual and interaction design of the core reading exp
 
 > **Dive in and emerge in the field of knowledge.**
 
-SwilRead is to Markdown vaults what Kindle is to ebooks: a tool that disappears so the content can take center stage. Every UI decision must serve immersion. Anything that pulls the reader's attention away from the text is a defect.
+SwirlRead is to Markdown vaults what Kindle is to ebooks: a tool that disappears so the content can take center stage. Every UI decision must serve immersion. Anything that pulls the reader's attention away from the text is a defect.
 
-This is the opposite of an editor-first app. An editor surrounds the content with tools. SwilRead surrounds the content with whitespace. If editing exists, it must be subordinate to reading and short-lived.
+This is the opposite of an editor-first app. An editor surrounds the content with tools. SwirlRead surrounds the content with whitespace. If editing exists, it must be subordinate to reading and short-lived.
 
 ---
 

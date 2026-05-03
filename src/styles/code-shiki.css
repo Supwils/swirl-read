@@ -1,17 +1,17 @@
-.theme-sepia .swilread-prose pre[style*='--shiki-light'],
-.theme-sepia .swilread-prose pre[style*='--shiki-light'] span,
-.theme-light .swilread-prose pre[style*='--shiki-light'],
-.theme-light .swilread-prose pre[style*='--shiki-light'] span {
+.theme-sepia .swirlread-prose pre[style*='--shiki-light'],
+.theme-sepia .swirlread-prose pre[style*='--shiki-light'] span,
+.theme-light .swirlread-prose pre[style*='--shiki-light'],
+.theme-light .swirlread-prose pre[style*='--shiki-light'] span {
   color: var(--shiki-light);
   background-color: var(--shiki-light-bg, var(--color-code-bg));
   font-style: var(--shiki-light-font-style);
   font-weight: var(--shiki-light-font-weight);
   text-decoration: var(--shiki-light-text-decoration);
 }
-.theme-dark .swilread-prose pre[style*='--shiki-dark'],
-.theme-dark .swilread-prose pre[style*='--shiki-dark'] span,
-.theme-oled .swilread-prose pre[style*='--shiki-dark'],
-.theme-oled .swilread-prose pre[style*='--shiki-dark'] span {
+.theme-dark .swirlread-prose pre[style*='--shiki-dark'],
+.theme-dark .swirlread-prose pre[style*='--shiki-dark'] span,
+.theme-oled .swirlread-prose pre[style*='--shiki-dark'],
+.theme-oled .swirlread-prose pre[style*='--shiki-dark'] span {
   color: var(--shiki-dark);
   background-color: var(--shiki-dark-bg, var(--color-code-bg));
   font-style: var(--shiki-dark-font-style);
@@ -19,8 +19,8 @@
   text-decoration: var(--shiki-dark-text-decoration);
 }
 @media (prefers-color-scheme: dark) {
-  .theme-auto .swilread-prose pre[style*='--shiki-dark'],
-  .theme-auto .swilread-prose pre[style*='--shiki-dark'] span {
+  .theme-auto .swirlread-prose pre[style*='--shiki-dark'],
+  .theme-auto .swirlread-prose pre[style*='--shiki-dark'] span {
     color: var(--shiki-dark);
     background-color: var(--shiki-dark-bg, var(--color-code-bg));
     font-style: var(--shiki-dark-font-style);
@@ -29,8 +29,8 @@
   }
 }
 @media (prefers-color-scheme: light) {
-  .theme-auto .swilread-prose pre[style*='--shiki-light'],
-  .theme-auto .swilread-prose pre[style*='--shiki-light'] span {
+  .theme-auto .swirlread-prose pre[style*='--shiki-light'],
+  .theme-auto .swirlread-prose pre[style*='--shiki-light'] span {
     color: var(--shiki-light);
     background-color: var(--shiki-light-bg, var(--color-code-bg));
     font-style: var(--shiki-light-font-style);

@@ -1,15 +1,15 @@
-# SwilRead — Architecture Overview
+# SwirlRead — Architecture Overview
 
 > Status: Decided 2026-05-01
 
-This document describes the high-level structure of the SwilRead codebase. Implementation tasks reference modules defined here.
+This document describes the high-level structure of the SwirlRead codebase. Implementation tasks reference modules defined here.
 
 ---
 
 ## Module Map
 
 ```
-swil-read/
+swirl-read/
 ├── public/
 │   └── (static assets, including bundled sample vault)
 ├── src/
@@ -284,7 +284,7 @@ Phase 1 ships only `search-worker`. Markdown parsing in Phase 1 is on the main t
 
 ## Persistence Schema (IndexedDB via Dexie)
 
-Database: `swilread`
+Database: `swirlread`
 
 Tables:
 

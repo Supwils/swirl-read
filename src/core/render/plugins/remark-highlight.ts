@@ -8,7 +8,7 @@
  * Hast hint: emit a real `<mark>` element. `<mark>` is the semantic match
  * for "highlighted text" and is NOT in the default rehype-sanitize allow
  * list, so the pipeline schema explicitly whitelists it. Themed via CSS
- * on `.swilread-prose mark`.
+ * on `.swirlread-prose mark`.
  *
  * Recognized form:
  *   - `==text==`               at least one non-`=`/non-newline char between

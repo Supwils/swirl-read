@@ -8,7 +8,7 @@
         the universal `*` rule below — the thumb is a low-alpha tint of the
         text colour, so it disappears on the surface it sits on but reveals
         itself on hover.
-     3. `.swilread-scroll-thin` opt-in class for inline / popover surfaces
+     3. `.swirlread-scroll-thin` opt-in class for inline / popover surfaces
         (command palette, TOC, sidebar) where the thinner rail reads better.
 
    Firefox uses `scrollbar-color` / `scrollbar-width` (no pseudo-elements);
@@ -69,32 +69,32 @@ html {
    container. Keeps bulky 12px scrollbars off narrow popovers. The known
    chrome surfaces are pre-enrolled below so individual components don't
    each need to remember to add the class. */
-.swilread-scroll-thin,
-.swilread-vault-layout__sidebar,
-.swilread-vault-layout__toc,
-.swilread-cmdk__list,
-.swilread-settings__body,
-.swilread-shortcuts__body,
-.swilread-tags-panel__body {
+.swirlread-scroll-thin,
+.swirlread-vault-layout__sidebar,
+.swirlread-vault-layout__toc,
+.swirlread-cmdk__list,
+.swirlread-settings__body,
+.swirlread-shortcuts__body,
+.swirlread-tags-panel__body {
   scrollbar-width: thin;
 }
-.swilread-scroll-thin::-webkit-scrollbar,
-.swilread-vault-layout__sidebar::-webkit-scrollbar,
-.swilread-vault-layout__toc::-webkit-scrollbar,
-.swilread-cmdk__list::-webkit-scrollbar,
-.swilread-settings__body::-webkit-scrollbar,
-.swilread-shortcuts__body::-webkit-scrollbar,
-.swilread-tags-panel__body::-webkit-scrollbar {
+.swirlread-scroll-thin::-webkit-scrollbar,
+.swirlread-vault-layout__sidebar::-webkit-scrollbar,
+.swirlread-vault-layout__toc::-webkit-scrollbar,
+.swirlread-cmdk__list::-webkit-scrollbar,
+.swirlread-settings__body::-webkit-scrollbar,
+.swirlread-shortcuts__body::-webkit-scrollbar,
+.swirlread-tags-panel__body::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
-.swilread-scroll-thin::-webkit-scrollbar-thumb,
-.swilread-vault-layout__sidebar::-webkit-scrollbar-thumb,
-.swilread-vault-layout__toc::-webkit-scrollbar-thumb,
-.swilread-cmdk__list::-webkit-scrollbar-thumb,
-.swilread-settings__body::-webkit-scrollbar-thumb,
-.swilread-shortcuts__body::-webkit-scrollbar-thumb,
-.swilread-tags-panel__body::-webkit-scrollbar-thumb {
+.swirlread-scroll-thin::-webkit-scrollbar-thumb,
+.swirlread-vault-layout__sidebar::-webkit-scrollbar-thumb,
+.swirlread-vault-layout__toc::-webkit-scrollbar-thumb,
+.swirlread-cmdk__list::-webkit-scrollbar-thumb,
+.swirlread-settings__body::-webkit-scrollbar-thumb,
+.swirlread-shortcuts__body::-webkit-scrollbar-thumb,
+.swirlread-tags-panel__body::-webkit-scrollbar-thumb {
   border-width: 2px;
 }
 
@@ -103,35 +103,35 @@ html {
    rail would be visually jarring; 8px matches the chrome surfaces above.
    Colors already inherit via the * rule (var(--color-text-muted) tinted),
    so they are fully theme-aware with no extra colour declarations here. */
-.swilread-prose pre,
-.swilread-prose table,
-.swilread-prose .swilread-math--display,
-.swilread-prose .swilread-mermaid,
-.swilread-prose .swilread-mermaid__source,
-.swilread-plaintext,
-.swilread-json__tree,
-.swilread-csv__scroll {
+.swirlread-prose pre,
+.swirlread-prose table,
+.swirlread-prose .swirlread-math--display,
+.swirlread-prose .swirlread-mermaid,
+.swirlread-prose .swirlread-mermaid__source,
+.swirlread-plaintext,
+.swirlread-json__tree,
+.swirlread-csv__scroll {
   scrollbar-width: thin;
 }
-.swilread-prose pre::-webkit-scrollbar,
-.swilread-prose table::-webkit-scrollbar,
-.swilread-prose .swilread-math--display::-webkit-scrollbar,
-.swilread-prose .swilread-mermaid::-webkit-scrollbar,
-.swilread-prose .swilread-mermaid__source::-webkit-scrollbar,
-.swilread-plaintext::-webkit-scrollbar,
-.swilread-json__tree::-webkit-scrollbar,
-.swilread-csv__scroll::-webkit-scrollbar {
+.swirlread-prose pre::-webkit-scrollbar,
+.swirlread-prose table::-webkit-scrollbar,
+.swirlread-prose .swirlread-math--display::-webkit-scrollbar,
+.swirlread-prose .swirlread-mermaid::-webkit-scrollbar,
+.swirlread-prose .swirlread-mermaid__source::-webkit-scrollbar,
+.swirlread-plaintext::-webkit-scrollbar,
+.swirlread-json__tree::-webkit-scrollbar,
+.swirlread-csv__scroll::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
-.swilread-prose pre::-webkit-scrollbar-thumb,
-.swilread-prose table::-webkit-scrollbar-thumb,
-.swilread-prose .swilread-math--display::-webkit-scrollbar-thumb,
-.swilread-prose .swilread-mermaid::-webkit-scrollbar-thumb,
-.swilread-prose .swilread-mermaid__source::-webkit-scrollbar-thumb,
-.swilread-plaintext::-webkit-scrollbar-thumb,
-.swilread-json__tree::-webkit-scrollbar-thumb,
-.swilread-csv__scroll::-webkit-scrollbar-thumb {
+.swirlread-prose pre::-webkit-scrollbar-thumb,
+.swirlread-prose table::-webkit-scrollbar-thumb,
+.swirlread-prose .swirlread-math--display::-webkit-scrollbar-thumb,
+.swirlread-prose .swirlread-mermaid::-webkit-scrollbar-thumb,
+.swirlread-prose .swirlread-mermaid__source::-webkit-scrollbar-thumb,
+.swirlread-plaintext::-webkit-scrollbar-thumb,
+.swirlread-json__tree::-webkit-scrollbar-thumb,
+.swirlread-csv__scroll::-webkit-scrollbar-thumb {
   border-width: 2px;
 }
 

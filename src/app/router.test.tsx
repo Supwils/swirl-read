@@ -42,15 +42,15 @@ describe('production route tree', () => {
   it('renders LandingPage at /', () => {
     renderAt('/')
     expect(
-      screen.getByRole('heading', { level: 1, name: /swilread/i }),
+      screen.getByRole('heading', { level: 1, name: /swirlread/i }),
     ).toBeInTheDocument()
   })
 
   it('renders AppShell with no-vault placeholder at /app', () => {
     renderAt('/app')
     expect(screen.getByText(/no vault selected/i)).toBeInTheDocument()
-    // AppShell header contains the SwilRead wordmark + settings trigger
-    expect(screen.getByRole('link', { name: /swilread/i })).toBeInTheDocument()
+    // AppShell header contains the SwirlRead wordmark + settings trigger
+    expect(screen.getByRole('link', { name: /swirlread/i })).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: /open settings/i }),
     ).toBeInTheDocument()

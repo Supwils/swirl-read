@@ -74,24 +74,24 @@ export function BacklinksPanel({
   if (state.kind === 'ready' && ranked.length === 0) return null
 
   return (
-    <section className="swilread-backlinks" aria-labelledby="backlinks-title">
-      <h2 id="backlinks-title" className="swilread-backlinks__title">
+    <section className="swirlread-backlinks" aria-labelledby="backlinks-title">
+      <h2 id="backlinks-title" className="swirlread-backlinks__title">
         <Link2 size={16} aria-hidden="true" />
         Backlinks
       </h2>
 
       {state.kind === 'loading' && (
-        <p className="swilread-backlinks__status">Looking for backlinks…</p>
+        <p className="swirlread-backlinks__status">Looking for backlinks…</p>
       )}
 
       {state.kind === 'error' && (
-        <p className="swilread-backlinks__status" role="alert">
+        <p className="swirlread-backlinks__status" role="alert">
           Couldn&apos;t load backlinks: {state.message}
         </p>
       )}
 
       {state.kind === 'ready' && ranked.length > 0 && (
-        <ul className="swilread-backlinks__list">
+        <ul className="swirlread-backlinks__list">
           {ranked.map((backlink) => (
             <BacklinkItem key={backlink.sourcePath} backlink={backlink} />
           ))}
@@ -103,16 +103,16 @@ export function BacklinksPanel({
 
 function BacklinkItem({ backlink }: { backlink: Backlink }): ReactNode {
   return (
-    <li className="swilread-backlinks__item">
+    <li className="swirlread-backlinks__item">
       <Link
         to={`/app/${backlink.vaultId}/${backlink.sourcePath}`}
-        className="swilread-backlinks__link"
+        className="swirlread-backlinks__link"
         title={backlink.sourcePath}
       >
         {basename(backlink.sourcePath) || backlink.sourcePath}
       </Link>
-      <p className="swilread-backlinks__path">{backlink.sourcePath}</p>
-      <p className="swilread-backlinks__context">
+      <p className="swirlread-backlinks__path">{backlink.sourcePath}</p>
+      <p className="swirlread-backlinks__context">
         {renderSnippet(backlink.context)}
       </p>
     </li>
@@ -140,7 +140,7 @@ function renderSnippet(context: string): ReactNode {
       parts.push(context.slice(cursor, match.index))
     }
     parts.push(
-      <mark key={key++} className="swilread-backlinks__mark">
+      <mark key={key++} className="swirlread-backlinks__mark">
         {match[0]}
       </mark>,
     )

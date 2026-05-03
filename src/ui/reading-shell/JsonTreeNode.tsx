@@ -28,7 +28,7 @@ function highlight(text: string, query: string): ReactNode {
     }
     if (idx > i) parts.push(text.slice(i, idx))
     parts.push(
-      <mark key={key++} className="swilread-json__match">
+      <mark key={key++} className="swirlread-json__match">
         {text.slice(idx, idx + q.length)}
       </mark>,
     )
@@ -57,7 +57,7 @@ export function JsonNode({
         path={path}
         keyName={fieldKey}
         query={query}
-        valueClass="swilread-json__null"
+        valueClass="swirlread-json__null"
         rendered={<>null</>}
       />
     )
@@ -69,7 +69,7 @@ export function JsonNode({
         path={path}
         keyName={fieldKey}
         query={query}
-        valueClass="swilread-json__boolean"
+        valueClass="swirlread-json__boolean"
         rendered={<>{String(value)}</>}
       />
     )
@@ -81,7 +81,7 @@ export function JsonNode({
         path={path}
         keyName={fieldKey}
         query={query}
-        valueClass="swilread-json__number"
+        valueClass="swirlread-json__number"
         rendered={<>{String(value)}</>}
       />
     )
@@ -93,7 +93,7 @@ export function JsonNode({
         path={path}
         keyName={fieldKey}
         query={query}
-        valueClass="swilread-json__string"
+        valueClass="swirlread-json__string"
         rendered={<>&quot;{highlight(value, query)}&quot;</>}
       />
     )
@@ -116,7 +116,7 @@ export function JsonNode({
         depth={depth}
       >
         {items.map((child, idx) => (
-          <li key={idx} className="swilread-json__item">
+          <li key={idx} className="swirlread-json__item">
             <JsonNode
               value={child}
               depth={depth + 1}
@@ -148,7 +148,7 @@ export function JsonNode({
         depth={depth}
       >
         {entries.map(([k, v]) => (
-          <li key={k} className="swilread-json__item">
+          <li key={k} className="swirlread-json__item">
             <JsonNode
               value={v}
               depth={depth + 1}
@@ -168,7 +168,7 @@ export function JsonNode({
       path={path}
       keyName={fieldKey}
       query={query}
-      valueClass="swilread-json__null"
+      valueClass="swirlread-json__null"
       rendered={<>(unsupported)</>}
     />
   )

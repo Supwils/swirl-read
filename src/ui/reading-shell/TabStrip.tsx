@@ -1,7 +1,7 @@
 /**
  * TabStrip — horizontal list of open documents for the active vault.
  *
- * Sits at the top of `.swilread-vault-layout__content`. The URL drives
+ * Sits at the top of `.swirlread-vault-layout__content`. The URL drives
  * which tab is active; this component reads the location and compares
  * against `useTabsStore.tabsByVault[vaultId]`.
  *
@@ -207,7 +207,7 @@ export function TabStrip({ vaultId, currentPath }: TabStripProps): ReactNode {
   return (
     <div
       ref={stripRef}
-      className="swilread-tab-strip swilread-scroll-thin"
+      className="swirlread-tab-strip swirlread-scroll-thin"
       role="tablist"
       aria-label="Open documents"
     >
@@ -230,7 +230,7 @@ export function TabStrip({ vaultId, currentPath }: TabStripProps): ReactNode {
             title={tabTitle}
             draggable
             className={[
-              'swilread-tab-strip__tab',
+              'swirlread-tab-strip__tab',
               active ? 'is-active' : '',
               tab.pinned ? 'is-pinned' : 'is-preview',
               isDropTarget
@@ -269,10 +269,10 @@ export function TabStrip({ vaultId, currentPath }: TabStripProps): ReactNode {
               onKeyDown(e, idx)
             }}
           >
-            <span className="swilread-tab-strip__label">{display}</span>
+            <span className="swirlread-tab-strip__label">{display}</span>
             <button
               type="button"
-              className="swilread-tab-strip__close"
+              className="swirlread-tab-strip__close"
               aria-label={`Close ${display}`}
               onMouseDown={(e) => {
                 // Stop the parent's mousedown handler from claiming this

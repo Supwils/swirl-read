@@ -1,4 +1,4 @@
-# SwilRead — Launch Docs (M9.8)
+# SwirlRead — Launch Docs (M9.8)
 
 > Status: **drafts**, not yet executed. The actual launch is a
 > day-of-action; these files prepare for it.

@@ -81,7 +81,7 @@ describe('BacklinksPanel (M4.5 + RX5)', () => {
             .includes('mentions [[target]] in passing'),
         ),
       )
-      .find((node) => node.classList.contains('swilread-backlinks__context'))
+      .find((node) => node.classList.contains('swirlread-backlinks__context'))
     expect(snippet).toBeDefined()
 
     // RX5: the [[target]] reference itself is wrapped in <mark> so the eye

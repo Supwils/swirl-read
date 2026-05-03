@@ -155,7 +155,7 @@ describe('DocumentPage — markdown rendering', () => {
             .includes('this links to [[target]]'),
         ),
       )
-      .find((node) => node.classList.contains('swilread-backlinks__context'))
+      .find((node) => node.classList.contains('swirlread-backlinks__context'))
     expect(snippet).toBeDefined()
 
     await user.click(backlink)
@@ -242,7 +242,7 @@ describe('DocumentPage — markdown rendering', () => {
     const { container } = renderAt('/app/supwil-doc/index.md')
 
     await waitFor(() => {
-      const img = container.querySelector('img.swilread-embed--image')
+      const img = container.querySelector('img.swirlread-embed--image')
       expect(img).not.toBeNull()
       expect(img?.getAttribute('src')).toMatch(/^blob:/)
     })
@@ -278,7 +278,7 @@ describe('DocumentPage — markdown rendering', () => {
 
     await waitFor(() => {
       expect(
-        container.querySelector('aside.swilread-embed--markdown'),
+        container.querySelector('aside.swirlread-embed--markdown'),
       ).not.toBeNull()
     })
     await waitFor(() => {
@@ -343,7 +343,7 @@ describe('DocumentPage — markdown rendering', () => {
         expect(titles.length).toBeGreaterThanOrEqual(1)
       })
       // The header title sits inside the article header element.
-      const header = document.querySelector('.swilread-doc-header__title')
+      const header = document.querySelector('.swirlread-doc-header__title')
       expect(header?.textContent).toBe('React Hooks')
     })
 
@@ -362,7 +362,7 @@ describe('DocumentPage — markdown rendering', () => {
       renderAt('/app/supwil-doc/career/career-map.md')
 
       await waitFor(() => {
-        const header = document.querySelector('.swilread-doc-header__title')
+        const header = document.querySelector('.swirlread-doc-header__title')
         expect(header?.textContent).toBe('Career Map')
       })
     })
@@ -385,7 +385,7 @@ title: A Considered Note
       renderAt('/app/supwil-doc/with-fm.md')
 
       await waitFor(() => {
-        const header = document.querySelector('.swilread-doc-header__title')
+        const header = document.querySelector('.swirlread-doc-header__title')
         expect(header?.textContent).toBe('A Considered Note')
       })
       // Body H1 still rendered (TOC depends on it).
@@ -421,7 +421,7 @@ title: A Considered Note
         name: /loading document/i,
       })
       expect(
-        skeleton.querySelectorAll('.swilread-doc-skeleton__line').length,
+        skeleton.querySelectorAll('.swirlread-doc-skeleton__line').length,
       ).toBeGreaterThan(0)
       // Plain "Reading…" italic is gone — the skeleton has the text
       // only as sr-only for assistive tech.
@@ -511,7 +511,7 @@ Body.
     // hides the metadata RAIL (description / tags / etc.), not the
     // page identity.
     expect(
-      document.querySelector('.swilread-doc-header__title')?.textContent,
+      document.querySelector('.swirlread-doc-header__title')?.textContent,
     ).toBe('Hidden')
     // The metadata rail itself is gone.
     expect(screen.queryByText('Should not appear')).not.toBeInTheDocument()

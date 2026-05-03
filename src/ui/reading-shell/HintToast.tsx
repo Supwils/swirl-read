@@ -49,18 +49,18 @@ export function HintToast({ id, title, children }: HintToastProps): ReactNode {
 
   return (
     <div
-      className="swilread-hint"
+      className="swirlread-hint"
       role="status"
       aria-live="polite"
       data-testid="hint-toast"
     >
-      <div className="swilread-hint__body">
-        <p className="swilread-hint__title">{title}</p>
-        <div className="swilread-hint__detail">{children}</div>
+      <div className="swirlread-hint__body">
+        <p className="swirlread-hint__title">{title}</p>
+        <div className="swirlread-hint__detail">{children}</div>
       </div>
       <button
         type="button"
-        className="swilread-hint__close"
+        className="swirlread-hint__close"
         aria-label="Dismiss hint"
         onClick={() => {
           setVisible(false)

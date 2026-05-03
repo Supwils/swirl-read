@@ -92,22 +92,22 @@ export function TagsPanel({ vaultId }: TagsPanelProps): ReactNode {
       }}
     >
       <Dialog.Portal>
-        <Dialog.Overlay className="swilread-tags-panel__overlay" />
+        <Dialog.Overlay className="swirlread-tags-panel__overlay" />
         <Dialog.Content
-          className="swilread-tags-panel"
+          className="swirlread-tags-panel"
           aria-label="Tag listing"
         >
-          <header className="swilread-tags-panel__header">
-            <div className="swilread-tags-panel__heading">
+          <header className="swirlread-tags-panel__header">
+            <div className="swirlread-tags-panel__heading">
               <Hash size={18} aria-hidden="true" />
-              <Dialog.Title className="swilread-tags-panel__title">
+              <Dialog.Title className="swirlread-tags-panel__title">
                 {selectedTag ?? ''}
               </Dialog.Title>
             </div>
             <Dialog.Close asChild>
               <button
                 type="button"
-                className="swilread-tags-panel__close"
+                className="swirlread-tags-panel__close"
                 aria-label="Close tag listing"
               >
                 <X size={18} aria-hidden="true" />
@@ -117,7 +117,7 @@ export function TagsPanel({ vaultId }: TagsPanelProps): ReactNode {
           <Dialog.Description className="sr-only">
             Files in the current vault tagged #{selectedTag ?? ''}.
           </Dialog.Description>
-          <div className="swilread-tags-panel__body">
+          <div className="swirlread-tags-panel__body">
             <PanelBody
               vaultId={vaultId}
               selectedTag={selectedTag}
@@ -144,11 +144,11 @@ function PanelBody({
 }): ReactNode {
   if (!selectedTag) return null
   if (state.status === 'loading') {
-    return <p className="swilread-tags-panel__status">Building tag index…</p>
+    return <p className="swirlread-tags-panel__status">Building tag index…</p>
   }
   if (state.status === 'error') {
     return (
-      <p className="swilread-tags-panel__status" role="alert">
+      <p className="swirlread-tags-panel__status" role="alert">
         Couldn’t build the tag index: {state.message}
       </p>
     )
@@ -161,28 +161,28 @@ function PanelBody({
 
   if (files.length === 0) {
     return (
-      <p className="swilread-tags-panel__status">
+      <p className="swirlread-tags-panel__status">
         No files in this vault use #{selectedTag}.
       </p>
     )
   }
 
   return (
-    <ul className="swilread-tags-panel__list">
+    <ul className="swirlread-tags-panel__list">
       {files.map((path) => (
-        <li key={path} className="swilread-tags-panel__item">
+        <li key={path} className="swirlread-tags-panel__item">
           <Link
             to={`/app/${vaultId}/${path}`}
-            className="swilread-tags-panel__link"
+            className="swirlread-tags-panel__link"
             onClick={(event) => {
               event.preventDefault()
               onNavigate(path)
             }}
           >
-            <span className="swilread-tags-panel__link-name">
+            <span className="swirlread-tags-panel__link-name">
               {basename(path)}
             </span>
-            <span className="swilread-tags-panel__link-path">{path}</span>
+            <span className="swirlread-tags-panel__link-path">{path}</span>
           </Link>
         </li>
       ))}

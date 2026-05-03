@@ -49,8 +49,11 @@ export function MermaidDiagram(props: MermaidDiagramProps): ReactNode {
 
   if (!Renderer) {
     return (
-      <div className="swilread-mermaid swilread-mermaid--loading" role="status">
-        <span className="swilread-mermaid__status">Loading diagram…</span>
+      <div
+        className="swirlread-mermaid swirlread-mermaid--loading"
+        role="status"
+      >
+        <span className="swirlread-mermaid__status">Loading diagram…</span>
       </div>
     )
   }

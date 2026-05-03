@@ -1,5 +1,5 @@
 /* Media renderer (M7.6) ──────────────────────────────────────────────── */
-.swilread-media {
+.swirlread-media {
   margin: 1.5rem 0 0;
   display: flex;
   flex-direction: column;
@@ -8,7 +8,7 @@
   font-family: var(--font-sans);
 }
 
-.swilread-media__image {
+.swirlread-media__image {
   display: block;
   max-width: 100%;
   max-height: 75vh;
@@ -18,7 +18,7 @@
   border: 1px solid var(--color-border);
 }
 
-.swilread-media__image-trigger {
+.swirlread-media__image-trigger {
   position: relative;
   appearance: none;
   border: 0;
@@ -28,12 +28,12 @@
   border-radius: 8px;
 }
 
-.swilread-media__image-trigger:focus-visible {
+.swirlread-media__image-trigger:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 4px;
 }
 
-.swilread-media__zoom-hint {
+.swirlread-media__zoom-hint {
   position: absolute;
   bottom: 8px;
   right: 8px;
@@ -50,13 +50,13 @@
   pointer-events: none;
 }
 
-.swilread-media__image-trigger:hover .swilread-media__zoom-hint,
-.swilread-media__image-trigger:focus-visible .swilread-media__zoom-hint {
+.swirlread-media__image-trigger:hover .swirlread-media__zoom-hint,
+.swirlread-media__image-trigger:focus-visible .swirlread-media__zoom-hint {
   opacity: 1;
 }
 
 /* Audio wrapper themed to the reader (M7 polish) ─────────────────────── */
-.swilread-media__audio-wrap {
+.swirlread-media__audio-wrap {
   width: 100%;
   max-width: 480px;
   padding: 0.5rem 0.65rem;
@@ -65,13 +65,13 @@
   border: 1px solid var(--color-border);
 }
 
-.swilread-media__audio {
+.swirlread-media__audio {
   width: 100%;
   display: block;
 }
 
 /* Image lightbox (M7 polish) ─────────────────────────────────────────── */
-.swilread-lightbox__overlay {
+.swirlread-lightbox__overlay {
   position: fixed;
   inset: 0;
   z-index: 100;
@@ -79,7 +79,7 @@
   backdrop-filter: blur(2px);
 }
 
-.swilread-lightbox {
+.swirlread-lightbox {
   position: fixed;
   inset: 0;
   z-index: 110;
@@ -92,7 +92,7 @@
   outline: none;
 }
 
-.swilread-lightbox__image {
+.swirlread-lightbox__image {
   max-width: 92vw;
   max-height: 84vh;
   height: auto;
@@ -102,7 +102,7 @@
   background: white;
 }
 
-.swilread-lightbox__close {
+.swirlread-lightbox__close {
   position: fixed;
   top: 16px;
   right: 16px;
@@ -118,11 +118,11 @@
   cursor: pointer;
 }
 
-.swilread-lightbox__close:hover {
+.swirlread-lightbox__close:hover {
   background: rgb(0 0 0 / 0.6);
 }
 
-.swilread-lightbox__caption {
+.swirlread-lightbox__caption {
   margin: 0;
   color: rgb(255 255 255 / 0.85);
   font-family: var(--font-sans);
@@ -130,30 +130,30 @@
 }
 
 /* Embeds ─────────────────────────────────────────────────────────────── */
-.swilread-prose .swilread-embed {
+.swirlread-prose .swirlread-embed {
   display: block;
   margin: 1.4em 0;
 }
 
-.swilread-prose .swilread-embed--image {
+.swirlread-prose .swirlread-embed--image {
   max-width: 100%;
   height: auto;
   border-radius: 6px;
   box-shadow: 0 1px 3px var(--color-shadow);
 }
 
-.swilread-prose .swilread-embed--video,
-.swilread-prose .swilread-embed--audio {
+.swirlread-prose .swirlread-embed--video,
+.swirlread-prose .swirlread-embed--audio {
   width: 100%;
   border-radius: 6px;
   background: var(--color-surface);
 }
 
-.swilread-prose .swilread-embed--audio {
+.swirlread-prose .swirlread-embed--audio {
   height: 40px;
 }
 
-.swilread-prose .swilread-embed--markdown {
+.swirlread-prose .swirlread-embed--markdown {
   border: 1px solid var(--color-border);
   border-left: 3px solid var(--color-accent);
   background: color-mix(in srgb, var(--color-surface) 60%, transparent);
@@ -161,7 +161,7 @@
   padding: 0.6em 1em 0.9em;
 }
 
-.swilread-prose .swilread-embed__header {
+.swirlread-prose .swirlread-embed__header {
   display: flex;
   align-items: center;
   gap: 0.4em;
@@ -175,21 +175,21 @@
   border-bottom: 1px dashed var(--color-border);
 }
 
-.swilread-prose .swilread-embed__filename {
+.swirlread-prose .swirlread-embed__filename {
   font-family: var(--font-mono);
   text-transform: none;
   letter-spacing: 0;
   color: var(--color-text-muted);
 }
 
-.swilread-prose .swilread-embed__body > *:first-child {
+.swirlread-prose .swirlread-embed__body > *:first-child {
   margin-top: 0;
 }
-.swilread-prose .swilread-embed__body > *:last-child {
+.swirlread-prose .swirlread-embed__body > *:last-child {
   margin-bottom: 0;
 }
 
-.swilread-prose .swilread-embed--card {
+.swirlread-prose .swirlread-embed--card {
   display: flex;
   align-items: center;
   gap: 0.6em;
@@ -202,7 +202,7 @@
   font-size: 0.9em;
 }
 
-.swilread-prose .swilread-embed__kind {
+.swirlread-prose .swirlread-embed__kind {
   display: inline-block;
   padding: 0.05em 0.5em;
   border-radius: 3px;
@@ -214,20 +214,20 @@
   text-transform: uppercase;
 }
 
-.swilread-prose .swilread-embed--pending {
+.swirlread-prose .swirlread-embed--pending {
   color: var(--color-text-muted);
   font-style: italic;
   cursor: progress;
 }
 
-.swilread-prose .swilread-embed--broken {
+.swirlread-prose .swirlread-embed--broken {
   color: var(--color-text-muted);
   font-style: italic;
   border-left: 2px dotted var(--color-text-muted);
   padding-left: 0.6em;
 }
 
-.swilread-prose .swilread-embed--cycle {
+.swirlread-prose .swirlread-embed--cycle {
   color: var(--color-text-muted);
   border: 1px dashed var(--color-text-muted);
   border-radius: 4px;

@@ -104,7 +104,7 @@ export function FileTreeNode({
       <ul role="group">
         {error && (
           <li
-            className="swilread-file-tree__status"
+            className="swirlread-file-tree__status"
             style={{ paddingLeft: `${(depth + 1) * 12}px` }}
             role="alert"
           >
@@ -113,7 +113,7 @@ export function FileTreeNode({
         )}
         {!error && children === null && (
           <li
-            className="swilread-file-tree__status"
+            className="swirlread-file-tree__status"
             style={{ paddingLeft: `${(depth + 1) * 12}px` }}
           >
             Reading…
@@ -121,7 +121,7 @@ export function FileTreeNode({
         )}
         {!error && children !== null && children.length === 0 && (
           <li
-            className="swilread-file-tree__status"
+            className="swirlread-file-tree__status"
             style={{ paddingLeft: `${(depth + 1) * 12}px` }}
           >
             (empty)
@@ -145,19 +145,19 @@ export function FileTreeNode({
       return (
         <li role="treeitem" aria-expanded={expanded}>
           <div
-            className={`swilread-file-tree__row swilread-file-tree__row--section${
+            className={`swirlread-file-tree__row swirlread-file-tree__row--section${
               isAncestor ? ' is-ancestor' : ''
             }${sectionActive ? ' is-active' : ''}`}
             style={indent}
           >
             <button
               type="button"
-              className="swilread-file-tree__chevron-btn"
+              className="swirlread-file-tree__chevron-btn"
               onClick={() => setExpanded(!expanded)}
               aria-label={`${expanded ? 'Collapse' : 'Expand'} ${entry.name}`}
             >
               <ChevronRight
-                className={`swilread-file-tree__chevron${
+                className={`swirlread-file-tree__chevron${
                   expanded ? ' is-expanded' : ''
                 }`}
                 size={12}
@@ -166,17 +166,17 @@ export function FileTreeNode({
             </button>
             <Link
               to={`/app/${vaultId}/${sectionHome}`}
-              className="swilread-file-tree__section-link"
+              className="swirlread-file-tree__section-link"
               aria-label={`Open ${entry.name} section`}
               aria-current={sectionActive ? 'page' : undefined}
               title={sectionHome}
             >
               <Library
-                className="swilread-file-tree__icon"
+                className="swirlread-file-tree__icon"
                 size={14}
                 aria-hidden="true"
               />
-              <span className="swilread-file-tree__name">{entry.name}</span>
+              <span className="swirlread-file-tree__name">{entry.name}</span>
             </Link>
           </div>
           {childList}
@@ -188,7 +188,7 @@ export function FileTreeNode({
       <li role="treeitem" aria-expanded={expanded}>
         <button
           type="button"
-          className={`swilread-file-tree__row swilread-file-tree__row--dir${
+          className={`swirlread-file-tree__row swirlread-file-tree__row--dir${
             isAncestor ? ' is-ancestor' : ''
           }`}
           style={indent}
@@ -196,18 +196,18 @@ export function FileTreeNode({
           aria-label={`${expanded ? 'Collapse' : 'Expand'} ${entry.name}`}
         >
           <ChevronRight
-            className={`swilread-file-tree__chevron${
+            className={`swirlread-file-tree__chevron${
               expanded ? ' is-expanded' : ''
             }`}
             size={12}
             aria-hidden="true"
           />
           <Icon
-            className="swilread-file-tree__icon"
+            className="swirlread-file-tree__icon"
             size={14}
             aria-hidden="true"
           />
-          <span className="swilread-file-tree__name">{entry.name}</span>
+          <span className="swirlread-file-tree__name">{entry.name}</span>
         </button>
         {childList}
       </li>
@@ -218,7 +218,7 @@ export function FileTreeNode({
     <li role="treeitem">
       <Link
         to={`/app/${vaultId}/${entry.path}`}
-        className={`swilread-file-tree__row swilread-file-tree__row--file${
+        className={`swirlread-file-tree__row swirlread-file-tree__row--file${
           isActive ? ' is-active' : ''
         }`}
         style={indent}
@@ -231,15 +231,15 @@ export function FileTreeNode({
         }}
       >
         <span
-          className="swilread-file-tree__chevron-spacer"
+          className="swirlread-file-tree__chevron-spacer"
           aria-hidden="true"
         />
         <FileText
-          className="swilread-file-tree__icon"
+          className="swirlread-file-tree__icon"
           size={14}
           aria-hidden="true"
         />
-        <span className="swilread-file-tree__name">{entry.name}</span>
+        <span className="swirlread-file-tree__name">{entry.name}</span>
       </Link>
     </li>
   )

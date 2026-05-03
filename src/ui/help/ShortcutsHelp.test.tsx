@@ -30,7 +30,7 @@ describe('ShortcutsHelp (M9.4)', () => {
     expect(dialog).toBeInTheDocument()
     // Spot-check a binding from each group.
     expect(
-      dialog.querySelector('.swilread-shortcuts__list')?.textContent,
+      dialog.querySelector('.swirlread-shortcuts__list')?.textContent,
     ).toMatch(/Open command palette/i)
     expect(dialog.textContent).toMatch(/zen mode/i)
     expect(dialog.textContent).toMatch(/this list of shortcuts/i)

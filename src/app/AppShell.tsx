@@ -12,6 +12,7 @@ import {
   Search,
   Settings,
 } from 'lucide-react'
+import { useDialogStore } from '@/stores/dialog-store'
 import { useUIStore } from '@/stores/ui-store'
 import { useVaultStore } from '@/stores/vault-store'
 import { Logo } from '@/ui/components/Logo'
@@ -19,6 +20,8 @@ import { TabStrip } from '@/ui/reading-shell/TabStrip'
 import { VaultSwitcher } from '@/ui/reading-shell/VaultSwitcher'
 import { deriveCurrentPathFromPathname } from './derive-current-path'
 import { useCommandPaletteHotkey } from './use-command-palette-hotkey'
+import { useDirtyNavigationGuard } from './use-dirty-navigation-guard'
+import { useRouterDirtyBlocker } from './use-router-dirty-blocker'
 import { useShortcutsHelpHotkey } from './use-shortcuts-help-hotkey'
 import { useZenModeHotkey } from './use-zen-mode-hotkey'
 
@@ -46,6 +49,15 @@ const ShortcutsHelp = lazy(() =>
   })),
 )
 
+// Phase 2D: app-wide imperative confirm dialog (driven by useDialogStore).
+// Only mounts when something requests a confirmation, so the Radix
+// Dialog runtime stays out of the hot path for read-only sessions.
+const ConfirmDialog = lazy(() =>
+  import('@/ui/components/ConfirmDialog').then((module) => ({
+    default: module.ConfirmDialog,
+  })),
+)
+
 export function AppShell() {
   const fileTreeOpen = useUIStore((s) => s.fileTreeOpen)
   const toggleFileTree = useUIStore((s) => s.toggleFileTree)
@@ -55,6 +67,7 @@ export function AppShell() {
   const commandPaletteOpen = useUIStore((s) => s.commandPaletteOpen)
   const toggleCommandPalette = useUIStore((s) => s.toggleCommandPalette)
   const shortcutsHelpOpen = useUIStore((s) => s.shortcutsHelpOpen)
+  const confirmDialogPayload = useDialogStore((s) => s.confirmPayload)
   const chromeMode = useUIStore((s) => s.chromeMode)
   const toggleChromeMode = useUIStore((s) => s.toggleChromeMode)
   const setChromeMode = useUIStore((s) => s.setChromeMode)
@@ -67,6 +80,8 @@ export function AppShell() {
   useCommandPaletteHotkey()
   useZenModeHotkey()
   useShortcutsHelpHotkey()
+  useDirtyNavigationGuard()
+  useRouterDirtyBlocker()
 
   // The header's tab strip needs to know which vault we're inside and
   // the active document path; both come from the URL. Matching here
@@ -86,7 +101,7 @@ export function AppShell() {
   return (
     <div className="flex min-h-screen flex-col">
       <header
-        className="swilread-shell__header sticky top-0 z-50 flex h-[var(--shell-header-height)] items-center justify-between gap-3 border-b px-4"
+        className="swirlread-shell__header sticky top-0 z-50 flex h-[var(--shell-header-height)] items-center justify-between gap-3 border-b px-4"
         style={{
           borderColor: 'var(--color-border)',
           backgroundColor: 'var(--color-bg)',
@@ -108,7 +123,7 @@ export function AppShell() {
                 }
               })()
             }
-            className="swilread-shell__icon-button"
+            className="swirlread-shell__icon-button"
             aria-label={fileTreePinned ? 'Hide file tree' : 'Show file tree'}
             aria-pressed={fileTreePinned}
             title={fileTreePinned ? 'Hide file tree' : 'Show file tree'}
@@ -123,15 +138,15 @@ export function AppShell() {
             to="/"
             className="flex items-center gap-1.5 font-serif text-lg font-semibold"
             style={{ color: 'var(--color-text)' }}
-            aria-label="SwilRead — back to vaults"
+            aria-label="SwirlRead — back to vaults"
           >
             <Logo size={20} decorative />
-            <span>SwilRead</span>
+            <span>SwirlRead</span>
           </Link>
           {hasAnyVault && <VaultSwitcher />}
         </div>
         {vaultId && (
-          <div className="swilread-shell__tabs">
+          <div className="swirlread-shell__tabs">
             <TabStrip vaultId={vaultId} currentPath={currentPath} />
           </div>
         )}
@@ -139,7 +154,7 @@ export function AppShell() {
           <button
             type="button"
             onClick={() => void toggleChromeMode()}
-            className="swilread-shell__icon-button"
+            className="swirlread-shell__icon-button"
             aria-label={
               chromeMode === 'reading'
                 ? 'Switch to working mode'
@@ -161,7 +176,7 @@ export function AppShell() {
           <button
             type="button"
             onClick={toggleZenMode}
-            className="swilread-shell__icon-button"
+            className="swirlread-shell__icon-button"
             aria-label={zenMode ? 'Exit zen mode' : 'Enter zen mode'}
             aria-pressed={zenMode}
             title={zenMode ? 'Exit zen mode (F or Esc)' : 'Zen mode (F)'}
@@ -175,7 +190,7 @@ export function AppShell() {
           <button
             type="button"
             onClick={toggleCommandPalette}
-            className="swilread-shell__icon-button"
+            className="swirlread-shell__icon-button"
             aria-label="Open command palette"
             title="Command palette (⌘K)"
           >
@@ -184,7 +199,7 @@ export function AppShell() {
           <button
             type="button"
             onClick={() => void toggleToc()}
-            className="swilread-shell__icon-button"
+            className="swirlread-shell__icon-button"
             aria-label={
               tocOpen ? 'Hide table of contents' : 'Show table of contents'
             }
@@ -203,7 +218,7 @@ export function AppShell() {
             fallback={
               <button
                 type="button"
-                className="swilread-shell__icon-button"
+                className="swirlread-shell__icon-button"
                 aria-label="Open settings"
                 title="Settings"
                 disabled
@@ -227,6 +242,11 @@ export function AppShell() {
       {shortcutsHelpOpen && (
         <Suspense fallback={null}>
           <ShortcutsHelp />
+        </Suspense>
+      )}
+      {confirmDialogPayload && (
+        <Suspense fallback={null}>
+          <ConfirmDialog />
         </Suspense>
       )}
     </div>

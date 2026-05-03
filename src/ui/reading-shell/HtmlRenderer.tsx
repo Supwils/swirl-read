@@ -38,17 +38,17 @@ export function HtmlRenderer({ source }: HtmlRendererProps): ReactNode {
   const [mode, setMode] = useState<ViewMode>('preview')
 
   return (
-    <section className="swilread-html" data-testid="html-renderer">
-      <div className="swilread-html__toolbar">
-        <span className="swilread-html__badge" title="Sandboxed preview">
+    <section className="swirlread-html" data-testid="html-renderer">
+      <div className="swirlread-html__toolbar">
+        <span className="swirlread-html__badge" title="Sandboxed preview">
           Sandboxed
         </span>
-        <div className="swilread-html__toggle" role="tablist">
+        <div className="swirlread-html__toggle" role="tablist">
           <button
             type="button"
             role="tab"
             aria-selected={mode === 'preview'}
-            className={`swilread-html__toggle-btn ${
+            className={`swirlread-html__toggle-btn ${
               mode === 'preview' ? 'is-active' : ''
             }`}
             onClick={() => {
@@ -62,7 +62,7 @@ export function HtmlRenderer({ source }: HtmlRendererProps): ReactNode {
             type="button"
             role="tab"
             aria-selected={mode === 'source'}
-            className={`swilread-html__toggle-btn ${
+            className={`swirlread-html__toggle-btn ${
               mode === 'source' ? 'is-active' : ''
             }`}
             onClick={() => {
@@ -83,7 +83,7 @@ export function HtmlRenderer({ source }: HtmlRendererProps): ReactNode {
           sandbox=""
           srcDoc={source}
           title="HTML preview"
-          className="swilread-html__frame"
+          className="swirlread-html__frame"
           data-testid="html-renderer-iframe"
         />
       ) : (

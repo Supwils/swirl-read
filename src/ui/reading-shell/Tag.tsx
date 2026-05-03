@@ -29,7 +29,7 @@ export function Tag(props: TagProps): ReactNode {
   return (
     <button
       type="button"
-      className="swilread-tag"
+      className="swirlread-tag"
       data-tag={tag}
       onClick={() => selectTag(tag)}
       aria-label={`Show files with tag #${tag}`}

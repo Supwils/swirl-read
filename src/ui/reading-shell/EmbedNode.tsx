@@ -51,13 +51,15 @@ export function EmbedNode(props: EmbedProps): ReactNode {
 
   if (!target) {
     return (
-      <span className="swilread-embed swilread-embed--broken">Empty embed</span>
+      <span className="swirlread-embed swirlread-embed--broken">
+        Empty embed
+      </span>
     )
   }
 
   if (!wikiCtx) {
     return (
-      <span className="swilread-embed swilread-embed--pending">
+      <span className="swirlread-embed swirlread-embed--pending">
         Loading embed…
       </span>
     )
@@ -66,7 +68,7 @@ export function EmbedNode(props: EmbedProps): ReactNode {
   if (!wikiCtx.index) {
     return (
       <span
-        className="swilread-embed swilread-embed--pending"
+        className="swirlread-embed swirlread-embed--pending"
         data-target={target}
       >
         Resolving “{target}”…
@@ -78,7 +80,7 @@ export function EmbedNode(props: EmbedProps): ReactNode {
   if (!resolved) {
     return (
       <span
-        className="swilread-embed swilread-embed--broken"
+        className="swirlread-embed swirlread-embed--broken"
         data-target={target}
         title={`No file found for "${target}"`}
       >
@@ -89,7 +91,7 @@ export function EmbedNode(props: EmbedProps): ReactNode {
 
   if (embedCtx.stack.includes(resolved)) {
     return (
-      <aside className="swilread-embed swilread-embed--cycle">
+      <aside className="swirlread-embed swirlread-embed--cycle">
         Circular embed prevented: <code>{resolved}</code>
       </aside>
     )
@@ -97,7 +99,7 @@ export function EmbedNode(props: EmbedProps): ReactNode {
 
   if (embedCtx.stack.length >= MAX_EMBED_DEPTH) {
     return (
-      <aside className="swilread-embed swilread-embed--cycle">
+      <aside className="swirlread-embed swirlread-embed--cycle">
         Embed depth limit ({MAX_EMBED_DEPTH}) reached at <code>{resolved}</code>
         .
       </aside>
@@ -107,7 +109,7 @@ export function EmbedNode(props: EmbedProps): ReactNode {
   const vault = getAdapter(wikiCtx.vaultId)
   if (!vault) {
     return (
-      <span className="swilread-embed swilread-embed--broken">
+      <span className="swirlread-embed swirlread-embed--broken">
         Vault not loaded for embed.
       </span>
     )
@@ -168,21 +170,21 @@ function ImageEmbed({
   const dims = parseImageDimensions(display)
   if (error) {
     return (
-      <span className="swilread-embed swilread-embed--broken">
+      <span className="swirlread-embed swirlread-embed--broken">
         Couldn&apos;t load <code>{resolved}</code>: {error}
       </span>
     )
   }
   if (!url) {
     return (
-      <span className="swilread-embed swilread-embed--pending">
+      <span className="swirlread-embed swirlread-embed--pending">
         Loading <code>{resolved}</code>…
       </span>
     )
   }
   return (
     <img
-      className="swilread-embed swilread-embed--image"
+      className="swirlread-embed swirlread-embed--image"
       src={url}
       alt={dims.alt ?? fallbackAlt}
       data-target={resolved}
@@ -203,21 +205,21 @@ function VideoEmbed({
   const { url, error } = useBlobURL(vault, resolved)
   if (error) {
     return (
-      <span className="swilread-embed swilread-embed--broken">
+      <span className="swirlread-embed swirlread-embed--broken">
         Couldn&apos;t load <code>{resolved}</code>: {error}
       </span>
     )
   }
   if (!url) {
     return (
-      <span className="swilread-embed swilread-embed--pending">
+      <span className="swirlread-embed swirlread-embed--pending">
         Loading <code>{resolved}</code>…
       </span>
     )
   }
   return (
     <video
-      className="swilread-embed swilread-embed--video"
+      className="swirlread-embed swirlread-embed--video"
       src={url}
       controls
       preload="metadata"
@@ -236,21 +238,21 @@ function AudioEmbed({
   const { url, error } = useBlobURL(vault, resolved)
   if (error) {
     return (
-      <span className="swilread-embed swilread-embed--broken">
+      <span className="swirlread-embed swirlread-embed--broken">
         Couldn&apos;t load <code>{resolved}</code>: {error}
       </span>
     )
   }
   if (!url) {
     return (
-      <span className="swilread-embed swilread-embed--pending">
+      <span className="swirlread-embed swirlread-embed--pending">
         Loading <code>{resolved}</code>…
       </span>
     )
   }
   return (
     <audio
-      className="swilread-embed swilread-embed--audio"
+      className="swirlread-embed swirlread-embed--audio"
       src={url}
       controls
       preload="metadata"
@@ -297,7 +299,7 @@ function MarkdownEmbed({
 
   if (error) {
     return (
-      <aside className="swilread-embed swilread-embed--broken">
+      <aside className="swirlread-embed swirlread-embed--broken">
         Couldn&apos;t embed <code>{resolved}</code>: {error}
       </aside>
     )
@@ -312,25 +314,25 @@ function MarkdownEmbed({
 
   return (
     <aside
-      className="swilread-embed swilread-embed--markdown"
+      className="swirlread-embed swirlread-embed--markdown"
       data-target={resolved}
     >
-      <header className="swilread-embed__header">
-        <span className="swilread-embed__filename">{resolved}</span>
+      <header className="swirlread-embed__header">
+        <span className="swirlread-embed__filename">{resolved}</span>
       </header>
-      <div className="swilread-embed__body swilread-prose">
+      <div className="swirlread-embed__body swirlread-prose">
         {innerWikiCtx ? (
           <WikilinkContext.Provider value={innerWikiCtx}>
             <EmbedContext.Provider value={childContext}>
               {content ?? (
-                <span className="swilread-embed--pending">Reading…</span>
+                <span className="swirlread-embed--pending">Reading…</span>
               )}
             </EmbedContext.Provider>
           </WikilinkContext.Provider>
         ) : (
           <EmbedContext.Provider value={childContext}>
             {content ?? (
-              <span className="swilread-embed--pending">Reading…</span>
+              <span className="swirlread-embed--pending">Reading…</span>
             )}
           </EmbedContext.Provider>
         )}
@@ -349,11 +351,11 @@ function FileCardEmbed({
   const label = kind === 'pdf' ? 'PDF' : 'File'
   return (
     <aside
-      className="swilread-embed swilread-embed--card"
+      className="swirlread-embed swirlread-embed--card"
       data-target={resolved}
     >
-      <span className="swilread-embed__kind">{label}</span>
-      <code className="swilread-embed__filename">{resolved}</code>
+      <span className="swirlread-embed__kind">{label}</span>
+      <code className="swirlread-embed__filename">{resolved}</code>
     </aside>
   )
 }

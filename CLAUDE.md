@@ -1,18 +1,18 @@
-# CLAUDE.md — SwilRead
+# CLAUDE.md — SwirlRead
 
 This file is the entry point for AI agents working on this codebase. Read this first.
 
 ## What This Project Is
 
-**SwilRead** — a local-first, web-based, read-optimized interface for Markdown knowledge vaults.
+**SwirlRead** — a local-first, web-based, read-optimized interface for Markdown knowledge vaults.
 
 Tagline: **Read your knowledge. Beautifully.**
 Sub-tagline: **A reading sanctuary for the AI era.**
 
 ## Project State
 
-- **Phase**: Phase 1 complete — **M0–M7** shipped; **reader-experience craft pass** complete (RX1 / RX2 / RX3 / RX4 / RX5 / RX6 / RX7-DocumentPage); **M8 sample vault** end-to-end; **M9.1 / M9.2 / M9.3 / M9.4 / M9.5 / M9.6 / M9.7** all done; **M2.5 hover zones** done; **M7 polish complete** (image lightbox, audio themed wrapper, JSON tree search, copy-path); **M9.8 launch surface** ready to deploy — **operator action remaining**: register domain, link Vercel project, set secrets, push `v0.1.0` tag, post Show HN. See `docs/launch/launch-checklist.md`. **Phase 2** (lightweight editing): designed, not started.
-- **Tests**: 671 passing. Bundle: **main 249.00 KB gz**, CSS ~22.6 KB gz. Heavy renderers (Mermaid, KaTeX, Floating UI, all six M7 file renderers, command palette, tag panel, TOC, shortcuts help) live in lazy chunks.
+- **Phase**: Phase 1 complete — **M0–M7** shipped; **reader-experience craft pass** complete (RX1 / RX2 / RX3 / RX4 / RX5 / RX6 / RX7-DocumentPage); **M8 sample vault** end-to-end; **M9.1 / M9.2 / M9.3 / M9.4 / M9.5 / M9.6 / M9.7** all done; **M2.5 hover zones** done; **M7 polish complete**; **M9.8 launch surface** ready to deploy. **Phase 2 lightweight editing is feature-complete** as of 2026-05-03 — all four slices landed: 2A (`writeText` + FSAPI write + permissions), 2B (editor-store + dirty nav guard), 2C (DocumentEditSurface + CodeMirror 6 lazy chunk + read↔edit swap), 2D (`isReadOnly` capability gate + Radix confirm + useBlocker + editor prefs). See `docs/develop/lightweight-editing-plan.md` for the original spec; out-of-scope items (file create/rename/delete, multi-file editing, WYSIWYG, draft persistence) intentionally not addressed.
+- **Tests**: 747 passing. Bundle: **main 257.75 KB gz**, CSS ~25.1 KB gz, plus a lazy `DocumentEditSurface-*.js` chunk **183.85 KB gz** (CodeMirror runtime; only loads on first Edit click) and a lazy `ConfirmDialog-*.js` chunk **0.56 KB gz** (Radix runtime is shared with SettingsPanel/ShortcutsHelp). Heavy renderers (Mermaid, KaTeX, Floating UI, all six M7 file renderers, command palette, tag panel, TOC, shortcuts help, **CodeMirror runtime**, **app-wide confirm dialog**) live in lazy chunks — keep new heavy modules on the same pattern.
 - **Stack**: Vite 7 + React 19 + TypeScript 5.9 strict + Tailwind v4 + React Router 7
 - **Platform**: Web App via File System Access API (desktop browsers; iOS Safari known-broken). Tauri desktop deferred.
 - **Truth source order is strict.** When the docs disagree, `docs/develop/README.md` wins, then `docs/develop/phase-1-implementation-plan.md`, then `docs/develop/work-log.md`. Never trust this file's high-level summary over those three.
@@ -63,9 +63,16 @@ The canonical test vault is the user's own knowledge OS at `/Users/supwils/supwi
 - Variable names should be descriptive enough that comments aren't needed.
 - TypeScript strict mode; no `any` without justification.
 
+## Communication Language
+
+- **Default chat language is Simplified Chinese (中文).** All assistant-facing prose — answers, status updates, plan summaries, end-of-turn recaps — must be in Chinese unless the user explicitly asks (in this session) for a different language. Do not switch back to English on your own initiative.
+- **Code, identifiers, comments, commit messages, log strings, and docs stay in English** (this is the existing convention — do not translate them).
+- This rule persists across turns and conversations until the user explicitly overrides it in chat.
+
 ## Working Conventions Learned On The Job
 
 - **Never commit or push without explicit user instruction.** Do not run `git commit` or `git push` (or any variant) unless the user explicitly asks. Finish all code changes first; wait for the user to say "commit" or "push".
+- **Never add `Co-Authored-By` to commit messages.** Commits should show only the user as author — no Claude attribution line.
 - **Gate every change** with `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build`. Lint runs at `--max-warnings 0` — even react-refresh advisories fail the build, so split helpers out of component files when needed (see `src/ui/reading-shell/file-renderer-utils.ts` for the pattern).
 - **Renderer chunks must stay lazy.** Mermaid, KaTeX, Shiki extra grammars, the command palette, the tags panel, the TOC, and the ShortcutsHelp overlay all sit in their own dynamic-import chunks. New heavy renderers must follow the same pattern (`MermaidDiagram` → `MermaidRenderer` is the canonical reference).
 - **Per-vault state is keyed by `vaultId`.** Recents, scroll memory, backlinks, tag index, walked files, file-tree listings, and full-text index all separate per vault and must invalidate on `removeVault` (`forgetVault()` / `invalidate*` helpers). Don't add a new per-vault cache without wiring its invalidator into the same fan-out.

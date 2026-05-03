@@ -61,10 +61,10 @@ export function JsonRenderer({ source }: JsonRendererProps): ReactNode {
   }, [parsed, query])
 
   return (
-    <section className="swilread-json" data-testid="json-renderer">
-      <div className="swilread-json__toolbar">
+    <section className="swirlread-json" data-testid="json-renderer">
+      <div className="swirlread-json__toolbar">
         {parsed.ok && mode === 'tree' && (
-          <label className="swilread-json__search">
+          <label className="swirlread-json__search">
             <Search size={14} aria-hidden="true" />
             <input
               type="search"
@@ -79,17 +79,17 @@ export function JsonRenderer({ source }: JsonRendererProps): ReactNode {
           </label>
         )}
         {!parsed.ok && (
-          <span className="swilread-json__error" role="alert">
+          <span className="swirlread-json__error" role="alert">
             Couldn&apos;t parse JSON: {parsed.message}
           </span>
         )}
-        <div className="swilread-json__toggle" role="tablist">
+        <div className="swirlread-json__toggle" role="tablist">
           <button
             type="button"
             role="tab"
             aria-selected={mode === 'tree'}
             disabled={!parsed.ok}
-            className={`swilread-json__toggle-btn ${
+            className={`swirlread-json__toggle-btn ${
               mode === 'tree' ? 'is-active' : ''
             }`}
             onClick={() => {
@@ -103,7 +103,7 @@ export function JsonRenderer({ source }: JsonRendererProps): ReactNode {
             type="button"
             role="tab"
             aria-selected={mode === 'source'}
-            className={`swilread-json__toggle-btn ${
+            className={`swirlread-json__toggle-btn ${
               mode === 'source' ? 'is-active' : ''
             }`}
             onClick={() => {
@@ -117,7 +117,7 @@ export function JsonRenderer({ source }: JsonRendererProps): ReactNode {
       </div>
 
       {mode === 'tree' && parsed.ok ? (
-        <div className="swilread-json__tree" data-testid="json-renderer-tree">
+        <div className="swirlread-json__tree" data-testid="json-renderer-tree">
           <JsonNode
             value={parsed.value}
             depth={0}

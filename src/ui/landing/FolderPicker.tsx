@@ -92,7 +92,7 @@ export function FolderPicker({ open, onClose, onPicked }: FolderPickerProps) {
         style={{ color: 'var(--color-text)' }}
       >
         <p>
-          Choose any folder containing your Markdown files. SwilRead reads them
+          Choose any folder containing your Markdown files. SwirlRead reads them
           directly from your device. Nothing is uploaded.
         </p>
         <p style={{ color: 'var(--color-text-muted)' }}>

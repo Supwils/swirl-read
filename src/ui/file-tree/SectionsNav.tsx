@@ -45,8 +45,8 @@ export function SectionsNav({
   )
 
   return (
-    <nav className="swilread-file-tree__sections" aria-label="Sections">
-      <p className="swilread-file-tree__section-label">Sections</p>
+    <nav className="swirlread-file-tree__sections" aria-label="Sections">
+      <p className="swirlread-file-tree__section-label">Sections</p>
       <ul>
         {sorted.map((section) => {
           if (!section.home) return null
@@ -55,7 +55,7 @@ export function SectionsNav({
             <li key={section.directory.path}>
               <Link
                 to={`/app/${vaultId}/${section.home}`}
-                className={`swilread-file-tree__row swilread-file-tree__row--section-link${
+                className={`swirlread-file-tree__row swirlread-file-tree__row--section-link${
                   isActive ? ' is-active' : ''
                 }`}
                 aria-label={`Open ${section.directory.name} section`}
@@ -63,11 +63,11 @@ export function SectionsNav({
                 title={section.home}
               >
                 <Library
-                  className="swilread-file-tree__icon"
+                  className="swirlread-file-tree__icon"
                   size={14}
                   aria-hidden="true"
                 />
-                <span className="swilread-file-tree__name">
+                <span className="swirlread-file-tree__name">
                   {section.directory.name}
                 </span>
               </Link>

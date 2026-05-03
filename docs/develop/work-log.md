@@ -1,6 +1,223 @@
-# SwilRead — Work Log
+# SwirlRead — Work Log
 
 > Reverse chronological log of implementation work. Most recent entries first.
+
+---
+
+## 2026-05-03 · Phase 2D — Editor polish (isReadOnly + Radix confirm + useBlocker + editor prefs)
+
+**Status**: ✅ Phase 2D closes the lightweight-editing arc. Three concrete UX upgrades on top of 2C: (1) sync `isReadOnly` capability flag pre-flights the Edit affordance so SampleVault never even shows the button; (2) app-wide Radix-styled confirm dialog replaces every `window.confirm` and is wired into a React Router 7 `useBlocker` so in-app navigation is gated; (3) three persisted editor preferences (line numbers, line wrap, font size) are reactive via CodeMirror Compartments — toggles apply live without rebuilding the EditorState. The lightweight-editing scope (Phase 2A → 2D) is now feature-complete.
+
+### What changed
+
+- **`src/core/vault/types.ts`** — added `readonly isReadOnly: boolean` to `VaultFileSystem`. Static capability that distinguishes "this adapter cannot ever write" (sample) from "this adapter can write but hasn't been granted permission yet" (FSAPI before grant). Pre-flight gate in DocumentBodyView replaces the post-hoc `read-only-vault` error path for the sample case.
+
+- **`src/core/vault/fsapi-adapter.ts`** — `readonly isReadOnly = false`. Real on-disk vaults always have write potential.
+
+- **`src/core/vault/sample-adapter.ts`** — `readonly isReadOnly = true`. The bundled fixture is hard-locked.
+
+- **`src/ui/reading-shell/DocumentBodyView.tsx`** — `canEdit` now checks `!adapter.isReadOnly` instead of `typeof adapter.writeText === 'function'`. SampleVault no longer shows the Edit button; FSAPI vaults still do.
+
+- **`src/stores/dialog-store.ts`** (new, ~95 LOC) — Zustand store for app-wide imperative confirm dialogs. `requestConfirmation(opts)` returns a Promise<boolean> and publishes a `ConfirmDialogPayload` in store state. Only one prompt active at a time: a second request auto-cancels the pending one as `false` so two concurrent prompts can't fight over the dialog instance. Resolve fn lives in module scope (non-serialisable).
+
+- **`src/stores/dialog-store.test.ts`** (new, 4 tests) — covers happy-path confirm, happy-path cancel, auto-cancel-on-replace, and `reset()` rejecting any pending prompt.
+
+- **`src/ui/components/ConfirmDialog.tsx`** (new, ~75 LOC) — Lazy-loaded Radix Dialog that subscribes to `dialog-store.confirmPayload` and renders the prompt. Cancel auto-focused (destructive prompts default to the safe action so a stray Enter doesn't discard work). `destructive: true` payloads style the confirm button with a danger accent. Mounted at AppShell behind a `Suspense` gate keyed on `confirmPayload`.
+
+- **`src/styles/editor.css`** — added `.swirlread-confirm` chrome (overlay with backdrop blur, centered card with rise animation, danger-styled primary button via `var(--color-danger)`). Reuses existing `.swirlread-edit__btn` primitives so we don't drift two button systems.
+
+- **`src/app/use-router-dirty-blocker.ts`** (new, ~50 LOC) — `useRouterDirtyBlocker()` mounts React Router 7's `useBlocker`. When a dirty session exists AND the pathname is changing (state-only changes don't trigger), it `await`s the Radix confirm dialog. Confirm → drop the editor session via `editor-store.cancel()` then `blocker.proceed()`. Cancel → `blocker.reset()`. Mounted at AppShell next to the existing `useDirtyNavigationGuard()` (browser-level beforeunload).
+
+- **`src/app/use-dirty-navigation-guard.ts`** — `confirmLeaveIfDirty()` is now async (returns `Promise<boolean>`) and uses `requestConfirmation()` instead of `window.confirm`. Same prompt copy; same fail-safe true return for SSR / no-dirty cases.
+
+- **`src/app/use-dirty-navigation-guard.test.ts`** — updated for the async API; replaced the `window.confirm` spy with `useDialogStore.answerConfirmation()` assertions.
+
+- **`src/ui/reading-shell/DocumentEditSurface.tsx`** — `handleCancel()` is now async; uses `requestConfirmation()` instead of `window.confirm`. Both keymap (`Escape`) and click handler (`Cancel` button) wrap with `void` to satisfy the no-floating-promises rule. Added two CodeMirror Compartments for live editor pref reconfiguration: `lineNumbersCompartmentRef` swaps `lineNumbers()` extension on/off; `lineWrapCompartmentRef` swaps `EditorView.lineWrapping` on/off. Editor host element gets `style={{ fontSize }}` driven by `editorFontSize` so the runtime cm-content inherits via `font-family: inherit` plus the CSS override hooks.
+
+- **`src/ui/reading-shell/DocumentEditSurface.test.tsx`** — extended CodeMirror mocks: `@codemirror/view` exports `lineNumbers()` and `@codemirror/state` exports a `Compartment` shim with `of()` / `reconfigure()`. The dirty-Cancel test was rewritten to drive the new Radix flow (publishes payload → answer via store → asserts onExit fires).
+
+- **`src/stores/ui-store.ts`** — three new persisted prefs: `editorLineNumbers` (bool, default false), `editorLineWrap` (bool, default true), `editorFontSize` (`'sm' | 'md' | 'lg'`, default `'md'`). Round-trip through Dexie via existing `readPref` / `writePref` helpers; `EDITOR_FONT_SIZE_PX` exports the keyword→px mapping (sm:13, md:15, lg:17). `resetToDefaults` extended to clear them too.
+
+- **`src/ui/settings-panel/SettingsPanel.tsx`** — new `EditorPreferencesGroup` rendered after the existing TocControl. Two checkboxes (line numbers, line wrap) + segmented control (sm/md/lg).
+
+- **`src/app/AppShell.tsx`** — mounts `useRouterDirtyBlocker()` next to the other guards; adds the lazy `ConfirmDialog` import + render gate keyed on `useDialogStore.confirmPayload`.
+
+- **`src/stores/vault-store.test.ts` + `src/stores/editor-store.test.ts`** — fake adapters now declare `isReadOnly: false` to satisfy the widened interface.
+
+### Decisions
+
+- **`isReadOnly` is sync; `hasWritePermission` stays async.** Distinct concepts: the former is a static adapter capability ("can this adapter type ever write?"), the latter is a runtime permission state ("can it write right now?"). Sample says no to both forever; FSAPI says yes to the first and "depends on the handle" to the second.
+- **Cancel button gets autofocus in the confirm dialog.** Destructive prompts should default to the safe action — Enter shouldn't be a one-key data-loss path. This matches macOS HIG and the GNOME / Apple convention.
+- **Auto-cancel on duplicate request.** If two prompts race (router blocker + cancel button click in quick succession), the older one resolves `false` so the user only ever sees the newer prompt. Without this, the dialog would render whichever payload last set state and the older Promise would hang.
+- **Block only on pathname changes.** `useBlocker` would otherwise prompt on hash anchor jumps and search-string-only updates, which feel pathological. The predicate compares `currentLocation.pathname !== nextLocation.pathname`.
+- **Editor prefs flow through Compartments, not state rebuild.** A full `EditorState.create()` would reset undo history and cursor position. Compartments let us swap individual extensions in place — exactly what they exist for.
+- **Editor font size keyword (sm/md/lg) instead of free-form px.** Same rationale as the existing `chromeMode` enum pattern — three discrete values are easier to reason about than a slider, and the prose font size has its own slider already so users have a precision tool when they need one.
+
+### Files added / modified
+
+- `src/core/vault/types.ts` — `isReadOnly` added to interface
+- `src/core/vault/fsapi-adapter.ts` — `isReadOnly = false`
+- `src/core/vault/sample-adapter.ts` — `isReadOnly = true`
+- `src/stores/dialog-store.ts` (new)
+- `src/stores/dialog-store.test.ts` (new)
+- `src/ui/components/ConfirmDialog.tsx` (new)
+- `src/styles/editor.css` — confirm dialog chrome
+- `src/app/use-router-dirty-blocker.ts` (new)
+- `src/app/use-dirty-navigation-guard.ts` — async + Radix
+- `src/app/use-dirty-navigation-guard.test.ts` — updated for async API
+- `src/ui/reading-shell/DocumentEditSurface.tsx` — Radix cancel + Compartments + font-size style
+- `src/ui/reading-shell/DocumentEditSurface.test.tsx` — extended mocks + Radix-driven cancel test
+- `src/ui/reading-shell/DocumentBodyView.tsx` — `isReadOnly` pre-flight gate
+- `src/stores/ui-store.ts` — three new editor prefs + reset wiring
+- `src/ui/settings-panel/SettingsPanel.tsx` — EditorPreferencesGroup
+- `src/app/AppShell.tsx` — useRouterDirtyBlocker + ConfirmDialog mount
+- `src/stores/vault-store.test.ts` + `src/stores/editor-store.test.ts` — adapter mocks
+
+### Verification
+
+- `pnpm typecheck`: 0 errors
+- `pnpm lint --max-warnings 0`: 0 warnings
+- `pnpm format:check`: clean
+- `pnpm test`: **747 / 747 passing** (+4 dialog-store tests)
+- `pnpm build`: succeeded; main chunk **257.75 KB gz** (Δ +0.84 KB vs 2C — useBlocker subscribe, dialog-store reads, Compartment imports, ui-store reads, ConfirmDialog lazy wrapper). EditSurface chunk **183.85 KB gz** (Δ +2.2 KB — Compartment + lineNumbers extension code). New `ConfirmDialog-*.js` chunk **0.56 KB gz** (Radix Dialog runtime is shared with SettingsPanel/ShortcutsHelp so we only ship the wrapper JSX).
+
+### What this closes
+
+Phase 2 (lightweight editing) is **feature-complete** as specified in `docs/develop/lightweight-editing-plan.md`:
+
+- ✅ Phase 2A — `VaultFileSystem.writeText` + FSAPI write + permissions
+- ✅ Phase 2B — editor-store + dirty navigation guard
+- ✅ Phase 2C — DocumentEditSurface + CodeMirror 6 + read↔edit swap
+- ✅ Phase 2D — `isReadOnly` gate + Radix confirm + useBlocker + editor preferences
+
+Out-of-scope per spec (and intentionally not addressed): file creation/rename/delete, multi-file editing, WYSIWYG/block authoring, find/replace UI re-skin (CodeMirror's panel works), unsaved-draft persistence across sessions.
+
+### Next directions (operator's choice)
+
+- **Ship v0.1** — register `swirlread.app`, link Vercel, push `v0.1.0` tag, post Show HN. Editing is ready to demo.
+- **Phase 3 ideas** — AI features (per `docs/design/ai-roadmap.md`), Tauri desktop, mobile (Phase 3 per design docs).
+- **Polish backlog** — find/replace UX surfacing (toolbar Find icon could open a dedicated overlay); editor command-palette commands; markdown formatting toolbar (bold/italic/link) if user research validates need.
+
+---
+
+## 2026-05-03 · Phase 2C — DocumentEditSurface (CodeMirror 6 lightweight editor)
+
+**Status**: ✅ Phase 2C lands the user-facing editing UI on top of the Phase 2B store. Edit button in the document header → `DocumentEditSurface` (lazy chunk) → CodeMirror 6 with markdown syntax + history + search → toolbar Save/Cancel/Find → save-and-exit semantics → conflict + permission-denied banners. Phase 2D (find/replace polish, sync `isReadOnly` capability) is the only follow-up before the editing slice is shippable.
+
+### What changed
+
+- **`src/ui/reading-shell/DocumentEditSurface.tsx`** (new, ~280 LOC) — Lazy-loadable React component. Mounts a CodeMirror 6 EditorView once per `(vaultId, path)`; pipes every doc change into `useEditorStore.updateDraft`; back-propagates `session.draft` into the editor on external mutations (`reloadFromDisk`, `overwrite` race) without ping-ponging. Three slices of chrome around the editor:
+  - **Toolbar** — status pill (`All changes saved` / `Unsaved changes` / `Saving…`); Cancel; Save (primary; disabled when clean); Find (re-dispatches a synthetic `⌘F` keydown into `view.contentDOM` so CodeMirror's own search panel opens — no custom UI to maintain).
+  - **Conflict banner** — appears iff `session.conflict === 'stale-on-disk'`. Two actions: `Reload from disk (discard my draft)` → `editor-store.reloadFromDisk()`; `Overwrite anyway` → `editor-store.overwrite()`. Banner uses the warning border-color token so themed reading surfaces stay coherent.
+  - **Error banner** — discriminated render of `EditorError`: each `kind` maps to a calm title (`Write permission denied`, `File no longer exists`, `This vault is read-only`, `Save failed`, `Something went wrong`). Dismiss button calls `clearError`.
+  - **Keymap** — `Mod-s` → save-and-maybe-exit; `Esc` → cancel-with-confirm; full `searchKeymap` + `historyKeymap` + `defaultKeymap` underneath.
+  - **Save semantics** — per the lightweight-editing plan UX, Save = write + exit. Both the Save button and `⌘S` go through `saveAndMaybeExit(onExit)` which only calls `onExit()` if the save returned `'clean'` AND no error landed in the store. Conflict / error keeps the user in edit mode so they can resolve.
+
+- **`src/ui/reading-shell/DocumentEditSurface.test.tsx`** (new, 11 tests) — Mocks the six `@codemirror/*` modules (jsdom can't reliably host CodeMirror's contenteditable measurement). Covers: editor mount + initial doc seeding + focus on mount; `null`-render when session doesn't match the document; status pill transitions; clean-cancel exits; dirty-cancel prompts; Save disabled when clean; Save + clean result → exits; Save + stale-on-disk → stays in edit mode; conflict banner with both action buttons; permission-denied banner with Dismiss; read-only-vault banner.
+
+- **`src/ui/reading-shell/DocumentBodyView.tsx`** — wired the read↔edit swap.
+  - New private hook `useIsEditingThisDocument(vaultId, path)` subscribes to `useEditorStore.active` so the surface swap re-renders.
+  - When `state.kind === 'rendered'` and the adapter exposes `writeText`, the document header gets a small Lucide-Pencil "Edit" button. Click → `useEditorStore.enter(vaultId, filePath, state.raw)`.
+  - When the editor session targets the current document, `<DocumentEditSurface .../>` replaces the rendered article body (`<FrontmatterPanel>` + prose `<div>` + `<BacklinksPanel>` all hidden). Lazy-imported via `React.lazy`; wrapped in `<Suspense fallback={null}>`.
+  - On exit (Cancel or Save success), `setRetryToken(n => n + 1)` re-runs the document loader so the read view picks up the on-disk changes.
+  - Read-only adapter gating — for now we only check `typeof adapter.writeText === 'function'`; SampleVaultAdapter satisfies this and surfaces its `read-only-vault` rejection from the first save. Sync `isReadOnly` flag is a 2D polish.
+
+- **`src/styles/editor.css`** (new, ~150 LOC) — SwirlRead chrome around CodeMirror (toolbar, status pill, banners, primary/secondary buttons) plus a thin override layer scoped to `.swirlread-edit__editor` so the CodeMirror runtime adopts our four-theme tokens (`--color-bg`, `--color-text`, `--color-border`, `--color-surface`, accent + warning + danger). Selection uses `color-mix()` against the active accent color so all four SwirlRead themes (Sepia / Light / Dark / OLED) get coherent selection tints without per-theme CSS.
+
+- **`src/styles/globals.css`** — added `@import './editor.css';` after `zen-mobile.css`.
+
+- **`package.json`** — added six CodeMirror packages (all 6.x): `@codemirror/state`, `@codemirror/view`, `@codemirror/commands`, `@codemirror/language`, `@codemirror/lang-markdown`, `@codemirror/search`. No umbrella `codemirror` package — assembled from per-package primitives so the bundle stays under explicit control.
+
+### Key UX decisions
+
+- **Save = save + exit (not save + stay).** Lightweight-editing-plan §"Expected flow" is explicit: "Save → write file → re-render → return to reading mode". The plan's intent matters more than the muscle memory from VS Code / Notion. If users push back we revisit.
+- **Editor mount is `useEffect` mount-once.** Re-mounting on every render would blow undo history. Re-mounting only on `(vaultId, path)` change is correct because the parent unmounts the whole component when the user navigates away.
+- **Editor → store → editor back-propagation guards prevent ping-pong.** The `updateListener` skips pushing to the store when the new doc already matches `session.draft`; the back-prop effect skips dispatching when the editor doc already matches the store. Without these guards, any `reloadFromDisk` would echo through both effects and freeze the cursor.
+- **Find uses CodeMirror's own panel, dispatched via synthetic keydown.** Re-implementing find/replace would be a Phase 2D regression vector. CodeMirror's panel honors the search keymap we already mounted.
+- **Read-only adapter detection is post-hoc, not pre-flight.** The sync API can't tell us without an awaited call. SampleVault users will enter edit mode and bounce off the first save with a typed `read-only-vault` banner. Pre-flight gating lands in 2D once a sync `isReadOnly` flag is on `VaultFileSystem`.
+
+### Files added / modified
+
+- `src/ui/reading-shell/DocumentEditSurface.tsx` (new)
+- `src/ui/reading-shell/DocumentEditSurface.test.tsx` (new)
+- `src/ui/reading-shell/DocumentBodyView.tsx` — read↔edit swap, Edit button, lazy DocumentEditSurface import
+- `src/styles/editor.css` (new)
+- `src/styles/globals.css` — import editor.css
+- `package.json` + `pnpm-lock.yaml` — six `@codemirror/*` deps
+
+### Verification
+
+- `pnpm typecheck`: 0 errors
+- `pnpm lint --max-warnings 0`: 0 warnings
+- `pnpm format:check`: clean
+- `pnpm test`: **743 / 743 passing** (+11 EditSurface tests; existing 732 untouched)
+- `pnpm build`: succeeded; main chunk **256.91 KB gz** (Δ +0.29 KB vs Phase 2B end — purely the lazy-import wrapper). New `DocumentEditSurface-*.js` chunk **181.65 KB gz** (CodeMirror runtime + markdown lang + search + history; only loads when the user clicks Edit).
+
+### Bundle posture
+
+- Reader-only path (no Edit click): main 256.91 KB gz. This is **the existing read path's cost** — Phase 2C added effectively nothing to it.
+- Reader-becomes-editor path (first Edit click): +181.65 KB gz on demand. Loaded once per session, cached by the browser thereafter.
+- Future shrink lever (deferred): split `lang-markdown` (~80 KB gz) out of the EditSurface chunk and async-attach via `Compartment` after first paint, so the editor opens faster on slow networks. Not worth doing until we have telemetry on actual editor-open latency.
+
+### Next slice (Phase 2D — safety + polish)
+
+1. Add sync `isReadOnly: boolean` to `VaultFileSystem`; pre-flight gate the Edit button so SampleVaultAdapter doesn't show it at all.
+2. Visible find / replace UI affordance (currently the toolbar's Find button works but discoverability is low; spec-out a `⌘F` hint).
+3. React Router 7 `useBlocker` integration with a Radix-styled confirm dialog (replaces the `window.confirm` in `confirmLeaveIfDirty` and `handleCancel`).
+4. Editor Settings (line numbers toggle, line wrap toggle, font-size override) wired into `useUIStore` so they persist.
+
+---
+
+## 2026-05-03 · Phase 2B foundation — editor-store + dirty navigation guard
+
+**Status**: ✅ Phase 2B (session state slice) shipped. Phase 2A (`writeText` foundation) was already landed in commit `ad1b82b`; this slice builds the in-memory editing session and the unsaved-changes guard on top of it. The actual edit UI (CodeMirror + DocumentEditSurface split) remains Phase 2C territory and is intentionally not wired yet — without a render surface to switch to, route-level `read↔edit` toggling has nothing to display.
+
+### What changed
+
+- **`src/stores/editor-store.ts`** (new, ~280 LOC) — Zustand store carrying at most one `EditorSession` (`vaultId`, `path`, `original`, `draft`, `openedAt`, `dirty`, `saving`, `error`, `conflict`). Actions: `enter`, `updateDraft`, `save`, `overwrite`, `reloadFromDisk`, `cancel`, `clearError`, `forgetVault`. The `save()` loop performs the spec's stale-on-disk pre-check (re-read disk, compare against `original`, refuse if diverged) and lazy write-permission escalation (`hasWritePermission` → `requestWritePermission` → typed `permission-denied` error if denied). Vault errors are normalised into a small `EditorError` discriminated union (`permission-denied | file-missing | write-failed | read-only-vault | unknown`) so the future EditSurface can branch cleanly without `instanceof` walls. Adapter resolution is injected via an optional `resolver` argument so tests don't have to spin up `useVaultStore`.
+
+- **`src/stores/editor-store.test.ts`** (new, 22 tests) — covers seeding, dirty toggling, cancel, `forgetVault`, save happy path, lazy permission grant + denial, all four error mappings (`VaultPermissionDeniedError`, `VaultWriteError` with/without "read-only", non-vault error → `unknown`), pre-read failure, conflict detection, `overwrite()` bypass, `reloadFromDisk()`, `clearError`, missing-adapter fallback. Mock adapter implements the full `VaultFileSystem` shape so the type compiler keeps the test honest.
+
+- **`src/app/use-dirty-navigation-guard.ts`** (new, ~45 LOC) — `useDirtyNavigationGuard()` mounts a `beforeunload` listener that fires only while `useEditorStore.getState().active?.dirty === true`. `confirmLeaveIfDirty()` is a synchronous helper for in-app navigation (file tree click, vault switcher, palette nav). React Router 7 `useBlocker` integration is intentionally deferred to Phase 2C alongside a Radix-styled confirm dialog — `window.confirm` is the right primitive for now (sync gate, no race with imperative router calls).
+
+- **`src/app/use-dirty-navigation-guard.test.ts`** (new, 7 tests) — clean session never blocks unload, dirty session sets `defaultPrevented` + `returnValue`, listener removed on unmount, `confirmLeaveIfDirty()` short-circuits when clean and forwards the user's choice when dirty.
+
+- **`src/app/AppShell.tsx`** — mounted `useDirtyNavigationGuard()` next to the existing global hotkey hooks. Lives at the shell level so the listener follows the app's lifecycle, not any particular document.
+
+- **`src/stores/vault-store.ts`** — added `useEditorStore.getState().forgetVault(id)` to the `removeVault` cleanup fan-out. A vault eviction now drops any in-flight editor session targeting that vault so the user can't end up with a dirty draft pointing at a vanished adapter. Module cycle (`editor-store` ↔ `vault-store`) is benign — both sides reference each other only via lazy `getState()` / function-declaration imports, never at module-init time.
+
+### Files added / modified
+
+- `src/stores/editor-store.ts` (new)
+- `src/stores/editor-store.test.ts` (new)
+- `src/app/use-dirty-navigation-guard.ts` (new)
+- `src/app/use-dirty-navigation-guard.test.ts` (new)
+- `src/app/AppShell.tsx` — wire `useDirtyNavigationGuard()`
+- `src/stores/vault-store.ts` — `removeVault` fan-out includes editor-store
+
+### Decisions
+
+- **Single active session, no multi-file drafts.** Spec is explicit; honoured.
+- **Conflict detection lives in the save loop, not Phase 2D.** It's ~5 lines and the spec already calls for it; deferring would mean the Phase 2C UI ships unsafe.
+- **`unknown` errors auto-clear on `updateDraft`, but `permission-denied`/`stale-on-disk` do not.** Typing past a transient hiccup feels right; typing past a permission denial would let the user think the next save will succeed when it won't.
+- **Why a synchronous `window.confirm` for in-app navigation.** An async modal would let imperative router calls race ahead before the user answers. Phase 2C can layer a Radix Dialog on top once the EditSurface ships its own chrome.
+- **Why no DocumentPage wiring yet.** Phase 2B is purely state. Wiring DocumentPage to `useEditorStore.active.path` would either (a) introduce dead code paths the user can't trigger, or (b) ship an empty edit surface. Both worse than landing a clean foundation. The wiring naturally pairs with the CodeMirror surface in 2C.
+
+### Verification
+
+- `pnpm typecheck`: 0 errors
+- `pnpm lint --max-warnings 0`: 0 warnings
+- `pnpm format:check`: clean
+- `pnpm test`: **732 / 732 passing** (+29 vs pre-slice: 22 editor-store + 7 dirty-guard)
+- `pnpm build`: succeeded; main chunk **256.62 KB gz** (was 252.96 KB at pack-5; ~3 KB attributable to `editor-store` + dirty-guard, the rest from already-uncommitted local changes)
+
+### Next slice (Phase 2C)
+
+1. `DocumentReadSurface` / `DocumentEditSurface` split inside `DocumentPage`.
+2. CodeMirror 6 integration (`@codemirror/state`, `@codemirror/view`, `@codemirror/lang-markdown`, `@codemirror/commands`, history + search keymaps).
+3. `Edit` toolbar action (lazy-loaded; budget impact bounded by chunk-splitting the codemirror runtime).
+4. Save / Cancel / `⌘S` / `Esc` keybindings, with the `useDirtyNavigationGuard` confirm helper wired into Cancel.
+5. React Router `useBlocker` once a Radix confirm dialog is in.
 
 ---
 
@@ -121,7 +338,7 @@
   - 14 new files in `src/styles/`: `themes.css`, `scrollbars.css`, `prose.css`, `code-shiki.css`, `layout.css`, `file-tree.css`, `tabs.css`, `command-palette.css`, `settings.css`, `landing.css`, `file-renderers.css`, `media.css`, `prose-ext.css`, `zen-mobile.css`. All ≤ 499 LOC.
   - `globals.css` is now a 72-line entry point (`@import` chain + `@theme` block).
   - **Bundle size issue and fix**: Tailwind v4's `@tailwindcss/vite` plugin runs Lightning CSS on each @imported shard independently during the compile pass, before the optimize pass (which uses modern targets). This adds one `@supports (color:color-mix(in lab,red,red))` wrapper per shard that contains `color-mix()` — 14 extra wrappers (+0.84 KB gz) that can't be removed by the optimize pass because they're already-compiled output.
-  - All SwilRead target browsers (Chrome ≥ 111, Edge ≥ 111, Firefox ≥ 113, Safari ≥ 16.2) support `color-mix()` natively, so these wrappers are dead code.
+  - All SwirlRead target browsers (Chrome ≥ 111, Edge ≥ 111, Firefox ≥ 113, Safari ≥ 16.2) support `color-mix()` natively, so these wrappers are dead code.
   - Added `stripColorMixSupports()` Vite plugin (in `vite.config.ts`) that post-processes the CSS bundle and unwraps these blocks (brace-counting traversal, safe for cascade since the rules inside are deduplicated and don't have cross-shard conflicts).
   - Added `"browserslist"` field to `package.json` documenting the target range: Chrome/Edge ≥ 111, Firefox ≥ 113, Safari ≥ 16.2.
   - Verified: concatenating all shards into one file produces the same build hash as the split (@import) approach — confirming zero content duplication.
@@ -168,7 +385,7 @@
 - **A.M1** — Active tab is auto-scrolled into view after URL changes.
   - `TabStrip` keeps a `useRef<HTMLDivElement>` on the active tab and a `useEffect([currentPath])` that calls `scrollIntoView({ block: 'nearest', inline: 'nearest' })`. `inline: 'nearest'` is no-op when the tab is already visible — so already-on-screen tabs don't trigger spurious motion.
 
-- **A.M2** — Dead `data-swilread-dragging-tab` writes removed from `TabStrip` (3 sites + the `DRAG_FLAG` constant). The original concern (hover-zone grace timer firing mid-drag) is moot now that the strip lives in the header band, far from the edge hover zones.
+- **A.M2** — Dead `data-swirlread-dragging-tab` writes removed from `TabStrip` (3 sites + the `DRAG_FLAG` constant). The original concern (hover-zone grace timer firing mid-drag) is moot now that the strip lives in the header band, far from the edge hover zones.
 
 - **A.L6** — Extracted the URL-pathname-to-vault-path helper.
   - New `src/app/derive-current-path.ts` exports `deriveCurrentPathFromPathname(pathname)` plus a private `safeDecode` segment helper.
@@ -211,7 +428,7 @@
 ### What changed
 
 - **A.H2** — Hover-summoned floating sidebar now has a click-outside dismiss on desktop. Added `--floating` modifier on the backdrop element in `VaultLayout.tsx`; new CSS rule renders the backdrop as a transparent fullscreen click target whenever the sidebar is floating. Existing click handler in the layout already wired the dismiss path. Small-viewport `@media` block remains the source of the dark-overlay drawer treatment (rule order: base → `--floating` (transparent) → `@media` (dark on small viewport) means each context picks the correct background).
-- **A.H3** — `.swilread-vault-layout__sidebar.swilread-vault-layout__sidebar--floating { width: var(--file-tree-width) }` (specificity 0,2,0) was overriding the small-viewport drawer's `width: min(280px, 80vw)` (0,1,0) — so a custom-resized 480 px sidebar overflowed phone-width viewports. Added a matching-specificity override inside the existing `@media (max-width: 1024px)` block.
+- **A.H3** — `.swirlread-vault-layout__sidebar.swirlread-vault-layout__sidebar--floating { width: var(--file-tree-width) }` (specificity 0,2,0) was overriding the small-viewport drawer's `width: min(280px, 80vw)` (0,1,0) — so a custom-resized 480 px sidebar overflowed phone-width viewports. Added a matching-specificity override inside the existing `@media (max-width: 1024px)` block.
 - **A.M7** — Header brand cluster (logo + wordmark + vault switcher) and tools cluster (mode toggle / search / TOC / settings) now have `shrink-0` Tailwind class, so a wide tab strip in the middle can never squeeze them.
 
 ### Files modified
@@ -280,7 +497,7 @@ Recommended sequencing:
 
 ### PR 1 — Left-edge sidebar gutter
 
-The sidebar's first column was kissing the viewport's left edge — visually cramped. New `--sidebar-gutter: 8px` token applied as `padding-inline-start` on `.swilread-vault-layout__sidebar`. The depth-based row indent in `FileTree.tsx` dropped its hardcoded `+8` so chevron position is unchanged; only the row hover/active background now stops at the gutter rather than bleeding to the screen edge.
+The sidebar's first column was kissing the viewport's left edge — visually cramped. New `--sidebar-gutter: 8px` token applied as `padding-inline-start` on `.swirlread-vault-layout__sidebar`. The depth-based row indent in `FileTree.tsx` dropped its hardcoded `+8` so chevron position is unchanged; only the row hover/active background now stops at the gutter rather than bleeding to the screen edge.
 
 ### PR 3 — Sticky folder collapse (regression fix)
 
@@ -297,10 +514,10 @@ User can now open multiple documents simultaneously with VS Code-style tabs.
 - **Dexie schema bump v5 → v6** — new `openTabs` table indexed by `id`, `vaultId`, `[vaultId+order]`, `openedAtMs`. Test reset transaction extended.
 - **New `useTabsStore`** (`src/stores/tabs-store.ts`) — `tabsByVault`, `recentlyClosedByVault`, `openOrFocus(vaultId, path, { pin? })`, `closeTab`, `pinTab`, `reorderTabs`, `reopenLastClosed`, `forgetVault`, `init`. Active tab is **not** stored — derived from URL to keep one source of truth. `openOrFocus` rules (preview replaces preview; pin is sticky; cap at `MAX_TABS_PER_VAULT = 20`) covered by 18 unit tests including init/hydration and Dexie persistence.
 - **`removeVault` fan-out** in `vault-store.ts` now bulk-deletes `openTabs` rows for the vault and calls `useTabsStore.forgetVault(id)`, mirroring the existing `recentFiles` / `scrollPositions` / `backlinks` cleanup.
-- **`<TabStrip />`** component sits inside `.swilread-vault-layout__content` above `<Outlet/>`. Sticky to the top of the reading column. Each tab supports: single click → activate, double-click → pin, middle-click → close, × button → close, native HTML5 `draggable` for reorder (zero deps, drop indicator via outline), keyboard ArrowLeft/Right/Home/End focus traversal. Sets `documentElement.dataset.swilreadDraggingTab` during drag so future hover-zone hooks can suspend their grace timer (not yet wired — hover hooks already have escape hatches).
+- **`<TabStrip />`** component sits inside `.swirlread-vault-layout__content` above `<Outlet/>`. Sticky to the top of the reading column. Each tab supports: single click → activate, double-click → pin, middle-click → close, × button → close, native HTML5 `draggable` for reorder (zero deps, drop indicator via outline), keyboard ArrowLeft/Right/Home/End focus traversal. Sets `documentElement.dataset.swirlreadDraggingTab` during drag so future hover-zone hooks can suspend their grace timer (not yet wired — hover hooks already have escape hatches).
 - **DocumentPage integration** — every URL-driven document load calls `openOrFocus(vaultId, path)`; if the URL hits a path already in tabs the call is idempotent, otherwise the preview tab is replaced. `markRecentFile` continues to fire alongside.
 - **File-tree `Cmd/Ctrl + click`** intercepts the `<Link>` click and pre-pins via `openOrFocus(..., { pin: true })`; the subsequent navigate triggers `DocumentPage`'s default `pin:false` call which finds the tab already pinned and no-ops.
-- **CSS** in globals.css adds the strip styling, preview-italic, drop-target outline, active-tab seam treatment, and a `body.zen-mode .swilread-tab-strip { display: none }` rule.
+- **CSS** in globals.css adds the strip styling, preview-italic, drop-target outline, active-tab seam treatment, and a `body.zen-mode .swirlread-tab-strip { display: none }` rule.
 - **Keyboard shortcuts deferred** — Cmd/Ctrl+W, Ctrl+Tab, Cmd+1..9 are heavily browser-reserved (especially on macOS Chrome/Safari), so this PR ships mouse + within-strip arrow navigation only. A follow-up PR can add a unique-modifier shortcut set if requested.
 
 ### State + persistence summary
@@ -378,7 +595,7 @@ A future iteration will probably want hints for "first time you opened the comma
 - `src/main.tsx` — `void useHintsStore.getState().init()` joins the boot fire-and-forget calls
 - `src/ui/reading-shell/VaultLayout.tsx` — mounts the first-vault-tour toast at the bottom of the layout
 - `src/ui/settings-panel/SettingsPanel.tsx` — `<ResetHintsButton>` subcomponent + the import
-- `src/styles/globals.css` — `.swilread-hint*` block (toast, body, title, detail, kbd inline-styling, close button, zen-mode hide); footer flex layout switched to vertical stack
+- `src/styles/globals.css` — `.swirlread-hint*` block (toast, body, title, detail, kbd inline-styling, close button, zen-mode hide); footer flex layout switched to vertical stack
 
 ### Verification
 
@@ -393,7 +610,7 @@ A future iteration will probably want hints for "first time you opened the comma
 - Hint id namespace is shared globally. If two unrelated surfaces use the same id, the second will be invisible. Keep ids descriptive (`first-vault-tour`, not `welcome`).
 - The 12 s auto-dismiss is a single timer, no pause-on-hover. If a real user reports they couldn't read the toast in time, switch to a `mousedown`/`focusin` pause. Cheap fix.
 - `clearAll()` wipes the table indiscriminately. There's no per-id reset because the only user gesture is "show me the tour again from scratch."
-- `body.zen-mode .swilread-hint { display: none }` keeps the toast off when the user has explicitly asked for zero chrome. The seen flag still gets written if the timer fires while in zen, which is the right behaviour — they've technically had their chance to see the introduction next time they open a vault.
+- `body.zen-mode .swirlread-hint { display: none }` keeps the toast off when the user has explicitly asked for zero chrome. The seen flag still gets written if the timer fires while in zen, which is the right behaviour — they've technically had their chance to see the introduction next time they open a vault.
 
 ---
 
@@ -405,13 +622,13 @@ A future iteration will probably want hints for "first time you opened the comma
 
 #### 1. Image lightbox (`MediaRenderer`)
 
-The image branch wraps its `<img>` in a `<button class="swilread-media__image-trigger">` with a hover-revealed `ZoomIn` overlay hint. Click / Enter / Space opens a Radix Dialog. Inside the dialog: an enlarged image (max 92 vw / 84 vh), a sr-only `<Dialog.Title>` carrying the alt text for screen readers, a visible caption row, and an `X` close button positioned at the top-right of the viewport. Esc / outside-click / close button all dismiss via Radix's built-in handlers.
+The image branch wraps its `<img>` in a `<button class="swirlread-media__image-trigger">` with a hover-revealed `ZoomIn` overlay hint. Click / Enter / Space opens a Radix Dialog. Inside the dialog: an enlarged image (max 92 vw / 84 vh), a sr-only `<Dialog.Title>` carrying the alt text for screen readers, a visible caption row, and an `X` close button positioned at the top-right of the viewport. Esc / outside-click / close button all dismiss via Radix's built-in handlers.
 
 The dialog uses a custom overlay (`rgb(0 0 0 / 0.85)` + 2 px blur) rather than Radix's default; reading material rarely needs the deep dim that Settings or Tags use, but a nearly-opaque overlay reads as "you're viewing the picture now."
 
 #### 2. Audio themed wrapper
 
-The native `<audio controls>` element on its own sat on the page background with no framing. Wrapped it in `.swilread-media__audio-wrap` — a 999 px-rounded pill at `color-mix(in srgb, var(--color-surface) 60%, transparent)` with a 1 px border. The native control inside still owns the playback UX (cross-browser variation accepted) but visually the player belongs to the reading shell now.
+The native `<audio controls>` element on its own sat on the page background with no framing. Wrapped it in `.swirlread-media__audio-wrap` — a 999 px-rounded pill at `color-mix(in srgb, var(--color-surface) 60%, transparent)` with a 1 px border. The native control inside still owns the playback UX (cross-browser variation accepted) but visually the player belongs to the reading shell now.
 
 #### 3. JSON in-tree search
 
@@ -419,13 +636,13 @@ Toolbar grows a search input next to the Tree/Source toggle. As the user types:
 
 - A `useMemo` walks the parsed JSON value, recording every path whose key or stringified value contains the (lowercased) query, plus all of its ancestors, into a `Set<string>`.
 - Each `JsonNode` gets a new `forceOpenPaths` prop — the local `useState(open)` is OR'd with `forceOpenPaths.has(pathKey)` so matching subtrees expand without losing the user's previous manual collapse decisions.
-- Both the key label and string value pass through a `highlight()` helper that wraps every matched substring in `<mark class="swilread-json__match">` (`color-mix` accent tint).
+- Both the key label and string value pass through a `highlight()` helper that wraps every matched substring in `<mark class="swirlread-json__match">` (`color-mix` accent tint).
 
 Numbers / booleans / nulls are still searchable — they get coerced via `String(value)` before the substring test — but they don't render as `<mark>` because the `highlight` call only fires on the rendered children, which for primitives we control directly.
 
 #### 4. Copy-path button
 
-Every leaf and every collection row gets a hover-only `<button class="swilread-json__copy">` with a `Copy` icon. On click:
+Every leaf and every collection row gets a hover-only `<button class="swirlread-json__copy">` with a `Copy` icon. On click:
 
 - `formatJsonPath(path)` produces dot/bracket notation: `users[0].name`, with `[N]` for numeric indices, `["weird-key"]` for non-identifier keys (Unicode/whitespace/special characters), and `$` for root.
 - `navigator.clipboard.writeText` writes the result; if the API is unavailable or rejects (focus, permission), the click silently no-ops — clipboard failures shouldn't surface as errors in a reader.
@@ -438,7 +655,7 @@ Every leaf and every collection row gets a hover-only `<button class="swilread-j
 - `src/ui/reading-shell/MediaRenderer.tsx` — `ImageWithLightbox` subcomponent + Radix Dialog imports + audio div wrapper
 - `src/ui/reading-shell/JsonRenderer.tsx` — search state, force-expand path set, `highlight()` helper, `LeafRow` + `CollectionNode` carry path arrays, `CopyPathButton` subcomponent
 - `src/ui/reading-shell/json-utils.ts` — `formatJsonPath` exported (with `JsonPathSegment` type alias)
-- `src/styles/globals.css` — `.swilread-media__image-trigger` / `__zoom-hint`, `.swilread-media__audio-wrap`, `.swilread-lightbox*` family, `.swilread-json__search`, `.swilread-json__match`, `.swilread-json__copy` / `__copied`. Old `.swilread-media__audio` rule gone (moved into the wrapper)
+- `src/styles/globals.css` — `.swirlread-media__image-trigger` / `__zoom-hint`, `.swirlread-media__audio-wrap`, `.swirlread-lightbox*` family, `.swirlread-json__search`, `.swirlread-json__match`, `.swirlread-json__copy` / `__copied`. Old `.swirlread-media__audio` rule gone (moved into the wrapper)
 - `src/ui/reading-shell/JsonRenderer.test.tsx` — new tests: `formatJsonPath` (4 cases), search filter + force-expand, search match-against-values case-insensitive, copy-path button presence
 
 ### Verification
@@ -460,7 +677,7 @@ Every leaf and every collection row gets a hover-only `<button class="swilread-j
 
 ## 2026-05-02 · RX2 + M2.5 + M9.5 — Reading chrome modes, hover zones, permission-revoked path
 
-**Status**: ✅ Three polish items shipped together because they share the chrome state machine. SwilRead's "reading mode" finally lives up to the craft plan's intent: the default surface is just text + a quiet header.
+**Status**: ✅ Three polish items shipped together because they share the chrome state machine. SwirlRead's "reading mode" finally lives up to the craft plan's intent: the default surface is just text + a quiet header.
 
 ### RX2 — Reading chrome modes
 
@@ -483,9 +700,9 @@ Header gained a `BookOpen ↔ PanelTop` toggle button (with an `aria-pressed` st
 - `onMouseEnter` on the sidebar cancels any pending hide timer, so the cursor can travel from the zone to the sidebar without race conditions
 - A backdrop `<button>` in the same React fragment dismisses the drawer immediately on click (in addition to the timer)
 
-Working mode renders identical markup but the `display: none` rule on `.swilread-vault-layout--working .swilread-vault-layout__hover-zone` suppresses the strips. Working sidebars own the edges and shouldn't fight a hover trigger for the same region.
+Working mode renders identical markup but the `display: none` rule on `.swirlread-vault-layout--working .swirlread-vault-layout__hover-zone` suppresses the strips. Working sidebars own the edges and shouldn't fight a hover trigger for the same region.
 
-In zen mode neither path fires — the existing `body.zen-mode .swilread-vault-layout__sidebar { display: none }` rule wins.
+In zen mode neither path fires — the existing `body.zen-mode .swirlread-vault-layout__sidebar { display: none }` rule wins.
 
 The 800 ms grace timer is conservative on purpose. The previous design draft floated 2 s; that's enough for a stray cursor to keep the drawer open mid-thought. 800 ms feels closer to "I changed my mind." Tunable in `HOVER_DISMISS_MS`.
 
@@ -499,7 +716,7 @@ DocumentPage's load-effect catch block had been routing every non-`VaultFileNotF
 - `src/app/AppShell.tsx` — pulled `chromeMode` + `toggleChromeMode` from the store; added the toggle button between the ⌘K trigger and the TOC toggle, using `BookOpen` / `PanelTop` Lucide icons
 - `src/ui/reading-shell/VaultLayout.tsx` — hover-zone + drawer + grace-timer wiring; the layout now reads `chromeMode` to decide whether to honour `fileTreeOpen` / `tocOpen` (working) or the transient hover flags (reading); cleanup effect captures refs to keep the lint-rule honest
 - `src/ui/reading-shell/DocumentPage.tsx` — catch block adds the `VaultPermissionDeniedError → missing-vault` branch
-- `src/styles/globals.css` — `.swilread-vault-layout__hover-zone` (+ left / right modifiers); `.swilread-vault-layout--reading` overrides for sidebar / TOC fixed-position drawer treatment + shadows; `.swilread-vault-layout--working .swilread-vault-layout__hover-zone { display: none }`
+- `src/styles/globals.css` — `.swirlread-vault-layout__hover-zone` (+ left / right modifiers); `.swirlread-vault-layout--reading` overrides for sidebar / TOC fixed-position drawer treatment + shadows; `.swirlread-vault-layout--working .swirlread-vault-layout__hover-zone { display: none }`
 - `src/ui/file-tree/FileTree.test.tsx` — `beforeEach` pins `chromeMode: 'working'` so the persistent-sidebar assumptions in those tests still hold (otherwise `getSidebar()` would race the hover flow)
 
 ### Verification
@@ -512,7 +729,7 @@ DocumentPage's load-effect catch block had been routing every non-`VaultFileNotF
 
 ### Down-stream notes
 
-- Reading mode is now the new-user default. That's a deliberate choice: the craft plan argues SwilRead's pitch is "the document is the surface," and a hidden-by-default sidebar is the cleanest expression of that. Returning users who preferred working mode keep their pref because the field reads from Dexie on init; only fresh installs land in reading mode.
+- Reading mode is now the new-user default. That's a deliberate choice: the craft plan argues SwirlRead's pitch is "the document is the surface," and a hidden-by-default sidebar is the cleanest expression of that. Returning users who preferred working mode keep their pref because the field reads from Dexie on init; only fresh installs land in reading mode.
 - The hover zones don't yet have a visible affordance. A future polish could show a 1-pixel accent stripe on hover-near (not hover-on) so first-time users discover them; for now the ⌘K palette is the discoverability floor.
 - M9.5 only catches `VaultPermissionDeniedError`. Other read failures (corrupt file, network filesystem disconnect, unexpected `DOMException`) still surface as generic errors. That's deliberate — only permission-revoked has a clean recovery path; the rest genuinely need user attention.
 - The hover dismiss timer is a single 800 ms grace, not a "while in zone" timer. If a user wants the drawer to stay open while they read a long file path or a snippet preview, hovering the sidebar itself cancels the timer — that's the intended UX.
@@ -634,8 +851,8 @@ Four root-level files, written for the GitHub landing page (a stranger arriving 
 
 - Vercel deploy / domain go-live are gated on M9.8. The CI workflow is structured so adding a \`deploy\` job (separate workflow, runs on push to \`main\` after \`check\` passes) is a one-file add rather than a refactor.
 - The PR template is opt-in (GitHub still lets contributors blank it). The intent is documentation, not enforcement; we'll add a \`lint-pr\` action only if drive-by PRs become a recurring problem.
-- The \`CONTRIBUTING.md\` leads with non-negotiables on purpose. The temptation in OSS docs is to say everything is up for discussion to seem welcoming. For SwilRead the product is the discipline; saying the principles are non-negotiable up front saves everyone time.
-- \`LICENSE\` carries a generic "SwilRead contributors" copyright line. Once a real legal entity / human author wants to claim it, drop the entity name in. Not a v0.1 blocker.
+- The \`CONTRIBUTING.md\` leads with non-negotiables on purpose. The temptation in OSS docs is to say everything is up for discussion to seem welcoming. For SwirlRead the product is the discipline; saying the principles are non-negotiable up front saves everyone time.
+- \`LICENSE\` carries a generic "SwirlRead contributors" copyright line. Once a real legal entity / human author wants to claim it, drop the entity name in. Not a v0.1 blocker.
 
 ---
 
@@ -668,7 +885,7 @@ Three breakpoints, each tuned to a real device class:
 
 The drawer treatment is CSS-only:
 
-- `VaultLayout.tsx` always renders a `<button class="swilread-vault-layout__sidebar-backdrop" onClick={() => setFileTreeOpen(false)}>` next to the sidebar. On desktop this button has `display: none` and never paints. Below 1024 px, the media query flips it to a full-bleed translucent overlay; tapping it dismisses the drawer.
+- `VaultLayout.tsx` always renders a `<button class="swirlread-vault-layout__sidebar-backdrop" onClick={() => setFileTreeOpen(false)}>` next to the sidebar. On desktop this button has `display: none` and never paints. Below 1024 px, the media query flips it to a full-bleed translucent overlay; tapping it dismisses the drawer.
 - The sidebar itself flips from `position: sticky` (in flow, occupies a column) to `position: fixed` (overlay, with a 6 px box-shadow) below 1024 px.
 - React markup is identical across viewports — there's no breakpoint-aware JS, no resize observer, no SSR mismatch risk. The only TSX delta is the new backdrop `<button>` and a wiring of `setFileTreeOpen` from the store.
 
@@ -683,9 +900,9 @@ iOS Safari remains a known-broken target for v1 because it has no File System Ac
 - `src/styles/globals.css`
   - Imported the SC subset.
   - Updated `--font-serif` (`Source Han Serif SC` → `Noto Serif SC`).
-  - New `.swilread-vault-layout__sidebar-backdrop` rule (default-hidden).
+  - New `.swirlread-vault-layout__sidebar-backdrop` rule (default-hidden).
   - New `@media (max-width: 1024px)` block flipping the sidebar to a drawer + revealing the backdrop.
-  - New `@media (max-width: 768px)` block making `.swilread-settings` full-width.
+  - New `@media (max-width: 768px)` block making `.swirlread-settings` full-width.
 - `src/ui/reading-shell/VaultLayout.tsx`
   - Pulls `setFileTreeOpen` from `useUIStore`.
   - Wraps the sidebar render in a fragment that also includes a backdrop `<button>`. Backdrop is always rendered when the drawer is open; CSS controls visibility per breakpoint.
@@ -712,7 +929,7 @@ iOS Safari remains a known-broken target for v1 because it has no File System Ac
 
 ## 2026-05-02 · M8.1 + M8.2 + M8.3 — Sample vault, end-to-end · plus M9.5 error UX
 
-**Status**: ✅ A fresh user can now click "Try with sample vault" and read seven interlinked Markdown notes inside SwilRead with zero disk permission. Plus the load-failure error state gained a Try-again loop and a collapsible technical-details disclosure.
+**Status**: ✅ A fresh user can now click "Try with sample vault" and read seven interlinked Markdown notes inside SwirlRead with zero disk permission. Plus the load-failure error state gained a Try-again loop and a collapsible technical-details disclosure.
 
 ### What changed
 
@@ -749,9 +966,9 @@ iOS Safari remains a known-broken target for v1 because it has no File System Ac
 
 #### M9.5 — DocumentPage load-failure UX
 
-- `LoadState.error` (existing) now renders a calm two-line copy ("Something went wrong … this is a SwilRead-side problem") + a `<button>` "Try again" that bumps a new `retryToken` state, which is appended to the load effect's dep list, forcing a fresh `stat()` + `readText()`.
+- `LoadState.error` (existing) now renders a calm two-line copy ("Something went wrong … this is a SwirlRead-side problem") + a `<button>` "Try again" that bumps a new `retryToken` state, which is appended to the load effect's dep list, forcing a fresh `stat()` + `readText()`.
 - The raw error message moves into a collapsible `<details>` block ("Technical details") so a debugging developer can see the error without it competing with the headline message.
-- New `.swilread-doc-empty__action` / `__details` / `__pre` rules in `globals.css` reuse existing accent/code/border tokens — themed across Sepia/Light/Dark/OLED for free.
+- New `.swirlread-doc-empty__action` / `__details` / `__pre` rules in `globals.css` reuse existing accent/code/border tokens — themed across Sepia/Light/Dark/OLED for free.
 
 ### Files added
 
@@ -763,7 +980,7 @@ iOS Safari remains a known-broken target for v1 because it has no File System Ac
 - `src/ui/landing/LandingPage.tsx` — sample CTA wiring + Sparkles icon swap.
 - `src/ui/landing/LandingPage.test.tsx` — flipped the disabled-CTA test, added a new "registers the sample vault" test.
 - `src/ui/reading-shell/DocumentPage.tsx` — added `retryToken` state, threaded into the load-effect deps, swapped the error block JSX for the new copy + Try-again button + collapsible technical-details block.
-- `src/styles/globals.css` — `.swilread-doc-empty__action` / `__details` / `__pre` blocks under the existing RX7 cluster.
+- `src/styles/globals.css` — `.swirlread-doc-empty__action` / `__details` / `__pre` blocks under the existing RX7 cluster.
 
 ### Verification
 
@@ -866,7 +1083,7 @@ For a reader who scans articles without ever hovering a link, the entire 17 KB s
 - New `src/ui/reading-shell/JsonRenderer.tsx`:
   - `useMemo` wraps `JSON.parse` (with a `stripJsonComments` pass for `//` and `/* */` comments) so a 50 KB blob isn't re-parsed on every keystroke / re-render.
   - Tree built recursively by `<JsonNode value depth fieldKey?>`. Each collection node carries its own `useState(depth < 2)` collapse flag, so root + first level open by default, deeper levels collapsed. A 1000-key object doesn't paint as a wall.
-  - Primitives get type-specific class hooks (`.swilread-json__string` / `__number` / `__boolean` / `__null`) so future themes can re-skin without touching the component tree.
+  - Primitives get type-specific class hooks (`.swirlread-json__string` / `__number` / `__boolean` / `__null`) so future themes can re-skin without touching the component tree.
   - Collection rows use a real `<button aria-expanded>` so screen-readers narrate "expanded"/"collapsed" cleanly. Chevron flips via `ChevronDown` / `ChevronRight`.
   - Collapsed view shows a count summary (`3 items` / `5 keys`) so the user knows how much would unfold.
   - Parse failure → renderer auto-pins to Source view, disables the Tree tab, and shows `Couldn't parse JSON: <message>` as `role="alert"`. Content is never lost.
@@ -893,7 +1110,7 @@ The pre-M7.4 `metadata.json` fixture was the test target for two earlier Documen
 - `src/core/render/dispatcher.test.ts` — 1 new test asserting `.json`/`.jsonc` route to `{ kind: 'json' }`.
 - `src/ui/reading-shell/DocumentPage.tsx` — `LoadState.json` variant, load-effect dispatch, JSX branch.
 - `src/ui/reading-shell/DocumentPage.test.tsx` — `util.ts` added to sample vault fixture; two existing CodeFileRenderer assertions re-pointed to `util.ts` (the renderer hasn't changed; only the file used to test it).
-- `src/styles/globals.css` — `.swilread-json*` block (toolbar/toggle/tree panel, type-specific colour tokens for primitives, `border-left` nesting guide on `.swilread-json__list`).
+- `src/styles/globals.css` — `.swirlread-json*` block (toolbar/toggle/tree panel, type-specific colour tokens for primitives, `border-left` nesting guide on `.swirlread-json__list`).
 
 ### Verification
 
@@ -901,7 +1118,7 @@ The pre-M7.4 `metadata.json` fixture was the test target for two earlier Documen
 - `pnpm lint` — 0 errors / 0 warnings (after extracting `stripJsonComments` and switching test type assertions to `!`)
 - `pnpm format:check` — all conformant
 - `pnpm test` — **645 passed** (was 633; +7 JsonRenderer + 4 stripJsonComments + 1 dispatcher net)
-- `pnpm build` — main bundle **262.91 KB gz** (was 261.95; +0.96 KB for the tree renderer + four new Lucide icons `ChevronDown`/`ChevronRight`/`Code2`/`Workflow`, two of which were already pulled in by HtmlRenderer). CSS bundle delta ≈ +0.5 KB for the new `.swilread-json*` block.
+- `pnpm build` — main bundle **262.91 KB gz** (was 261.95; +0.96 KB for the tree renderer + four new Lucide icons `ChevronDown`/`ChevronRight`/`Code2`/`Workflow`, two of which were already pulled in by HtmlRenderer). CSS bundle delta ≈ +0.5 KB for the new `.swirlread-json*` block.
 
 ### Down-stream notes
 
@@ -925,7 +1142,7 @@ The pre-M7.4 `metadata.json` fixture was the test target for two earlier Documen
   - A small `Sandboxed` pill in the toolbar tells the reader scripts are off, so they don't expect interactivity.
   - A two-tab toggle (`Preview` / `Source`) flips between the iframe and the existing `CodeFileRenderer` (Shiki HTML grammar). Mode is local component state — switching files resets back to preview, which is the right default for an "unknown HTML file in someone's vault."
 - DocumentPage gained a `state.kind === 'html'` branch in `LoadState` and JSX. Load effect dispatches `html` between `table` and `text`.
-- `globals.css` gained the `.swilread-html*` block: 70vh-min iframe with rounded border, accent-tinted active tab in the toggle, the rounded-pill `Sandboxed` badge.
+- `globals.css` gained the `.swirlread-html*` block: 70vh-min iframe with rounded border, accent-tinted active tab in the toggle, the rounded-pill `Sandboxed` badge.
 
 ### Why no DOMPurify
 
@@ -940,7 +1157,7 @@ The first instinct on "HTML preview" is reach for DOMPurify. It's the wrong tool
 - `src/core/render/dispatcher.ts` — `html` variant added; `.html` / `.htm` removed from `CODE_LANGUAGES`; `getRendererKind` checks `html` after `table`, before `code`.
 - `src/core/render/dispatcher.test.ts` — 1 new test asserting `.html` / `.htm` route to `{ kind: 'html' }`.
 - `src/ui/reading-shell/DocumentPage.tsx` — `LoadState.html` variant, load-effect dispatch, `state.kind === 'html'` JSX branch.
-- `src/styles/globals.css` — `.swilread-html*` block (toolbar / badge / toggle / iframe frame).
+- `src/styles/globals.css` — `.swirlread-html*` block (toolbar / badge / toggle / iframe frame).
 
 ### Verification
 
@@ -983,7 +1200,7 @@ Papa Parse is ~16 KB gz minified — the main bundle is already at 260 KB after 
 - `src/core/render/dispatcher.ts` — `table` variant added; `.csv`/`.tsv`/`.tab` removed from `TEXT_EXTENSIONS`; new `TABLE_DELIMITERS` map; `getRendererKind` checks media → table → code → text.
 - `src/core/render/dispatcher.test.ts` — `.csv` no longer routes to `text`; new test asserts the table+delimiter routing for `.csv` / `.tsv` / `.tab`.
 - `src/ui/reading-shell/DocumentPage.tsx` — `LoadState.table` variant; load effect dispatches `table` between `code` and `text`; JSX renders `<CsvRenderer>` for the new state.
-- `src/styles/globals.css` — new `.swilread-csv*` block: scroll wrapper with rounded border, accent-tinted sticky `thead`, alternating-row tint, tabular-nums cells, link-styled "Show all" button.
+- `src/styles/globals.css` — new `.swirlread-csv*` block: scroll wrapper with rounded border, accent-tinted sticky `thead`, alternating-row tint, tabular-nums cells, link-styled "Show all" button.
 
 ### Verification
 
@@ -997,13 +1214,13 @@ Papa Parse is ~16 KB gz minified — the main bundle is already at 260 KB after 
 
 - Header detection is non-existent: row 0 is always the header. For a CSV with no header line, the user sees the first data row in `<th>` cells, which is mildly off but never destructive. A future polish could heuristically detect (homogeneous types in column 0 vs row 0) and offer a toggle.
 - "Show all" doesn't paginate further; it parses the whole file in one shot. For a 100k-row CSV that's a noticeable hitch on the main thread. M9.1 perf pass should consider chunked parsing in a worker if/when this becomes a real complaint — the `maxRows` seam in the parser is exactly the place to thread that.
-- Cells use `white-space: nowrap` so a wide column doesn't squash neighbours. The horizontal scroll inside `swilread-csv__scroll` keeps the column measure intact.
+- Cells use `white-space: nowrap` so a wide column doesn't squash neighbours. The horizontal scroll inside `swirlread-csv__scroll` keeps the column measure intact.
 
 ---
 
 ## 2026-05-02 · M7.6 Media Renderer
 
-**Status**: ✅ Image / video / audio files now open natively in SwilRead instead of falling through to the unsupported card.
+**Status**: ✅ Image / video / audio files now open natively in SwirlRead instead of falling through to the unsupported card.
 
 ### What changed
 
@@ -1050,7 +1267,7 @@ Previous M7 renderers (PlainText / CodeFile / Unsupported) only needed the file'
 
 - `src/core/render/dispatcher.ts`
   - `RendererDecision` type changed from `{ kind, language? }` to a discriminated union with five variants. `MediaKind` exported as a type alias.
-  - New `MEDIA_EXTENSIONS` table; `BINARY_EXTENSIONS` shrunk down to formats SwilRead genuinely can't render (PDF, archives, fonts, .doc/.xls/.epub).
+  - New `MEDIA_EXTENSIONS` table; `BINARY_EXTENSIONS` shrunk down to formats SwirlRead genuinely can't render (PDF, archives, fonts, .doc/.xls/.epub).
   - `getRendererKind` checks media before code so `.svg` resolves to image.
 - `src/core/render/dispatcher.test.ts`
   - Adjusted the discriminated-union access pattern (`ts.kind === 'code' && ts.language`).
@@ -1062,7 +1279,7 @@ Previous M7 renderers (PlainText / CodeFile / Unsupported) only needed the file'
   - Load effect dispatches `media` before `binary`; markRecentFile is skipped for both (a user clicking through their image folder shouldn't pollute the reading history).
   - JSX has a new `state.kind === 'media'` branch rendering `<MediaRenderer>`.
 - `src/styles/globals.css`
-  - New `.swilread-media*` rules: centred figure layout, `max-height: 75vh` for image/video so they never push the page absurdly tall, audio capped at 480px width, theme-aware borders, and `pending` / `broken` variants share the dashed-card look used elsewhere in the reader.
+  - New `.swirlread-media*` rules: centred figure layout, `max-height: 75vh` for image/video so they never push the page absurdly tall, audio capped at 480px width, theme-aware borders, and `pending` / `broken` variants share the dashed-card look used elsewhere in the reader.
 
 ### Verification
 
@@ -1070,7 +1287,7 @@ Previous M7 renderers (PlainText / CodeFile / Unsupported) only needed the file'
 - `pnpm lint` — 0 errors / 0 warnings
 - `pnpm format:check` — all conformant
 - `pnpm test` — **612 passed** (was 607; +4 MediaRenderer + 1 net new dispatcher test from the binary-split)
-- `pnpm build` — main bundle **260.95 KB gz** (was 260.57; +0.38 KB for the new dispatcher table, MediaRenderer component, and the shared-hook reorganization). CSS bundle **20.84 KB gz** (was 20.67; +0.17 KB for the seven new `.swilread-media*` rules).
+- `pnpm build` — main bundle **260.95 KB gz** (was 260.57; +0.38 KB for the new dispatcher table, MediaRenderer component, and the shared-hook reorganization). CSS bundle **20.84 KB gz** (was 20.67; +0.17 KB for the seven new `.swirlread-media*` rules).
 
 ### Down-stream notes
 
@@ -1083,7 +1300,7 @@ Previous M7 renderers (PlainText / CodeFile / Unsupported) only needed the file'
 
 ## 2026-05-02 · M7 Universal File Reader (first slice — M7.1 / M7.2 / M7.7 / M7.8)
 
-**Status**: ✅ SwilRead now opens every file in the vault, not just Markdown. Plain text reads as monospace; source code gets full Shiki highlighting; binaries get a calm metadata card instead of garbled bytes through `readText`.
+**Status**: ✅ SwirlRead now opens every file in the vault, not just Markdown. Plain text reads as monospace; source code gets full Shiki highlighting; binaries get a calm metadata card instead of garbled bytes through `readText`.
 
 ### What changed
 
@@ -1126,7 +1343,7 @@ Recent-files marking is also skipped for binaries: a user clicking through their
 - `src/ui/reading-shell/DocumentPage.test.tsx`
   - The "renders non-markdown text files as a code block (fallback path)" test was renamed to "renders source-code files via the CodeFileRenderer (M7.7)" and now finds the result via `findByTestId('code-file-renderer')` (Shiki splits text across spans, so direct text matching no longer works).
   - The TOC-clear test got the same treatment.
-- `src/styles/globals.css` — new theme-aware rules for `.swilread-plaintext`, `.swilread-codefile`, `.swilread-codefile__status`, and the full `.swilread-unsupported*` family. All built from existing semantic tokens; all four themes (Sepia/Light/Dark/OLED) get the same surface treatment for free.
+- `src/styles/globals.css` — new theme-aware rules for `.swirlread-plaintext`, `.swirlread-codefile`, `.swirlread-codefile__status`, and the full `.swirlread-unsupported*` family. All built from existing semantic tokens; all four themes (Sepia/Light/Dark/OLED) get the same surface treatment for free.
 
 ### Verification
 
@@ -1159,7 +1376,7 @@ The end-of-document `BacklinksPanel` now does three new things, all in line with
    - **Recency** — sources the reader has opened lately float to the top, in recency order. Drawn from `useReaderStore.recentByVault[vaultId]`. The reader's own attention is the strongest "next read" signal we have without a feedback loop.
    - **Same-section affinity** — at the same recency tier, sources whose top-level directory matches the current document's top-level directory rank ahead of cross-section sources. (Wilson's vault: a `knowledge/`-rooted note linking back into `knowledge/react.md` outranks a `tasks/`-rooted note that does the same.)
    - **Alphabetical fallback** — `localeCompare(undefined, { sensitivity: 'base' })`. Stable, locale-aware, CJK-friendly.
-2. **Wikilink emphasis in the snippet.** A new `renderSnippet()` walks the existing context string and wraps any `[[…]]` reference in `<mark>`. The `<mark>` rule (`.swilread-backlinks__mark`) uses a low-saturation `color-mix(in srgb, var(--color-accent) 15%, transparent)` tint so it reads as "the reference" without competing with body prose.
+2. **Wikilink emphasis in the snippet.** A new `renderSnippet()` walks the existing context string and wraps any `[[…]]` reference in `<mark>`. The `<mark>` rule (`.swirlread-backlinks__mark`) uses a low-saturation `color-mix(in srgb, var(--color-accent) 15%, transparent)` tint so it reads as "the reference" without competing with body prose.
 3. **Hide on empty.** When `state.kind === 'ready' && ranked.length === 0`, the component returns `null` — the entire `<section>` (including the heading) is gone. RX5 explicitly calls out the old "No backlinks yet." status row as a distraction at the document's natural ending; getting rid of it makes a clean note actually feel finished.
 
 ### Why a pure helper instead of in-component sort
@@ -1191,7 +1408,7 @@ The component's job becomes:
 - `src/ui/reading-shell/DocumentPage.test.tsx`
   - One existing assertion needed the same function-matcher fix (the integration test renders the panel through the full DocumentPage path).
 - `src/styles/globals.css`
-  - New `.swilread-backlinks__mark` rule. Uses `box-decoration-break: clone` so multi-line wikilinks (a future case once embed targets get longer) keep clean rounded corners on every line.
+  - New `.swirlread-backlinks__mark` rule. Uses `box-decoration-break: clone` so multi-line wikilinks (a future case once embed targets get longer) keep clean rounded corners on every line.
 
 ### Verification
 
@@ -1291,9 +1508,9 @@ Crucially: **the entire rail collapses to nothing when there are no headings AND
 - `src/ui/reading-shell/DocumentPage.tsx`:
   - Already publishes headings to `useTocStore` after each render. Added a sibling `void import('@/core/navigation/tag-index').then(({ tagsInMarkdownSource }) => …)` that publishes `{ tags, outgoingLinks }` derived from the same `raw` source the renderer just consumed. `extractWikilinkReferences` is now imported statically (already eager via `BacklinksPanel`); `tagsInMarkdownSource` stays dynamic (its body extractor lives in the lazy tag-index chunk).
 - `src/styles/globals.css`:
-  - `.swilread-toc__context` — bordered context block above the TOC.
-  - `.swilread-toc__tag-list` / `.swilread-toc__tag` / `.swilread-toc__tag-more` — tag chip styling matching the existing tag pill aesthetic.
-  - `.swilread-toc__context-counts` / `.swilread-toc__count` — small inline count badges with hover-friendly tooltips.
+  - `.swirlread-toc__context` — bordered context block above the TOC.
+  - `.swirlread-toc__tag-list` / `.swirlread-toc__tag` / `.swirlread-toc__tag-more` — tag chip styling matching the existing tag pill aesthetic.
+  - `.swirlread-toc__context-counts` / `.swirlread-toc__count` — small inline count badges with hover-friendly tooltips.
 
 ### Why count chips instead of full lists in the rail
 
@@ -1347,11 +1564,11 @@ The sidebar above the file tree now reads as a continuation surface, not a raw r
   - New `<FilesNav>` wrapper around the existing tree so the heading + tree share a consistent block treatment.
   - Subscribes to `useReaderStore.scrollByVault[vaultId]` to detect saved scroll positions for the Continue branch.
 - `src/styles/globals.css`:
-  - `.swilread-file-tree__sections` — bordered block matching the existing `__recent` rhythm.
-  - `.swilread-file-tree__files` — small top padding so the `Files` heading reads as a section break.
-  - `.swilread-file-tree__row--continue` — slightly heavier weight + flex for the Resume tag alignment.
-  - `.swilread-file-tree__row--section-link` — bolder weight + accent-tinted icon.
-  - `.swilread-file-tree__resume-tag` — pill-shaped accent badge inside the Continue row.
+  - `.swirlread-file-tree__sections` — bordered block matching the existing `__recent` rhythm.
+  - `.swirlread-file-tree__files` — small top padding so the `Files` heading reads as a section break.
+  - `.swirlread-file-tree__row--continue` — slightly heavier weight + flex for the Resume tag alignment.
+  - `.swirlread-file-tree__row--section-link` — bolder weight + accent-tinted icon.
+  - `.swirlread-file-tree__resume-tag` — pill-shaped accent badge inside the Continue row.
 
 ### Why "Continue" is gated on saved scroll memory
 
@@ -1399,7 +1616,7 @@ The craft plan specifies `Continue` as "the most recent file with saved scroll p
   - `cleanFilename(filePath)` — strips directory + extension, replaces `-`/`_` with spaces, title-cases ASCII words. Non-Latin words (CJK) and already-cased ASCII (acronyms like `NASA`) pass through unchanged.
   - Why a regex instead of reusing `extractHeadings`: that function walks the rendered DOM. Title selection has to run BEFORE render so the loading skeleton sits under the right header. The regex covers the only form that matters in practice.
 - `src/ui/reading-shell/DocumentPage.tsx`:
-  - New header markup (`<h1 class="swilread-doc-header__title">` + `<p class="swilread-doc-header__breadcrumb">` carrying vault id + path in muted monospace).
+  - New header markup (`<h1 class="swirlread-doc-header__title">` + `<p class="swirlread-doc-header__breadcrumb">` carrying vault id + path in muted monospace).
   - `useMemo`-d `derivedTitle` lives BEFORE the directory early-return so React's hook order stays stable across state transitions (an early-return-before-hook bug almost shipped — caught by failing tests).
 - `src/ui/reading-shell/Frontmatter.tsx`:
   - In `metadata` display mode, the title row is no longer rendered — the page header owns it now. Description / date / author / tags rail still shows. `raw` mode (full key/value table) is unchanged so power readers keep every field.
@@ -1411,7 +1628,7 @@ The craft plan specifies `Continue` as "the most recent file with saved scroll p
   - No animated shimmer — the project's design philosophy values calm over motion. A subtle 2.4s opacity pulse runs only when `prefers-reduced-motion: no-preference`.
   - `role="status"` + `aria-busy` + sr-only "Reading…" so screen readers get the loading state without sighted users seeing redundant copy.
 - `missing-file` state reworded into a two-line card (`File not found` + "this path doesn't exist in the current vault" + pointer to ⌘K).
-- `error` state matches the same card visual ("Couldn't open this file" + the underlying message). Same `swilread-doc-empty` class for consistent feel.
+- `error` state matches the same card visual ("Couldn't open this file" + the underlying message). Same `swirlread-doc-empty` class for consistent feel.
 
 ### Hook-order bug caught + fixed during the round
 
@@ -1446,7 +1663,7 @@ First pass put `useMemo(derivePageTitle, ...)` AFTER the `if (state.kind === 'di
 
 ### What I deliberately did NOT do
 
-- Did not de-duplicate the body `<h1>` visually when the page header derives from it. Both render the same text when the title source is body H1. Acceptable as "article title + body content title" but a follow-up RX1.5 could hide the body H1 visually (CSS `:first-child` rule on `.swilread-prose h1`) without removing it from the DOM (TOC needs it). Flagged for a subsequent craft pass.
+- Did not de-duplicate the body `<h1>` visually when the page header derives from it. Both render the same text when the title source is body H1. Acceptable as "article title + body content title" but a follow-up RX1.5 could hide the body H1 visually (CSS `:first-child` rule on `.swirlread-prose h1`) without removing it from the DOM (TOC needs it). Flagged for a subsequent craft pass.
 - Did not touch RX2 / RX3 / RX4 etc. — the prompt scoped to RX1 + RX7 (DocumentPage slice).
 - Did not change route URLs or refactor any store. Only DocumentPage + Frontmatter component touched on the UI side; only one new core utility added.
 
@@ -1476,7 +1693,7 @@ The command palette gains a third mode: `>` consumed as a prefix routes the rest
 
 - `src/ui/command-palette/CommandPalette.tsx` — new `classifyInput(raw)` + `PaletteMode` discriminated union (`recents` / `files` / `search`). New `useFullTextIndex(vaultId, mode)` hook that builds the index lazily on first `>` mode entry and re-runs `searchIndex` per keystroke. Three render branches each with their own loading / error / empty-state. Footer gains a `>` hint pill so the prefix is discoverable.
 - `src/stores/vault-store.ts` — `removeVault` now invalidates the new full-text cache too. **Important refactor**: switched ALL cache invalidator imports from static to dynamic (`void invalidateVaultCachesLazy(id)`) to keep heavy modules (MiniSearch, ~6 KB gz) out of the eager main bundle. `invalidateBacklinks` stays static — it lives in `core/` and has no heavy deps.
-- `src/styles/globals.css` — `.swilread-cmdk__hint` for the footer prefix hint.
+- `src/styles/globals.css` — `.swirlread-cmdk__hint` for the footer prefix hint.
 
 ### Why dynamic-import the cache invalidators
 
@@ -1540,7 +1757,7 @@ Layer-crossing note: `vault-store` reaches into `src/ui/...` for two of those in
 
 - `src/stores/ui-store.ts` — added transient `shortcutsHelpOpen` (NOT persisted; same pattern as `commandPaletteOpen` and `zenMode`).
 - `src/app/AppShell.tsx` — calls `useShortcutsHelpHotkey()`, lazy-imports `ShortcutsHelp`, conditionally mounts in Suspense.
-- `src/styles/globals.css` — `.swilread-shortcuts*` styles (header, body, group, kbd blocks).
+- `src/styles/globals.css` — `.swirlread-shortcuts*` styles (header, body, group, kbd blocks).
 
 ### Verification
 
@@ -1564,7 +1781,7 @@ Layer-crossing note: `vault-store` reaches into `src/ui/...` for two of those in
 
 ### What changed
 
-Before today: every reload required the user to re-pick their folder. SwilRead was effectively a single-session tool. Today: handles are reattached automatically when the browser still trusts them, and a single button reauthorizes them when it doesn't. The landing page knows you're a returning user and shows your vaults. The header lets you flip between vaults without going back to the landing page.
+Before today: every reload required the user to re-pick their folder. SwirlRead was effectively a single-session tool. Today: handles are reattached automatically when the browser still trusts them, and a single button reauthorizes them when it doesn't. The landing page knows you're a returning user and shows your vaults. The header lets you flip between vaults without going back to the landing page.
 
 **Files created**:
 
@@ -1578,7 +1795,7 @@ Before today: every reload required the user to re-pick their folder. SwilRead w
 - `src/app/AppShell.tsx` — renders `<VaultSwitcher />` next to the wordmark when at least one vault exists. Conditional avoids the dropdown showing on `/app` index for fresh users.
 - `src/ui/reading-shell/DocumentPage.tsx` + `VaultHome.tsx` — both replace the inline "not registered" copy with `<ReauthorizeVault vaultId={...} />`. The `missing-vault` / `missing` states route through one component now.
 - `src/ui/landing/LandingPage.tsx` — split into `FreshSection` (original CTAs) and `ReturningSection` (recents list capped at 5 with relative-date stamps, "Open another vault" dashed CTA). `useVaultStore.registeredVaults.length > 0` is the seam.
-- `src/styles/globals.css` — `.swilread-reauthorize*` panel styles (icon, title, body, primary button, error), `.swilread-vault-switcher*` dropdown styles (trigger, menu, items, separator, CTA), `.swilread-landing-recents*` list styles (label, link, name, meta, CTA).
+- `src/styles/globals.css` — `.swirlread-reauthorize*` panel styles (icon, title, body, primary button, error), `.swirlread-vault-switcher*` dropdown styles (trigger, menu, items, separator, CTA), `.swirlread-landing-recents*` list styles (label, link, name, meta, CTA).
 
 ### Why no automatic permission prompt at boot
 
@@ -1706,8 +1923,8 @@ Press `F` anywhere in the reading shell and the chrome melts away — header, fi
 
 **Files modified**:
 
-- `src/app/AppShell.tsx` — adds the new `useZenModeHotkey()` call alongside the existing `useCommandPaletteHotkey()`. Header gains a `swilread-shell__header` class so the zen-mode CSS can target it by name.
-- `src/styles/globals.css` — replaced the placeholder zen-mode block with selectors that target dedicated classes (`swilread-shell__header`, `swilread-vault-layout__sidebar`, `swilread-vault-layout__toc`) rather than fragile DOM-position chains. Adds a `min-height: 100vh` on the layout so the freed vertical space stays the right size for the document area.
+- `src/app/AppShell.tsx` — adds the new `useZenModeHotkey()` call alongside the existing `useCommandPaletteHotkey()`. Header gains a `swirlread-shell__header` class so the zen-mode CSS can target it by name.
+- `src/styles/globals.css` — replaced the placeholder zen-mode block with selectors that target dedicated classes (`swirlread-shell__header`, `swirlread-vault-layout__sidebar`, `swirlread-vault-layout__toc`) rather than fragile DOM-position chains. Adds a `min-height: 100vh` on the layout so the freed vertical space stays the right size for the document area.
 
 ### Why selectors over DOM-position chains
 
@@ -1759,7 +1976,7 @@ Wilson's vault uses Obsidian-style `#tag` and `#nested/tag` markers extensively 
 - `src/core/render/pipeline.ts` — registers `remark-tag` AFTER `remark-wikilink` so `#tag` appearing inside a `[[wikilink]]` (which builds its own children) doesn't get double-rewritten. Sanitize schema permits `<tag>` with `data-tag`.
 - `src/ui/reading-shell/DocumentPage.tsx` — adds `tag: Tag` to the `customComponents` map so the pipeline's `<tag>` elements bind to the React component.
 - `src/ui/reading-shell/VaultLayout.tsx` — lazy-imports and mounts `TagsPanel` once per vault layout (alongside the lazy TOC). Survives across document navigation.
-- `src/styles/globals.css` — `.swilread-tag` pill (accent-bordered, accent-tinted background, scale-up on hover) + `.swilread-tags-panel*` modal styles (mirrors the cmdk palette's blurred-overlay aesthetic).
+- `src/styles/globals.css` — `.swirlread-tag` pill (accent-bordered, accent-tinted background, scale-up on hover) + `.swirlread-tags-panel*` modal styles (mirrors the cmdk palette's blurred-overlay aesthetic).
 
 ### Why a vault-wide index instead of "tags in this file"
 
@@ -1808,7 +2025,7 @@ The command palette becomes actually useful for navigation. Open ⌘K, type a fe
 
 - `src/ui/command-palette/CommandPalette.tsx` — substantially extended. New `useCurrentVaultId()` parses the route via `useLocation` rather than relying on `vaultStore.activeVaultId` (the URL is the user's mental model for "what vault am I in"). New `useVaultFiles(vaultId)` kicks off the walk only when the palette is open AND a vault is in scope, so users who never hit ⌘K pay zero. The body branches on input-empty vs. input-set: recents shown when empty, Files group shown when set. `shouldFilter` flips per-mode — false for recents (preserve recency order), true for Files (let cmdk's score function rank). cmdk's `value` field combines basename + path so a query can hit either the leaf name or any parent folder name. Friendly states for loading / error / no-matches / no-vault-in-scope.
 - `src/ui/command-palette/CommandPalette.test.tsx` — test harness restructured: `ShellWithPalette` renders the palette as a layout-level sibling of `<Outlet />` so it stays mounted across `/app`, `/app/:vaultId`, and `/app/:vaultId/*`. The previous flat-route harness only mounted the palette at `/app`, which silently broke when a child route (vault home, document) was active — the failure mode that surfaced when the M5.2 tests landed. 5 new Files-mode tests cover the placeholder copy, fuzzy match (w/ CJK), navigate-and-close, no-matches state, and the no-vault prompt.
-- `src/styles/globals.css` — `.swilread-cmdk__status` style for the loading / error rows below the list.
+- `src/styles/globals.css` — `.swirlread-cmdk__status` style for the loading / error rows below the list.
 - `src/core/vault/index.ts` — re-exports `walkAllFiles` + `WalkOptions`.
 
 ### Why URL-derived vault id (not `activeVaultId`)
@@ -1857,7 +2074,7 @@ We also locked the dev server to a project-dedicated port: **7945** (`SWIL` on a
 
 - `src/stores/ui-store.ts` — added transient `commandPaletteOpen: boolean` (NOT persisted — same shape as `zenMode`) plus `setCommandPaletteOpen` and `toggleCommandPalette`. 3 new tests in `ui-store.test.ts`.
 - `src/app/AppShell.tsx` — added a `Search` icon button next to the TOC toggle; lazy-imports `CommandPalette` and conditionally mounts it inside Suspense when `commandPaletteOpen` flips true.
-- `src/styles/globals.css` — `.swilread-cmdk*` styles for the centered modal, blurred backdrop, search input, list, items (with `[data-selected='true']` accent), keyboard hint footer, and a mobile breakpoint that pulls the modal closer to the top.
+- `src/styles/globals.css` — `.swirlread-cmdk*` styles for the centered modal, blurred backdrop, search input, list, items (with `[data-selected='true']` accent), keyboard hint footer, and a mobile breakpoint that pulls the modal closer to the top.
 - `src/setup-tests.ts` — added two new jsdom stubs that cmdk needs: a `ResizeObserver` class and `Element.prototype.scrollIntoView`. Without them the palette tests crash before they can render.
 - `vite.config.ts` — `server.port` and `preview.port` set to **7945** with `strictPort: true`.
 - `package.json` — `cmdk@^1.1.1` added.
@@ -1902,9 +2119,9 @@ This is the moment the file tree stops looking like raw filesystem and starts lo
 
 - `src/core/navigation/section-detector.ts` — added `pickSectionHomeFromEntries(entries, dirName)`, `findSectionHome(vault, dirPath)`, `detectSections(vault)`, and a `VaultSection` type. The pure helper applies a 10-slot priority list (5 candidates × 2 extensions): `<dirname>-map.md`, `<dirname>-map.mdx`, `<dirname>.md`, `<dirname>.mdx`, then the existing `HOME_CANDIDATES_LC` constant for index/home/README. All comparisons lowercased; directory entries with home-shaped names are correctly ignored.
 - `src/core/navigation/section-detector.test.ts` — 13 new tests across pure helper, async wrapper, and `detectSections`. The Wilson-vault scenario test asserts every top-level dir resolves to the right map file or `null` (for the `orphan/` folder), and that loose top-level files are NOT promoted to sections.
-- `src/ui/file-tree/FileTree.tsx` — added a `sectionHome` state and a depth-0-only effect that pre-fetches the directory's listing via `getListing` and computes its home. When `sectionHome !== null`, the directory renders as a `<div className="swilread-file-tree__row--section">` containing a `<button>` for the chevron and a `<Link>` for the icon+name. Old single-button behavior preserved for non-section directories so the existing M4.3 tests keep passing unmodified.
+- `src/ui/file-tree/FileTree.tsx` — added a `sectionHome` state and a depth-0-only effect that pre-fetches the directory's listing via `getListing` and computes its home. When `sectionHome !== null`, the directory renders as a `<div className="swirlread-file-tree__row--section">` containing a `<button>` for the chevron and a `<Link>` for the icon+name. Old single-button behavior preserved for non-section directories so the existing M4.3 tests keep passing unmodified.
 - `src/ui/file-tree/FileTree.test.tsx` — 3 new integration tests: section link points at the right map file, dirs without a home stay as plain expandable folders, the section row marks `aria-current="page"` when viewing its own map.
-- `src/styles/globals.css` — `.swilread-file-tree__row--section`, `.swilread-file-tree__chevron-btn`, `.swilread-file-tree__section-link`. Section rows have a slightly heavier weight, the `Library` Lucide icon picks up the accent color, and the row gets a tinted background when active.
+- `src/styles/globals.css` — `.swirlread-file-tree__row--section`, `.swirlread-file-tree__chevron-btn`, `.swirlread-file-tree__section-link`. Section rows have a slightly heavier weight, the `Library` Lucide icon picks up the accent color, and the row gets a tinted background when active.
 
 ### Why pre-fetch listings for top-level directories
 
@@ -1961,7 +2178,7 @@ Long-form reading hand-feel got two big upgrades. Documents remember exactly whe
 - `src/ui/reading-shell/VaultLayout.tsx` — renders a sticky right `<aside>` when `tocOpen`. `TableOfContents` is `lazy()` + `Suspense fallback={null}` so it lives in its own chunk.
 - `src/ui/settings-panel/SettingsPanel.tsx` — TOC toggle row added beside the file-tree toggle.
 - `src/ui/reading-shell/DocumentPage.tsx` — publishes headings to `useTocStore` after every successful render via dynamic-imported `extractHeadings`. Clears on non-markdown / unmount. The dynamic import keeps `headings.ts` in the lazy TOC chunk instead of the main bundle.
-- `src/styles/globals.css` — new `--toc-width: 240px`, `.swilread-vault-layout__toc` (sticky right rail, hidden < 1100 px), `.swilread-toc*` styles (active border-left in accent, hover tint, level-based weight/size).
+- `src/styles/globals.css` — new `--toc-width: 240px`, `.swirlread-vault-layout__toc` (sticky right rail, hidden < 1100 px), `.swirlread-toc*` styles (active border-left in accent, hover tint, level-based weight/size).
 - `src/setup-tests.ts` — global `IntersectionObserver` stub for jsdom so any test that mounts the vault layout doesn't explode. Tests that care about observer behavior re-stub via `vi.stubGlobal`.
 
 **Why DOM extraction instead of a rehype slug plugin**: avoids ~2 KB of bundle and keeps headings/slugs/ids co-located in one render-time pass. The pipeline already permits `id` on h1–h6 in the sanitize schema (left over from the original M4.6 placeholder) — we just fill them in.
@@ -2012,7 +2229,7 @@ We are now ~1.1 KB over the 250 KB soft target the previous agent flagged. The T
 - `src/core/render/pipeline.ts` — registers `remark-mermaid` in the processor; extends the sanitize schema with `<mermaid-diagram>` + `data-source`.
 - `src/core/render/pipeline.test.tsx` — adds 3 integration tests for the mermaid pass.
 - `src/ui/reading-shell/DocumentPage.tsx` — adds `'mermaid-diagram': MermaidDiagram` to the `customComponents` map.
-- `src/styles/globals.css` — `.swilread-mermaid*` styles for the centered SVG container, the loading shimmer, and the failure fallback `<figure>`.
+- `src/styles/globals.css` — `.swirlread-mermaid*` styles for the centered SVG container, the loading shimmer, and the failure fallback `<figure>`.
 - `package.json` / `pnpm-lock.yaml` — added `mermaid@^11.14.0`.
 
 ### Architecture decisions
@@ -2075,7 +2292,7 @@ Markdown documents with YAML/TOML frontmatter now render a subtle metadata bar a
 - `src/ui/reading-shell/DocumentPage.test.tsx` — adds 3 integration tests (metadata mode, hidden mode, raw mode); wires `useUIStore` into the per-test reset.
 - `src/ui/settings-panel/SettingsPanel.tsx` — adds a segmented "Frontmatter" control (Metadata / All / Hidden).
 - `src/ui/settings-panel/SettingsPanel.test.tsx` — adds 1 test for the new control; existing reset test covers the new field too.
-- `src/styles/globals.css` — `.swilread-frontmatter*` styles for the metadata bar (title, description, meta line, tag chips) and the raw definition list.
+- `src/styles/globals.css` — `.swirlread-frontmatter*` styles for the metadata bar (title, description, meta line, tag chips) and the raw definition list.
 
 ### Architecture decisions
 
@@ -2126,7 +2343,7 @@ The backlinks data from M4.4 is now visible in the reader. Every rendered Markdo
 
 - `src/ui/reading-shell/DocumentPage.tsx` — renders `BacklinksPanel` below Markdown content inside the existing document context.
 - `src/ui/reading-shell/DocumentPage.test.tsx` — adds end-to-end coverage for showing a backlink on a target document and navigating back to its source.
-- `src/styles/globals.css` — `.swilread-backlinks*` styles for the bottom panel, source rows, path metadata, and context snippets.
+- `src/styles/globals.css` — `.swirlread-backlinks*` styles for the bottom panel, source rows, path metadata, and context snippets.
 - Development docs updated to mark M4.5 done.
 
 ### Architecture decisions
@@ -2169,7 +2386,7 @@ Lean toward **M3.13 Mermaid** next if rendering fidelity is the priority, or **M
 
 ### What was built
 
-SwilRead now has a persistent backlinks data layer. Markdown files are scanned for wikilinks, targets are resolved through the existing wikilink index, and resolved edges are stored in memory plus IndexedDB. `DocumentPage` incrementally refreshes backlinks for a file after it renders successfully, and the core module also exposes a whole-vault builder for future eager indexing.
+SwirlRead now has a persistent backlinks data layer. Markdown files are scanned for wikilinks, targets are resolved through the existing wikilink index, and resolved edges are stored in memory plus IndexedDB. `DocumentPage` incrementally refreshes backlinks for a file after it renders successfully, and the core module also exposes a whole-vault builder for future eager indexing.
 
 **Files created**:
 
@@ -2234,7 +2451,7 @@ The reading preferences that already existed in `useUIStore` now have a proper p
 - `package.json` / `pnpm-lock.yaml` — added `@radix-ui/react-dialog`.
 - `src/app/AppShell.tsx` — replaced the minimal header `ThemeSwitcher` with the settings trigger.
 - `src/app/router.test.tsx` — header assertion now expects the settings button.
-- `src/styles/globals.css` — `.swilread-settings*` rules for the drawer, overlay, controls, compact segmented groups, mobile full-width behavior.
+- `src/styles/globals.css` — `.swirlread-settings*` rules for the drawer, overlay, controls, compact segmented groups, mobile full-width behavior.
 - `vitest.config.ts` — excludes `.pnpm-store/**` so a local pnpm store mirror never duplicates test discovery.
 
 ### Architecture decisions
@@ -2278,7 +2495,7 @@ Lean toward **M4.4 backlinks index** if continuing navigation infrastructure, or
 
 ### What was built
 
-SwilRead now remembers what was opened recently, per vault. Successfully opened files are stored latest-first, capped to 20 per vault, persisted in IndexedDB, and surfaced immediately at the top of the file-tree sidebar. This is also the first slice of reader-specific state for the future command palette.
+SwirlRead now remembers what was opened recently, per vault. Successfully opened files are stored latest-first, capped to 20 per vault, persisted in IndexedDB, and surfaced immediately at the top of the file-tree sidebar. This is also the first slice of reader-specific state for the future command palette.
 
 **Files created**:
 
@@ -2318,7 +2535,7 @@ SwilRead now remembers what was opened recently, per vault. Successfully opened 
 ### Issues / Notes
 
 - Recent rows currently store only path + timestamp. Display names derive from `basename(path)`. If we later need richer command-palette ranking, add optional title/snippet fields through another Dexie migration.
-- The sidebar recent section does not validate existence on render. If a file is deleted outside SwilRead, clicking it lands in the existing "File not found" state and the stale recent can be cleared by a future maintenance pass.
+- The sidebar recent section does not validate existence on render. If a file is deleted outside SwirlRead, clicking it lands in the existing "File not found" state and the stale recent can be cleared by a future maintenance pass.
 
 ### Next step
 
@@ -2354,7 +2571,7 @@ The vault is now always one click away. A 280 px left rail shows the full tree o
 - `src/app/AppShell.tsx` — sticky header now spans `var(--shell-header-height)`; added a left-side icon button using Lucide `PanelLeftOpen` / `PanelLeftClose` that flips `useUIStore.toggleFileTree`.
 - `src/stores/ui-store.ts` — added `fileTreeOpen: boolean` (default `true`) + `setFileTreeOpen` / `toggleFileTree`. Wired into `init()` and `resetToDefaults()` with the same defensive read pattern as the other prefs.
 - `src/stores/ui-store.test.ts` — 5 new tests covering default, set, toggle, restore-from-db, invalid-stored-value fallback.
-- `src/styles/globals.css` — `.swilread-vault-layout*`, `.swilread-file-tree*`, and `.swilread-shell__icon-button` rules. CSS vars `--shell-header-height` (48px) and `--file-tree-width` (280px) live on `:root`.
+- `src/styles/globals.css` — `.swirlread-vault-layout*`, `.swirlread-file-tree*`, and `.swirlread-shell__icon-button` rules. CSS vars `--shell-header-height` (48px) and `--file-tree-width` (280px) live on `:root`.
 - `src/app/router.test.tsx` — assertion updated for the new tree shape (children of `/app` collapse from `[<index>, :vaultId, :vaultId/*]` to `[<index>, :vaultId]`, with `:vaultId` having its own `[<index>, *]` children).
 - `src/ui/reading-shell/VaultHome.test.tsx` — `beforeEach` now pins `fileTreeOpen: false` so legacy assertions don't double-match elements that exist in both the sidebar and the main view.
 
@@ -2429,7 +2646,7 @@ User report (screenshot): the vault home view rendered a list of folders + files
 
 - `src/ui/reading-shell/VaultHome.tsx` — load order now: list root + run home detection in the same async pass; if a home file exists, `<Navigate replace>` to it; otherwise render `<DirectoryListing>` rooted at "". The "vault not registered" branch keeps its old shape since there's nothing to list.
 - `src/ui/reading-shell/DocumentPage.tsx` — `vault.stat(filePath)` first. If the entry is a directory, list it and render the same `<DirectoryListing>` (kicker reads "Folder"); otherwise the existing read-text-and-render path runs unchanged. Adds one extra adapter call per page load — negligible vs. the cost of trying readText on a dir and having to disambiguate the resulting `VaultReadError`.
-- `src/styles/globals.css` — `.swilread-directory*` rules: subtle hover tint via `color-mix(var(--color-accent), 8%)`, dashed underline on breadcrumb hover, JetBrains Mono for the file-size badge, theme-aware throughout.
+- `src/styles/globals.css` — `.swirlread-directory*` rules: subtle hover tint via `color-mix(var(--color-accent), 8%)`, dashed underline on breadcrumb hover, JetBrains Mono for the file-size badge, theme-aware throughout.
 
 ### Architecture decisions
 
@@ -2451,7 +2668,7 @@ User report (screenshot): the vault home view rendered a list of folders + files
 ### Manual browser E2E (against `supwil/`)
 
 1. `pnpm dev`, open `localhost:5173/`
-2. Pick the `supwil/` vault → SwilRead lands directly on `index.md` rendered (no folder list seen)
+2. Pick the `supwil/` vault → SwirlRead lands directly on `index.md` rendered (no folder list seen)
 3. Edit URL to `/app/:vaultId/career` → folder listing appears with `me`, `ai`, etc., breadcrumb shows `Vault root / career`
 4. Click into `me/me.md` → DocumentPage renders the note
 5. Theme switcher cycles through Sepia/Light/Dark/OLED — listing inherits all four palettes via semantic tokens
@@ -2491,7 +2708,7 @@ Hovering a resolved wikilink now reveals a 400 ms-delayed popover that shows the
 **Files modified**:
 
 - `src/ui/reading-shell/Wikilink.tsx` — resolved branch now wraps the link in `<WikilinkPreview>`. Broken / pending states unchanged.
-- `src/styles/globals.css` — `.swilread-wikilink-preview*` rules using `--color-surface` / `--color-border` / `--color-text*` so all four themes inherit automatically.
+- `src/styles/globals.css` — `.swirlread-wikilink-preview*` rules using `--color-surface` / `--color-border` / `--color-text*` so all four themes inherit automatically.
 - `package.json` — `@floating-ui/react ^0.27.19` (the choice already documented in `tech-stack.md`).
 
 ### Architecture decisions
@@ -2556,7 +2773,7 @@ The last small-but-visible primitive in Wilson's vault — `==highlighted==` —
 
 - `src/core/render/pipeline.ts` — registered `remark-highlight` after `remark-wikilink`; whitelisted `<mark>` in the sanitize schema (not in GitHub's default allow list).
 - `src/core/render/pipeline.test.tsx` — 3 new integration tests (single, multiple, sanitize survival).
-- `src/styles/globals.css` — `.swilread-prose mark` rule with `color-mix` over `#ffd76a` on light themes and `#d6a93f` on Dark/OLED. `box-decoration-break: clone` so highlights wrapping across lines keep their padding.
+- `src/styles/globals.css` — `.swirlread-prose mark` rule with `color-mix` over `#ffd76a` on light themes and `#d6a93f` on Dark/OLED. `box-decoration-break: clone` so highlights wrapping across lines keep their padding.
 
 ### Architecture decisions
 
@@ -2630,7 +2847,7 @@ Obsidian-style embeds — `![[image.png]]`, `![[note.md]]`, `![[clip.mp4]]`, etc
 - `src/core/render/pipeline.test.tsx` — 4 new tests asserting `<vault-embed>` element + data attrs + paragraph lifting.
 - `src/ui/reading-shell/DocumentPage.tsx` — registered `'vault-embed': EmbedNode` in `customComponents`; wraps the prose with both `WikilinkContext.Provider` and `EmbedContext.Provider` (initial stack = `[currentPath]`).
 - `src/ui/reading-shell/DocumentPage.test.tsx` — 4 new integration tests: image embed → `<img>` with blob URL, broken target notice, recursive markdown embed, self-cycle notice.
-- `src/styles/globals.css` — `.swilread-embed*` styles for image / video / audio / markdown card / file card / broken / pending / cycle. Theme-aware via existing semantic tokens.
+- `src/styles/globals.css` — `.swirlread-embed*` styles for image / video / audio / markdown card / file card / broken / pending / cycle. Theme-aware via existing semantic tokens.
 - `src/setup-tests.ts` — added a deterministic `URL.createObjectURL` shim (jsdom doesn't accept the duck-typed `File` we hand back from the mock filesystem; stubbing here is cheaper than reworking the mock).
 - `src/core/vault/__test-helpers__/mock-fs.ts` — kept the duck-typed File but added a comment explaining the trade-off.
 
@@ -2714,7 +2931,7 @@ The four themes + Auto are now actually reachable. Until this commit the body cl
 - `src/app/AppShell.tsx` — replaced "App Shell · placeholder" with `<ThemeSwitcher />`
 - `src/App.tsx` — calls `useApplyUIPrefs()` once at the top of the tree
 - `src/main.tsx` — fires `useUIStore.getState().init()` alongside vault store init
-- `src/styles/globals.css` — `.swilread-prose` now uses `var(--reader-font-family)`, `var(--reader-font-size)`, `var(--reader-line-height)`; added zen-mode rule that hides AppShell header
+- `src/styles/globals.css` — `.swirlread-prose` now uses `var(--reader-font-family)`, `var(--reader-font-size)`, `var(--reader-line-height)`; added zen-mode rule that hides AppShell header
 - `src/ui/reading-shell/DocumentPage.tsx` — article maxWidth uses `var(--reader-content-width)`
 - `src/app/router.test.tsx` — header assertion updated for the new ThemeSwitcher combobox + wordmark link
 
@@ -2776,7 +2993,7 @@ Shiki — same TextMate grammars VS Code uses — wired into the pipeline. Code 
 - `src/ui/reading-shell/DocumentPage.tsx` — refactored useEffect to use a typed inner `async function loadAndRender(...)` that awaits both `readText` and `renderMarkdown`. Cancellation flag checked at every async boundary.
 - `src/core/render/pipeline.test.tsx` — all tests now async; added a Shiki output detection test (CSS var signature) and a graceful-fallback test for unknown languages.
 - `src/ui/reading-shell/DocumentPage.test.tsx` — list-item assertions use `<li>` queries; code-block assertions check `<pre>` textContent (Shiki tokenizes per-token, breaking single-element text matches).
-- `src/styles/globals.css` — Shiki-specific theme CSS using attribute selector `pre[style*="--shiki-light"]`; routes `--shiki-light`/`--shiki-dark` to actual `color` based on active SwilRead theme.
+- `src/styles/globals.css` — Shiki-specific theme CSS using attribute selector `pre[style*="--shiki-light"]`; routes `--shiki-light`/`--shiki-dark` to actual `color` based on active SwirlRead theme.
 
 ### Architecture decisions
 
@@ -2839,7 +3056,7 @@ Full Obsidian callout support: 14 distinct types, 26 type aliases, themed colors
 
 - `src/core/render/pipeline.ts` — wires `remarkCallout` between `remarkGfm` and `remarkWikilink`; extends sanitize schema for `<callout>` tag and `data-callout-type` / `data-callout-title` attributes
 - `src/ui/reading-shell/DocumentPage.tsx` — adds `callout: Callout` to the components map; renamed `wikilinkComponents` → `customComponents` to reflect the broader role
-- `src/styles/globals.css` — `.swilread-callout` ruleset with type-specific accent colors via `--callout-color` CSS var; uses `color-mix()` for tinted background
+- `src/styles/globals.css` — `.swirlread-callout` ruleset with type-specific accent colors via `--callout-color` CSS var; uses `color-mix()` for tinted background
 
 ### Architecture decisions
 
@@ -2984,7 +3201,7 @@ Or pick a different milestone if there's more strategic value.
 
 ### What was built
 
-The first time SwilRead actually renders a Markdown document in the browser. Everything before this was scaffolding; this milestone produces real product value.
+The first time SwirlRead actually renders a Markdown document in the browser. Everything before this was scaffolding; this milestone produces real product value.
 
 **Files created**:
 
@@ -2994,8 +3211,8 @@ The first time SwilRead actually renders a Markdown document in the browser. Eve
 
 **Files modified**:
 
-- `src/ui/reading-shell/DocumentPage.tsx` — replaces placeholder with real reader: pulls adapter from store, calls `readText`, dispatches MD vs non-MD, renders into `.swilread-prose` container.
-- `src/styles/globals.css` — added a complete `.swilread-prose` ruleset: theme-aware typography for headings, paragraphs, lists, blockquotes, code blocks, tables, links, hr, images, task list checkboxes.
+- `src/ui/reading-shell/DocumentPage.tsx` — replaces placeholder with real reader: pulls adapter from store, calls `readText`, dispatches MD vs non-MD, renders into `.swirlread-prose` container.
+- `src/styles/globals.css` — added a complete `.swirlread-prose` ruleset: theme-aware typography for headings, paragraphs, lists, blockquotes, code blocks, tables, links, hr, images, task list checkboxes.
 - `src/app/router.test.tsx` — updated DocumentPage assertion to expect the new missing-vault state instead of the old placeholder text.
 
 ### Pipeline architecture (M1.5)
@@ -3022,7 +3239,7 @@ Non-Markdown files fall through to a styled `<pre>` block so the app still rende
 
 ### Prose styles (the visual identity)
 
-Scoped `.swilread-prose` so chrome (header, settings) doesn't accidentally inherit reader typography. Highlights:
+Scoped `.swirlread-prose` so chrome (header, settings) doesn't accidentally inherit reader typography. Highlights:
 
 - 18 px serif body, 1.7 line-height, 720 px max width (≈68 chars per line)
 - Theme-aware via CSS variables — same component, four themes
@@ -3242,7 +3459,7 @@ Replace the module-level registry with a real reactive store:
 - Persisted fields: `registeredVaults: VaultMeta[]`, `activeVaultId: VaultId | null`
 - Methods: `registerVault(adapter) → VaultMeta`, `switchVault(id)`, `removeVault(id)`
 - Migrate LandingPage and VaultHome from `registerVault` / `getVault` to the store
-- Set up Dexie schema `swilread` with `vaults` and `preferences` tables
+- Set up Dexie schema `swirlread` with `vaults` and `preferences` tables
 
 Once that lands, the registry shim deletes itself.
 
@@ -3815,7 +4032,7 @@ Initial Vite + React 19 + TypeScript project skeleton.
 - `vite.config.ts` — `@/*` alias to `src/*`, ES2022 build target, sourcemaps on
 - `index.html` — minimal shell with theme-color = brand cream
 - `src/main.tsx` — entrypoint with React 19 `createRoot`, StrictMode, fail-loud root check
-- `src/App.tsx` — placeholder rendering "SwilRead"
+- `src/App.tsx` — placeholder rendering "SwirlRead"
 - `src/vite-env.d.ts` — Vite client types
 - `.gitignore`, `.editorconfig`, `.nvmrc` (Node 22), `.npmrc`
 

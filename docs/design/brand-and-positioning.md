@@ -1,4 +1,4 @@
-# SwilRead — Brand, Positioning & Philosophy
+# SwirlRead — Brand, Positioning & Philosophy
 
 > Status: Decided 2026-05-01 · Living document
 
@@ -21,26 +21,26 @@ But there is a quiet cost to this:
 
 The phrase that captures this: **being dragged by AI** instead of **walking with it**.
 
-### SwilRead's Stance
+### SwirlRead's Stance
 
-SwilRead is built on a counter-thesis:
+SwirlRead is built on a counter-thesis:
 
 > **In the age of AI, the people who think clearly are the ones who still read deeply.**
 >
 > They build their own substrate of knowledge — slowly, attentively, through real engagement with ideas. That substrate is what lets them have meaningful conversations with AI instead of being passive recipients of it.
 
-SwilRead is a tool for those people. It's a **sanctuary for deep reading** in an era that increasingly devalues it.
+SwirlRead is a tool for those people. It's a **sanctuary for deep reading** in an era that increasingly devalues it.
 
-This is not anti-AI. AI is a feature in SwilRead (Phase 2+). The question is **whose terms** AI operates on:
+This is not anti-AI. AI is a feature in SwirlRead (Phase 2+). The question is **whose terms** AI operates on:
 
 - AI working **for** the reader = augmenting recall, surfacing connections, asking good questions
 - AI working **on** the reader = generating answers that bypass thinking, summarizing things you should have read
 
-SwilRead picks the first.
+SwirlRead picks the first.
 
 ### Brand Promise (one sentence)
 
-> SwilRead helps you read your own knowledge so deeply that AI becomes your collaborator, not your replacement.
+> SwirlRead helps you read your own knowledge so deeply that AI becomes your collaborator, not your replacement.
 
 ---
 
@@ -76,7 +76,7 @@ We can A/B these later. The primary is locked.
 
 ## Brand Voice
 
-### How SwilRead Talks
+### How SwirlRead Talks
 
 - **Literate but not pretentious.** Reference Borges, not Adler. Quote a paragraph, not a Twitter thread.
 - **Confident but not boastful.** "We render Markdown beautifully," not "the best Markdown reader ever built."
@@ -96,11 +96,11 @@ Productivity, hack, optimize, 10x, AI-powered, supercharged, blazingly fast, gam
 
 **Bad** (generic SaaS):
 
-> SwilRead is the AI-powered Markdown reader that supercharges your knowledge workflow. Unlock 10x productivity with our cutting-edge reading experience!
+> SwirlRead is the AI-powered Markdown reader that supercharges your knowledge workflow. Unlock 10x productivity with our cutting-edge reading experience!
 
-**Good** (SwilRead voice):
+**Good** (SwirlRead voice):
 
-> SwilRead opens your Markdown vault and renders it the way it should be read — quietly, beautifully, with everything in its place. It's the reading room your notes deserve.
+> SwirlRead opens your Markdown vault and renders it the way it should be read — quietly, beautifully, with everything in its place. It's the reading room your notes deserve.
 
 ---
 
@@ -108,7 +108,7 @@ Productivity, hack, optimize, 10x, AI-powered, supercharged, blazingly fast, gam
 
 ### Primary Wow (Hero Image / OG Card)
 
-**Side-by-side comparison: VS Code preview vs. SwilRead** — same long technical document.
+**Side-by-side comparison: VS Code preview vs. SwirlRead** — same long technical document.
 
 This single image does the work of a thousand words. It says, instantly: "you've been reading wrong this whole time."
 
@@ -145,7 +145,7 @@ Re-aligning the sample vault to match the brand philosophy:
 
 ```
 sample-vault/
-├── index.md                            ← "Welcome to SwilRead — read deeply again"
+├── index.md                            ← "Welcome to SwirlRead — read deeply again"
 ├── why-this-vault-exists.md            ← The philosophical pitch
 ├── reading/
 │   ├── reading-map.md
@@ -165,10 +165,10 @@ sample-vault/
 │   ├── building-your-substrate.md      ← Why you need your own knowledge
 │   └── personal-knowledge.md
 ├── recommended-readings.md             ← Demos lists, links, quotes
-└── about-swilread.md                   ← The soft pitch (last in nav order)
+└── about-swirlread.md                   ← The soft pitch (last in nav order)
 ```
 
-This sample vault is itself an argument for SwilRead. The user reads it and thinks: "this is how I want to engage with ideas."
+This sample vault is itself an argument for SwirlRead. The user reads it and thinks: "this is how I want to engage with ideas."
 
 It's also an argument **against** the hyper-AI model: every essay subtly reinforces the brand thesis without lecturing.
 
@@ -186,7 +186,7 @@ It's also an argument **against** the hyper-AI model: every essay subtly reinfor
 2. **The Reader's Mark** — a stylized lowercase "r" rendered with a serif pen-stroke, like a manuscript drop cap
 3. **The Open Pages** — two thin horizontal lines representing the gutter of an open book, with subtle asymmetry
 
-**My recommendation**: Direction 1 (Bookmark) — it's the most quietly distinctive and evokes "place where you stopped reading," which is a SwilRead feature philosophy (scroll memory, return to where you left off).
+**My recommendation**: Direction 1 (Bookmark) — it's the most quietly distinctive and evokes "place where you stopped reading," which is a SwirlRead feature philosophy (scroll memory, return to where you left off).
 
 We don't need to commission a logo for v0. A well-set wordmark in Source Serif is enough until v0.5.
 
@@ -246,15 +246,15 @@ The wordmark and the reading body share the same family. This is intentional —
                               │              ● NotebookLM
                               │
                               │
-                  ● SwilRead  │
+                  ● SwirlRead  │
                               │
                               │
                         local-first / privacy
 ```
 
-SwilRead occupies a unique position: **local-first AND read-optimized AND AI-thoughtful**.
+SwirlRead occupies a unique position: **local-first AND read-optimized AND AI-thoughtful**.
 
-No other product is in that quadrant. Obsidian is local-first but write-optimized. NotebookLM is read-optimized but cloud and AI-first. SwilRead is the missing piece.
+No other product is in that quadrant. Obsidian is local-first but write-optimized. NotebookLM is read-optimized but cloud and AI-first. SwirlRead is the missing piece.
 
 ---
 
@@ -265,7 +265,7 @@ No other product is in that quadrant. Obsidian is local-first but write-optimize
 | Primary tagline     | Read your knowledge. Beautifully.   |
 | Supporting line     | A reading sanctuary for the AI era. |
 | Sample vault theme  | Reading in the Age of AI            |
-| Killer demo (hero)  | VS Code vs SwilRead side-by-side    |
+| Killer demo (hero)  | VS Code vs SwirlRead side-by-side   |
 | Killer demo (GIF)   | F key → Zen mode                    |
 | Killer demo (video) | 60-second guided walkthrough        |
 | Brand voice         | Literate, confident, warm, slow     |

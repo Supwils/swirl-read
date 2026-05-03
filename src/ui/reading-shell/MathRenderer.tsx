@@ -61,11 +61,11 @@ export function MathRenderer({
 
   if (state.status === 'loading') {
     return display ? (
-      <div className="swilread-math swilread-math--loading" aria-busy="true">
+      <div className="swirlread-math swirlread-math--loading" aria-busy="true">
         Loading math…
       </div>
     ) : (
-      <span className="swilread-math swilread-math--loading" aria-busy="true">
+      <span className="swirlread-math swirlread-math--loading" aria-busy="true">
         …
       </span>
     )
@@ -77,7 +77,7 @@ export function MathRenderer({
     if (display) {
       return (
         <pre
-          className="swilread-math swilread-math--error"
+          className="swirlread-math swirlread-math--error"
           title={state.message}
         >
           <code>{source}</code>
@@ -86,7 +86,7 @@ export function MathRenderer({
     }
     return (
       <code
-        className="swilread-math swilread-math--error"
+        className="swirlread-math swirlread-math--error"
         title={state.message}
       >
         {source}
@@ -100,12 +100,12 @@ export function MathRenderer({
   // and round-tripping it would inflate bundle + runtime.
   return display ? (
     <div
-      className="swilread-math swilread-math--display"
+      className="swirlread-math swirlread-math--display"
       dangerouslySetInnerHTML={{ __html: state.html }}
     />
   ) : (
     <span
-      className="swilread-math swilread-math--inline"
+      className="swirlread-math swirlread-math--inline"
       dangerouslySetInnerHTML={{ __html: state.html }}
     />
   )

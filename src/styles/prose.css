@@ -1,26 +1,26 @@
 /* ─────────────────────────────────────────────────────────────────────────
    Prose styles — rendered markdown content.
-   Scoped to `.swilread-prose` so they don't leak to UI chrome.
+   Scoped to `.swirlread-prose` so they don't leak to UI chrome.
    Tuned for reading: 65–72 ch line length, generous vertical rhythm,
    theme-aware colors via semantic tokens.
    ───────────────────────────────────────────────────────────────────────── */
-.swilread-prose {
+.swirlread-prose {
   font-family: var(--reader-font-family, var(--font-serif));
   font-size: var(--reader-font-size, 18px);
   line-height: var(--reader-line-height, 1.7);
   color: var(--color-text);
 }
 
-.swilread-prose > * + * {
+.swirlread-prose > * + * {
   margin-top: 1.4em;
 }
 
-.swilread-prose h1,
-.swilread-prose h2,
-.swilread-prose h3,
-.swilread-prose h4,
-.swilread-prose h5,
-.swilread-prose h6 {
+.swirlread-prose h1,
+.swirlread-prose h2,
+.swirlread-prose h3,
+.swirlread-prose h4,
+.swirlread-prose h5,
+.swirlread-prose h6 {
   font-family: var(--font-serif);
   font-weight: 600;
   line-height: 1.25;
@@ -29,50 +29,50 @@
   margin-bottom: 0.6em;
 }
 
-.swilread-prose h1 {
+.swirlread-prose h1 {
   font-size: 2.2em;
   margin-top: 0;
 }
-.swilread-prose h2 {
+.swirlread-prose h2 {
   font-size: 1.7em;
   border-bottom: 1px solid var(--color-border);
   padding-bottom: 0.3em;
 }
-.swilread-prose h3 {
+.swirlread-prose h3 {
   font-size: 1.35em;
 }
-.swilread-prose h4 {
+.swirlread-prose h4 {
   font-size: 1.15em;
 }
-.swilread-prose h5,
-.swilread-prose h6 {
+.swirlread-prose h5,
+.swirlread-prose h6 {
   font-size: 1em;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--color-text-muted);
 }
 
-.swilread-prose a {
+.swirlread-prose a {
   color: var(--color-link);
   text-decoration: underline;
   text-decoration-color: color-mix(in srgb, var(--color-link) 40%, transparent);
   text-underline-offset: 3px;
   transition: text-decoration-color 150ms ease;
 }
-.swilread-prose a:hover {
+.swirlread-prose a:hover {
   text-decoration-color: var(--color-link);
 }
 
-.swilread-prose strong {
+.swirlread-prose strong {
   font-weight: 600;
   color: var(--color-text);
 }
 
-.swilread-prose em {
+.swirlread-prose em {
   font-style: italic;
 }
 
-.swilread-prose code {
+.swirlread-prose code {
   font-family: var(--font-mono);
   font-size: 0.92em;
   background: var(--color-code-bg);
@@ -81,7 +81,7 @@
   border-radius: 4px;
 }
 
-.swilread-prose pre {
+.swirlread-prose pre {
   font-family: var(--font-mono);
   font-size: 0.9em;
   background: var(--color-code-bg);
@@ -91,50 +91,50 @@
   overflow-x: auto;
   line-height: 1.5;
 }
-.swilread-prose pre code {
+.swirlread-prose pre code {
   background: transparent;
   padding: 0;
   border-radius: 0;
 }
 
 /* Shiki dual-theme: pre carries inline CSS vars `--shiki-light` and
-   `--shiki-dark`. We pick which to display via the active SwilRead theme.
+   `--shiki-dark`. We pick which to display via the active SwirlRead theme.
    Selector: `pre[style*="--shiki-light"]` matches any Shiki-rendered block.
    Sepia + Light themes use the light Shiki theme; Dark + OLED use dark. */
 
-.swilread-prose blockquote {
+.swirlread-prose blockquote {
   border-left: 3px solid var(--color-accent);
   padding-left: 1.2em;
   color: var(--color-text-muted);
   font-style: italic;
 }
 
-.swilread-prose ul,
-.swilread-prose ol {
+.swirlread-prose ul,
+.swirlread-prose ol {
   padding-left: 1.4em;
 }
-.swilread-prose ul {
+.swirlread-prose ul {
   list-style: disc;
 }
-.swilread-prose ol {
+.swirlread-prose ol {
   list-style: decimal;
 }
-.swilread-prose li + li {
+.swirlread-prose li + li {
   margin-top: 0.3em;
 }
-.swilread-prose li > ul,
-.swilread-prose li > ol {
+.swirlread-prose li > ul,
+.swirlread-prose li > ol {
   margin-top: 0.3em;
 }
 
-.swilread-prose hr {
+.swirlread-prose hr {
   border: 0;
   height: 1px;
   background: var(--color-border);
   margin: 2.4em 0;
 }
 
-.swilread-prose img {
+.swirlread-prose img {
   max-width: 100%;
   height: auto;
   border-radius: 4px;
@@ -143,7 +143,7 @@
 /* GFM tables (M3.1) — display:block lets long tables scroll horizontally
    on narrow viewports without breaking the prose column measure.
    border-collapse still works inside display:block. */
-.swilread-prose table {
+.swirlread-prose table {
   display: block;
   width: 100%;
   max-width: 100%;
@@ -154,39 +154,39 @@
      the block container scrolls. */
   border-spacing: 0;
 }
-.swilread-prose thead {
+.swirlread-prose thead {
   border-bottom: 2px solid var(--color-border);
 }
-.swilread-prose th,
-.swilread-prose td {
+.swirlread-prose th,
+.swirlread-prose td {
   padding: 0.55em 0.8em;
   border-bottom: 1px solid var(--color-border);
   text-align: left;
   vertical-align: top;
 }
-.swilread-prose th {
+.swirlread-prose th {
   font-weight: 600;
   color: var(--color-text);
   background: color-mix(in srgb, var(--color-surface) 60%, transparent);
 }
-.swilread-prose th[align='right'],
-.swilread-prose td[align='right'] {
+.swirlread-prose th[align='right'],
+.swirlread-prose td[align='right'] {
   text-align: right;
 }
-.swilread-prose th[align='center'],
-.swilread-prose td[align='center'] {
+.swirlread-prose th[align='center'],
+.swirlread-prose td[align='center'] {
   text-align: center;
 }
-.swilread-prose tbody tr:nth-child(even) {
+.swirlread-prose tbody tr:nth-child(even) {
   background: color-mix(in srgb, var(--color-surface) 25%, transparent);
 }
-.swilread-prose tr:hover td {
+.swirlread-prose tr:hover td {
   background: color-mix(in srgb, var(--color-surface) 50%, transparent);
 }
 
 /* Strikethrough — distinct enough that scanning catches it, but the
    muted color prevents it from competing with live content. */
-.swilread-prose del {
+.swirlread-prose del {
   color: var(--color-text-muted);
   text-decoration-thickness: 1px;
   text-decoration-color: color-mix(
@@ -200,16 +200,16 @@
    `<li>` whose `<ul>` parent gets `class="contains-task-list"`. Drop
    the bullet on the list and tighten the row so the checkbox aligns
    with the body text. */
-.swilread-prose .contains-task-list {
+.swirlread-prose .contains-task-list {
   list-style: none;
   padding-left: 0.4em;
 }
-.swilread-prose .task-list-item {
+.swirlread-prose .task-list-item {
   display: flex;
   align-items: baseline;
   gap: 0.5em;
 }
-.swilread-prose .task-list-item > input[type='checkbox'] {
+.swirlread-prose .task-list-item > input[type='checkbox'] {
   margin: 0;
   flex-shrink: 0;
   width: 1em;
@@ -217,7 +217,7 @@
   position: relative;
   top: 0.1em;
 }
-.swilread-prose input[type='checkbox'] {
+.swirlread-prose input[type='checkbox'] {
   margin-right: 0.5em;
   accent-color: var(--color-accent);
 }
@@ -226,14 +226,14 @@
    block at end-of-doc with an `<ol>` whose items contain backref `<a>`
    tags. Make them feel like footnotes (smaller type, clear separation)
    without making them invisible. */
-.swilread-prose .footnotes {
+.swirlread-prose .footnotes {
   margin-top: 3em;
   padding-top: 1.2em;
   border-top: 1px solid var(--color-border);
   font-size: 0.88em;
   color: var(--color-text-muted);
 }
-.swilread-prose .footnotes h2 {
+.swirlread-prose .footnotes h2 {
   /* GFM marks the heading sr-only; respect that screen-reader-only convention */
   position: absolute;
   width: 1px;
@@ -245,46 +245,46 @@
   white-space: nowrap;
   border: 0;
 }
-.swilread-prose .footnotes ol {
+.swirlread-prose .footnotes ol {
   padding-left: 1.6em;
 }
-.swilread-prose .footnotes li {
+.swirlread-prose .footnotes li {
   margin-top: 0.4em;
 }
-.swilread-prose .footnotes li:target {
+.swirlread-prose .footnotes li:target {
   background: color-mix(in srgb, var(--color-accent) 14%, transparent);
   border-radius: 4px;
   padding: 0.2em 0.4em;
 }
-.swilread-prose .footnotes p {
+.swirlread-prose .footnotes p {
   display: inline;
   margin: 0;
 }
-.swilread-prose .data-footnote-backref {
+.swirlread-prose .data-footnote-backref {
   margin-left: 0.3em;
   color: var(--color-text-muted);
   text-decoration: none;
   border-bottom: 1px dashed
     color-mix(in srgb, var(--color-text-muted) 50%, transparent);
 }
-.swilread-prose .data-footnote-backref:hover {
+.swirlread-prose .data-footnote-backref:hover {
   color: var(--color-link);
   border-bottom-color: var(--color-link);
 }
 /* The reference superscript inside body text */
-.swilread-prose sup > a[id^='user-content-fnref'] {
+.swirlread-prose sup > a[id^='user-content-fnref'] {
   font-family: var(--font-mono);
   font-size: 0.78em;
   text-decoration: none;
   padding: 0 0.15em;
   border-radius: 3px;
 }
-.swilread-prose sup > a[id^='user-content-fnref']:hover {
+.swirlread-prose sup > a[id^='user-content-fnref']:hover {
   background: color-mix(in srgb, var(--color-accent) 14%, transparent);
 }
 
 /* Callouts ─────────────────────────────────────────────────────────── */
-.swilread-prose .swilread-callout {
+.swirlread-prose .swirlread-callout {
   --callout-color: var(--color-accent);
   --callout-bg: color-mix(in srgb, var(--callout-color) 8%, transparent);
   border-left: 4px solid var(--callout-color);
@@ -294,7 +294,7 @@
   margin: 1.4em 0;
 }
 
-.swilread-prose .swilread-callout__header {
+.swirlread-prose .swirlread-callout__header {
   display: flex;
   align-items: center;
   gap: 0.5em;
@@ -304,69 +304,69 @@
   margin-bottom: 0.5em;
 }
 
-.swilread-prose .swilread-callout__icon {
+.swirlread-prose .swirlread-callout__icon {
   flex-shrink: 0;
 }
 
-.swilread-prose .swilread-callout__title {
+.swirlread-prose .swirlread-callout__title {
   letter-spacing: 0.01em;
 }
 
-.swilread-prose .swilread-callout__body > *:first-child {
+.swirlread-prose .swirlread-callout__body > *:first-child {
   margin-top: 0;
 }
-.swilread-prose .swilread-callout__body > *:last-child {
+.swirlread-prose .swirlread-callout__body > *:last-child {
   margin-bottom: 0;
 }
-.swilread-prose .swilread-callout__body > * + * {
+.swirlread-prose .swirlread-callout__body > * + * {
   margin-top: 0.7em;
 }
 
 /* Type-specific accent colors. Tuned per theme via --color-accent layering;
    for now we use distinct hues so types are differentiable across themes. */
-.swilread-prose .callout--note,
-.swilread-prose .callout--info {
+.swirlread-prose .callout--note,
+.swirlread-prose .callout--info {
   --callout-color: #4a8bd1;
 }
-.swilread-prose .callout--tip {
+.swirlread-prose .callout--tip {
   --callout-color: #2e9b6b;
 }
-.swilread-prose .callout--important {
+.swirlread-prose .callout--important {
   --callout-color: #b659c9;
 }
-.swilread-prose .callout--success {
+.swirlread-prose .callout--success {
   --callout-color: #2e9b6b;
 }
-.swilread-prose .callout--question {
+.swirlread-prose .callout--question {
   --callout-color: #9c6ad1;
 }
-.swilread-prose .callout--warning {
+.swirlread-prose .callout--warning {
   --callout-color: #d9923a;
 }
-.swilread-prose .callout--failure {
+.swirlread-prose .callout--failure {
   --callout-color: #c95757;
 }
-.swilread-prose .callout--danger {
+.swirlread-prose .callout--danger {
   --callout-color: #d14545;
 }
-.swilread-prose .callout--bug {
+.swirlread-prose .callout--bug {
   --callout-color: #d14545;
 }
-.swilread-prose .callout--example {
+.swirlread-prose .callout--example {
   --callout-color: #9c6ad1;
 }
-.swilread-prose .callout--quote {
+.swirlread-prose .callout--quote {
   --callout-color: var(--color-text-muted);
 }
-.swilread-prose .callout--abstract {
+.swirlread-prose .callout--abstract {
   --callout-color: #4ba6a3;
 }
-.swilread-prose .callout--todo {
+.swirlread-prose .callout--todo {
   --callout-color: #4a8bd1;
 }
 
 /* Wikilink hover preview (M3.4) ───────────────────────────────────────── */
-.swilread-wikilink-preview {
+.swirlread-wikilink-preview {
   z-index: 60;
   width: min(380px, calc(100vw - 32px));
   max-width: 380px;
@@ -385,7 +385,7 @@
   pointer-events: auto;
 }
 
-.swilread-wikilink-preview__header {
+.swirlread-wikilink-preview__header {
   font-family: var(--font-mono);
   font-size: 0.74em;
   letter-spacing: 0.02em;
@@ -396,18 +396,18 @@
   word-break: break-all;
 }
 
-.swilread-wikilink-preview__body {
+.swirlread-wikilink-preview__body {
   color: var(--color-text);
 }
 
-.swilread-wikilink-preview__pending,
-.swilread-wikilink-preview__error {
+.swirlread-wikilink-preview__pending,
+.swirlread-wikilink-preview__error {
   color: var(--color-text-muted);
   font-style: italic;
 }
 
 /* Tags (M3.14) ───────────────────────────────────────────────────────── */
-.swilread-prose .swilread-tag {
+.swirlread-prose .swirlread-tag {
   display: inline-flex;
   align-items: baseline;
   margin: 0 0.05em;
@@ -428,15 +428,15 @@
     color 120ms ease;
 }
 
-.swilread-prose .swilread-tag:hover,
-.swilread-prose .swilread-tag:focus-visible {
+.swirlread-prose .swirlread-tag:hover,
+.swirlread-prose .swirlread-tag:focus-visible {
   background: color-mix(in srgb, var(--color-accent) 20%, transparent);
   border-color: var(--color-accent);
   outline: none;
 }
 
 /* Highlights ─────────────────────────────────────────────────────────── */
-.swilread-prose mark {
+.swirlread-prose mark {
   /* Tinted highlight — yellow accent that picks up enough of the theme's
      accent so it never looks alien. Padding gives it the felt-pen vibe. */
   background: color-mix(in srgb, #ffd76a 38%, transparent);
@@ -446,13 +446,13 @@
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
 }
-.theme-dark .swilread-prose mark,
-.theme-oled .swilread-prose mark {
+.theme-dark .swirlread-prose mark,
+.theme-oled .swirlread-prose mark {
   background: color-mix(in srgb, #d6a93f 28%, transparent);
 }
 
 /* Wikilinks ─────────────────────────────────────────────────────────── */
-.swilread-prose .swilread-wikilink {
+.swirlread-prose .swirlread-wikilink {
   text-decoration: none;
   border-bottom: 1px dashed
     color-mix(in srgb, var(--color-link) 50%, transparent);
@@ -462,18 +462,18 @@
     color 150ms ease,
     background-color 150ms ease;
 }
-.swilread-prose .swilread-wikilink--resolved {
+.swirlread-prose .swirlread-wikilink--resolved {
   color: var(--color-link);
 }
-.swilread-prose .swilread-wikilink--resolved:hover {
+.swirlread-prose .swirlread-wikilink--resolved:hover {
   border-bottom-color: var(--color-link);
   background: color-mix(in srgb, var(--color-link) 10%, transparent);
 }
-.swilread-prose .swilread-wikilink--pending {
+.swirlread-prose .swirlread-wikilink--pending {
   color: var(--color-text-muted);
   cursor: progress;
 }
-.swilread-prose .swilread-wikilink--broken {
+.swirlread-prose .swirlread-wikilink--broken {
   color: var(--color-text-muted);
   border-bottom-style: dotted;
   cursor: help;

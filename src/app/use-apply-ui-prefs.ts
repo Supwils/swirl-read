@@ -4,7 +4,7 @@
  * - Theme class on `<body>` (one of `theme-sepia | theme-light | theme-dark
  *   | theme-oled | theme-auto`)
  * - CSS variables on `:root` for typography settings, consumed by
- *   `.swilread-prose` and other reading-shell rules
+ *   `.swirlread-prose` and other reading-shell rules
  *
  * Mount this hook once at the top of the React tree (App.tsx). It runs on
  * every relevant store change and is idempotent — repeated values produce

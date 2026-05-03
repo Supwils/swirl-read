@@ -1,4 +1,4 @@
-# SwilRead — Engineering Principles
+# SwirlRead — Engineering Principles
 
 > Status: Decided 2026-05-01
 

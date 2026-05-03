@@ -37,13 +37,13 @@ export function MediaRenderer({
   if (error) {
     return (
       <section
-        className="swilread-media swilread-media--broken"
+        className="swirlread-media swirlread-media--broken"
         role="alert"
         data-testid="media-renderer-broken"
       >
-        <p className="swilread-media__title">Couldn&apos;t load the file</p>
-        <p className="swilread-media__body">{error}</p>
-        <p className="swilread-media__path">{file.path}</p>
+        <p className="swirlread-media__title">Couldn&apos;t load the file</p>
+        <p className="swirlread-media__body">{error}</p>
+        <p className="swirlread-media__path">{file.path}</p>
       </section>
     )
   }
@@ -51,18 +51,18 @@ export function MediaRenderer({
   if (!url) {
     return (
       <section
-        className="swilread-media swilread-media--pending"
+        className="swirlread-media swirlread-media--pending"
         role="status"
         data-testid="media-renderer-pending"
       >
-        <p className="swilread-media__body">Loading {altText}…</p>
+        <p className="swirlread-media__body">Loading {altText}…</p>
       </section>
     )
   }
 
   return (
     <figure
-      className={`swilread-media swilread-media--${media}`}
+      className={`swirlread-media swirlread-media--${media}`}
       data-testid="media-renderer"
       data-media={media}
     >
@@ -72,22 +72,22 @@ export function MediaRenderer({
           src={url}
           controls
           preload="metadata"
-          className="swilread-media__video"
+          className="swirlread-media__video"
         />
       )}
       {media === 'audio' && (
-        <div className="swilread-media__audio-wrap">
+        <div className="swirlread-media__audio-wrap">
           <audio
             src={url}
             controls
             preload="metadata"
-            className="swilread-media__audio"
+            className="swirlread-media__audio"
           />
         </div>
       )}
-      <figcaption className="swilread-media__caption">
-        <span className="swilread-media__name">{altText}</span>
-        <span className="swilread-media__size">{formatSize(file.size)}</span>
+      <figcaption className="swirlread-media__caption">
+        <span className="swirlread-media__name">{altText}</span>
+        <span className="swirlread-media__size">{formatSize(file.size)}</span>
       </figcaption>
     </figure>
   )
@@ -113,7 +113,7 @@ function ImageWithLightbox({
       <Dialog.Trigger asChild>
         <button
           type="button"
-          className="swilread-media__image-trigger"
+          className="swirlread-media__image-trigger"
           aria-label={`Open ${altText} in full view`}
           data-testid="media-renderer-lightbox-trigger"
         >
@@ -121,33 +121,33 @@ function ImageWithLightbox({
             src={url}
             alt={altText}
             loading="lazy"
-            className="swilread-media__image"
+            className="swirlread-media__image"
           />
-          <span className="swilread-media__zoom-hint" aria-hidden="true">
+          <span className="swirlread-media__zoom-hint" aria-hidden="true">
             <ZoomIn size={14} />
           </span>
         </button>
       </Dialog.Trigger>
 
       <Dialog.Portal>
-        <Dialog.Overlay className="swilread-lightbox__overlay" />
+        <Dialog.Overlay className="swirlread-lightbox__overlay" />
         <Dialog.Content
-          className="swilread-lightbox"
+          className="swirlread-lightbox"
           aria-describedby={undefined}
           data-testid="media-renderer-lightbox"
         >
           <Dialog.Title className="sr-only">{altText}</Dialog.Title>
-          <img src={url} alt={altText} className="swilread-lightbox__image" />
+          <img src={url} alt={altText} className="swirlread-lightbox__image" />
           <Dialog.Close asChild>
             <button
               type="button"
-              className="swilread-lightbox__close"
+              className="swirlread-lightbox__close"
               aria-label="Close"
             >
               <X size={18} aria-hidden="true" />
             </button>
           </Dialog.Close>
-          <p className="swilread-lightbox__caption">{altText}</p>
+          <p className="swirlread-lightbox__caption">{altText}</p>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

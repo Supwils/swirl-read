@@ -1,12 +1,12 @@
 /* Settings panel ─────────────────────────────────────────────────────── */
-.swilread-settings__overlay {
+.swirlread-settings__overlay {
   position: fixed;
   inset: 0;
   z-index: 80;
   background: rgb(0 0 0 / 0.22);
 }
 
-.swilread-settings {
+.swirlread-settings {
   position: fixed;
   top: 0;
   right: 0;
@@ -27,13 +27,13 @@
  * controls inside don't end up cramped against the right edge.
  */
 @media (max-width: 768px) {
-  .swilread-settings {
+  .swirlread-settings {
     width: 100vw;
     border-left: 0;
   }
 }
 
-.swilread-settings__header {
+.swirlread-settings__header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -42,7 +42,7 @@
   border-bottom: 1px solid var(--color-border);
 }
 
-.swilread-settings__title {
+.swirlread-settings__title {
   margin: 0;
   font-family: var(--font-serif);
   font-size: 1.25rem;
@@ -50,13 +50,13 @@
   color: var(--color-text);
 }
 
-.swilread-settings__description {
+.swirlread-settings__description {
   margin: 0.25rem 0 0;
   font-size: 0.86rem;
   color: var(--color-text-muted);
 }
 
-.swilread-settings__close {
+.swirlread-settings__close {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -70,17 +70,17 @@
   cursor: pointer;
 }
 
-.swilread-settings__close:hover {
+.swirlread-settings__close:hover {
   color: var(--color-text);
   background: color-mix(in srgb, var(--color-accent) 10%, transparent);
 }
 
-.swilread-settings__close:focus-visible {
+.swirlread-settings__close:focus-visible {
   outline: none;
   border-color: var(--color-accent);
 }
 
-.swilread-settings__body {
+.swirlread-settings__body {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
@@ -89,7 +89,7 @@
   padding: 1.2rem;
 }
 
-.swilread-settings__field {
+.swirlread-settings__field {
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
@@ -98,34 +98,34 @@
   border: 0;
 }
 
-.swilread-settings__label-row {
+.swirlread-settings__label-row {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 1rem;
 }
 
-.swilread-settings__label {
+.swirlread-settings__label {
   display: block;
   font-size: 0.86rem;
   font-weight: 500;
   color: var(--color-text);
 }
 
-.swilread-settings__hint {
+.swirlread-settings__hint {
   display: block;
   margin-top: 0.1rem;
   font-size: 0.78rem;
   color: var(--color-text-muted);
 }
 
-.swilread-settings__value {
+.swirlread-settings__value {
   font-family: var(--font-mono);
   font-size: 0.78rem;
   color: var(--color-text-muted);
 }
 
-.swilread-settings__select {
+.swirlread-settings__select {
   width: 100%;
   border: 1px solid var(--color-border);
   border-radius: 6px;
@@ -135,7 +135,7 @@
   font: inherit;
 }
 
-.swilread-settings__segmented {
+.swirlread-settings__segmented {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.25rem;
@@ -145,7 +145,7 @@
   background: color-mix(in srgb, var(--color-surface) 50%, transparent);
 }
 
-.swilread-settings__segment {
+.swirlread-settings__segment {
   min-height: 32px;
   border: 1px solid transparent;
   border-radius: 5px;
@@ -156,22 +156,22 @@
   cursor: pointer;
 }
 
-.swilread-settings__segment:hover {
+.swirlread-settings__segment:hover {
   color: var(--color-text);
 }
 
-.swilread-settings__segment[aria-pressed='true'] {
+.swirlread-settings__segment[aria-pressed='true'] {
   border-color: color-mix(in srgb, var(--color-accent) 38%, transparent);
   background: color-mix(in srgb, var(--color-accent) 14%, transparent);
   color: var(--color-text);
 }
 
-.swilread-settings__range {
+.swirlread-settings__range {
   width: 100%;
   accent-color: var(--color-accent);
 }
 
-.swilread-settings__toggle-row {
+.swirlread-settings__toggle-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -181,14 +181,14 @@
   border-bottom: 1px solid var(--color-border);
 }
 
-.swilread-settings__checkbox {
+.swirlread-settings__checkbox {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
   accent-color: var(--color-accent);
 }
 
-.swilread-settings__footer {
+.swirlread-settings__footer {
   padding: 1rem 1.2rem;
   border-top: 1px solid var(--color-border);
   display: flex;
@@ -196,7 +196,7 @@
   gap: 0.5rem;
 }
 
-.swilread-settings__reset {
+.swirlread-settings__reset {
   width: 100%;
   min-height: 36px;
   border: 1px solid var(--color-border);
@@ -207,7 +207,7 @@
   cursor: pointer;
 }
 
-.swilread-settings__reset:hover {
+.swirlread-settings__reset:hover {
   border-color: color-mix(
     in srgb,
     var(--color-accent) 45%,
@@ -217,7 +217,7 @@
 }
 
 @media (max-width: 767px) {
-  .swilread-settings {
+  .swirlread-settings {
     width: 100vw;
     border-left: 0;
   }

@@ -1,5 +1,5 @@
 /* Command palette (M5.1) ─────────────────────────────────────────────── */
-.swilread-cmdk__overlay {
+.swirlread-cmdk__overlay {
   position: fixed;
   inset: 0;
   z-index: 100;
@@ -7,7 +7,7 @@
   backdrop-filter: blur(2px);
 }
 
-.swilread-cmdk__content {
+.swirlread-cmdk__content {
   position: fixed;
   z-index: 110;
   top: 18vh;
@@ -28,14 +28,14 @@
   overflow: hidden;
 }
 
-.swilread-cmdk {
+.swirlread-cmdk {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
   min-height: 0;
 }
 
-.swilread-cmdk__input {
+.swirlread-cmdk__input {
   width: 100%;
   padding: 0.95rem 1.1rem;
   border: 0;
@@ -47,11 +47,11 @@
   outline: none;
 }
 
-.swilread-cmdk__input::placeholder {
+.swirlread-cmdk__input::placeholder {
   color: var(--color-text-muted);
 }
 
-.swilread-cmdk__list {
+.swirlread-cmdk__list {
   flex: 1 1 auto;
   min-height: 0;
   max-height: 48vh;
@@ -59,14 +59,14 @@
   padding: 0.4rem 0.4rem 0.6rem;
 }
 
-.swilread-cmdk__empty {
+.swirlread-cmdk__empty {
   padding: 1.4rem 1rem;
   text-align: center;
   color: var(--color-text-muted);
   font-size: 0.9rem;
 }
 
-.swilread-cmdk__status {
+.swirlread-cmdk__status {
   margin: 0;
   padding: 0.85rem 1rem;
   text-align: center;
@@ -75,11 +75,11 @@
   font-style: italic;
 }
 
-.swilread-cmdk__group {
+.swirlread-cmdk__group {
   padding-top: 0.3rem;
 }
 
-.swilread-cmdk__group [cmdk-group-heading] {
+.swirlread-cmdk__group [cmdk-group-heading] {
   padding: 0.3rem 0.7rem 0.45rem;
   font-size: 0.7rem;
   font-weight: 500;
@@ -88,7 +88,7 @@
   color: var(--color-text-muted);
 }
 
-.swilread-cmdk__item {
+.swirlread-cmdk__item {
   display: flex;
   align-items: center;
   gap: 0.55rem;
@@ -98,20 +98,20 @@
   font-size: 0.94rem;
 }
 
-.swilread-cmdk__item[data-selected='true'] {
+.swirlread-cmdk__item[data-selected='true'] {
   background: color-mix(in srgb, var(--color-accent) 14%, transparent);
 }
 
-.swilread-cmdk__item-icon {
+.swirlread-cmdk__item-icon {
   flex-shrink: 0;
   color: var(--color-text-muted);
 }
 
-.swilread-cmdk__item[data-selected='true'] .swilread-cmdk__item-icon {
+.swirlread-cmdk__item[data-selected='true'] .swirlread-cmdk__item-icon {
   color: var(--color-accent);
 }
 
-.swilread-cmdk__item-primary {
+.swirlread-cmdk__item-primary {
   font-weight: 500;
   color: var(--color-text);
   white-space: nowrap;
@@ -119,7 +119,7 @@
   text-overflow: ellipsis;
 }
 
-.swilread-cmdk__item-secondary {
+.swirlread-cmdk__item-secondary {
   margin-left: auto;
   font-family: var(--font-mono);
   font-size: 0.74rem;
@@ -130,7 +130,7 @@
   max-width: 55%;
 }
 
-.swilread-cmdk__footer {
+.swirlread-cmdk__footer {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -142,14 +142,14 @@
   color: var(--color-text-muted);
 }
 
-.swilread-cmdk__hint {
+.swirlread-cmdk__hint {
   margin-right: auto;
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
 }
 
-.swilread-cmdk__kbd {
+.swirlread-cmdk__kbd {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -164,24 +164,24 @@
   margin-right: 0.15rem;
 }
 
-.swilread-cmdk__kbd + .swilread-cmdk__kbd {
+.swirlread-cmdk__kbd + .swirlread-cmdk__kbd {
   margin-left: 0.4rem;
 }
 
 @media (max-width: 640px) {
-  .swilread-cmdk__content {
+  .swirlread-cmdk__content {
     top: 8vh;
     width: calc(100vw - 16px);
   }
 }
 
 /* Vault switcher (M6.1) ──────────────────────────────────────────────── */
-.swilread-vault-switcher {
+.swirlread-vault-switcher {
   position: relative;
   display: inline-flex;
 }
 
-.swilread-vault-switcher__trigger {
+.swirlread-vault-switcher__trigger {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -197,23 +197,23 @@
   max-width: 220px;
 }
 
-.swilread-vault-switcher__trigger:hover {
+.swirlread-vault-switcher__trigger:hover {
   background: color-mix(in srgb, var(--color-accent) 10%, transparent);
 }
 
-.swilread-vault-switcher__trigger[aria-expanded='true'] {
+.swirlread-vault-switcher__trigger[aria-expanded='true'] {
   border-color: var(--color-border);
   background: color-mix(in srgb, var(--color-accent) 14%, transparent);
 }
 
-.swilread-vault-switcher__name {
+.swirlread-vault-switcher__name {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 160px;
 }
 
-.swilread-vault-switcher__menu {
+.swirlread-vault-switcher__menu {
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
@@ -232,7 +232,7 @@
   gap: 0.05rem;
 }
 
-.swilread-vault-switcher__empty {
+.swirlread-vault-switcher__empty {
   margin: 0;
   padding: 0.6rem 0.65rem;
   color: var(--color-text-muted);
@@ -240,7 +240,7 @@
   font-size: 0.86rem;
 }
 
-.swilread-vault-switcher__item {
+.swirlread-vault-switcher__item {
   display: flex;
   align-items: center;
   gap: 0.45rem;
@@ -257,35 +257,35 @@
   cursor: pointer;
 }
 
-.swilread-vault-switcher__item:hover,
-.swilread-vault-switcher__item:focus-visible {
+.swirlread-vault-switcher__item:hover,
+.swirlread-vault-switcher__item:focus-visible {
   background: color-mix(in srgb, var(--color-accent) 12%, transparent);
   outline: none;
 }
 
-.swilread-vault-switcher__item.is-active {
+.swirlread-vault-switcher__item.is-active {
   color: var(--color-accent);
   font-weight: 500;
 }
 
-.swilread-vault-switcher__item-name {
+.swirlread-vault-switcher__item-name {
   flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.swilread-vault-switcher__separator {
+.swirlread-vault-switcher__separator {
   height: 1px;
   background: var(--color-border);
   margin: 0.3rem 0.2rem;
 }
 
-.swilread-vault-switcher__item--cta {
+.swirlread-vault-switcher__item--cta {
   color: var(--color-text-muted);
   font-size: 0.86rem;
 }
 
-.swilread-vault-switcher__item--cta:hover {
+.swirlread-vault-switcher__item--cta:hover {
   color: var(--color-text);
 }

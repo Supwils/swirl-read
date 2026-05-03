@@ -19,7 +19,7 @@ export function PlainTextRenderer({
   source,
 }: PlainTextRendererProps): ReactNode {
   return (
-    <pre className="swilread-plaintext" data-testid="plain-text-renderer">
+    <pre className="swirlread-plaintext" data-testid="plain-text-renderer">
       {source}
     </pre>
   )

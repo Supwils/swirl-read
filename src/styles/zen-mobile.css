@@ -1,5 +1,5 @@
 /* Backlinks panel ───────────────────────────────────────────────────── */
-.swilread-backlinks {
+.swirlread-backlinks {
   margin-top: 3rem;
   padding-top: 1.1rem;
   border-top: 1px solid var(--color-border);
@@ -7,7 +7,7 @@
   color: var(--color-text);
 }
 
-.swilread-backlinks__title {
+.swirlread-backlinks__title {
   display: flex;
   align-items: center;
   gap: 0.45rem;
@@ -18,18 +18,18 @@
   color: var(--color-text);
 }
 
-.swilread-backlinks__title svg {
+.swirlread-backlinks__title svg {
   color: var(--color-text-muted);
 }
 
-.swilread-backlinks__status {
+.swirlread-backlinks__status {
   margin: 0.7rem 0 0;
   color: var(--color-text-muted);
   font-size: 0.86rem;
   font-style: italic;
 }
 
-.swilread-backlinks__list {
+.swirlread-backlinks__list {
   list-style: none;
   margin: 0.85rem 0 0;
   padding: 0;
@@ -38,26 +38,26 @@
   gap: 0.65rem;
 }
 
-.swilread-backlinks__item {
+.swirlread-backlinks__item {
   border: 1px solid var(--color-border);
   border-radius: 7px;
   padding: 0.75rem 0.85rem;
   background: color-mix(in srgb, var(--color-surface) 35%, transparent);
 }
 
-.swilread-backlinks__link {
+.swirlread-backlinks__link {
   color: var(--color-link);
   font-size: 0.92rem;
   font-weight: 500;
   text-decoration: none;
 }
 
-.swilread-backlinks__link:hover {
+.swirlread-backlinks__link:hover {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
-.swilread-backlinks__path {
+.swirlread-backlinks__path {
   margin: 0.18rem 0 0;
   font-family: var(--font-mono);
   font-size: 0.72rem;
@@ -65,7 +65,7 @@
   word-break: break-all;
 }
 
-.swilread-backlinks__context {
+.swirlread-backlinks__context {
   margin: 0.55rem 0 0;
   color: var(--color-text-muted);
   font-family: var(--font-serif);
@@ -73,7 +73,7 @@
   line-height: 1.45;
 }
 
-.swilread-backlinks__mark {
+.swirlread-backlinks__mark {
   background: color-mix(in srgb, var(--color-accent) 15%, transparent);
   color: var(--color-text);
   padding: 0 0.18rem;
@@ -84,7 +84,7 @@
 }
 
 /* First-time hints toast (M9.4) ──────────────────────────────────────── */
-.swilread-hint {
+.swirlread-hint {
   position: fixed;
   bottom: 24px;
   left: 50%;
@@ -103,26 +103,26 @@
   font-family: var(--font-sans);
 }
 
-.swilread-hint__body {
+.swirlread-hint__body {
   flex: 1;
   min-width: 0;
 }
 
-.swilread-hint__title {
+.swirlread-hint__title {
   margin: 0;
   font-family: var(--font-serif);
   font-size: 0.96rem;
   font-weight: 600;
 }
 
-.swilread-hint__detail {
+.swirlread-hint__detail {
   margin-top: 0.25rem;
   font-size: 0.84rem;
   color: var(--color-text-muted);
   line-height: 1.45;
 }
 
-.swilread-hint__detail kbd {
+.swirlread-hint__detail kbd {
   display: inline-block;
   padding: 0 0.3rem;
   margin: 0 0.05rem;
@@ -135,7 +135,7 @@
   line-height: 1.5;
 }
 
-.swilread-hint__close {
+.swirlread-hint__close {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
@@ -149,16 +149,16 @@
   cursor: pointer;
 }
 
-.swilread-hint__close:hover {
+.swirlread-hint__close:hover {
   color: var(--color-text);
   background: color-mix(in srgb, var(--color-surface) 60%, transparent);
 }
 
-body.zen-mode .swilread-hint {
+body.zen-mode .swirlread-hint {
   display: none;
 }
 
-.swilread-media__video {
+.swirlread-media__video {
   display: block;
   max-width: 100%;
   max-height: 75vh;
@@ -168,7 +168,7 @@ body.zen-mode .swilread-hint {
 
 /* (audio rule moved into the themed wrapper block above — M7 polish) */
 
-.swilread-media__caption {
+.swirlread-media__caption {
   display: flex;
   align-items: baseline;
   gap: 0.6rem;
@@ -176,18 +176,18 @@ body.zen-mode .swilread-hint {
   color: var(--color-text-muted);
 }
 
-.swilread-media__name {
+.swirlread-media__name {
   font-family: var(--font-serif);
   color: var(--color-text);
 }
 
-.swilread-media__size {
+.swirlread-media__size {
   font-family: var(--font-mono);
   font-size: 0.76rem;
 }
 
-.swilread-media--pending,
-.swilread-media--broken {
+.swirlread-media--pending,
+.swirlread-media--broken {
   padding: 1.2rem 1rem;
   border: 1px dashed var(--color-border);
   border-radius: 8px;
@@ -196,20 +196,20 @@ body.zen-mode .swilread-hint {
   align-items: stretch;
 }
 
-.swilread-media__title {
+.swirlread-media__title {
   margin: 0;
   font-family: var(--font-serif);
   font-weight: 600;
   color: var(--color-text);
 }
 
-.swilread-media__body {
+.swirlread-media__body {
   margin: 0;
   color: var(--color-text-muted);
   font-size: 0.9rem;
 }
 
-.swilread-media__path {
+.swirlread-media__path {
   margin: 0;
   font-family: var(--font-mono);
   font-size: 0.78rem;
@@ -249,12 +249,12 @@ body.zen-mode .swilread-hint {
      than DOM position so the rules survive layout refactors. The
      callout header and frontmatter title are reading content (not
      chrome) so they stay visible. */
-  body.zen-mode .swilread-shell__header,
-  body.zen-mode .swilread-vault-layout__sidebar,
-  body.zen-mode .swilread-vault-layout__toc {
+  body.zen-mode .swirlread-shell__header,
+  body.zen-mode .swirlread-vault-layout__sidebar,
+  body.zen-mode .swirlread-vault-layout__toc {
     display: none;
   }
-  body.zen-mode .swilread-vault-layout {
+  body.zen-mode .swirlread-vault-layout {
     min-height: 100vh;
   }
 

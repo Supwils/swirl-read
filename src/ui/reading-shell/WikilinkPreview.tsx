@@ -107,7 +107,7 @@ export function WikilinkPreview({
           <div
             ref={refs.setFloating}
             style={floatingStyles}
-            className="swilread-wikilink-preview"
+            className="swirlread-wikilink-preview"
             data-target={dataTarget}
             {...getFloatingProps()}
           >
@@ -154,16 +154,16 @@ function PreviewBody({
 
   return (
     <>
-      <header className="swilread-wikilink-preview__header">{resolved}</header>
-      <div className="swilread-wikilink-preview__body">
+      <header className="swirlread-wikilink-preview__header">{resolved}</header>
+      <div className="swirlread-wikilink-preview__body">
         {error && (
-          <span className="swilread-wikilink-preview__error">{error}</span>
+          <span className="swirlread-wikilink-preview__error">{error}</span>
         )}
         {!error && text === null && (
-          <span className="swilread-wikilink-preview__pending">Reading…</span>
+          <span className="swirlread-wikilink-preview__pending">Reading…</span>
         )}
         {!error && text !== null && text.length === 0 && (
-          <span className="swilread-wikilink-preview__pending">
+          <span className="swirlread-wikilink-preview__pending">
             (empty file)
           </span>
         )}

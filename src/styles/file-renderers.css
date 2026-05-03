@@ -1,5 +1,5 @@
 /* M7 universal file reader ───────────────────────────────────────────── */
-.swilread-plaintext {
+.swirlread-plaintext {
   margin: 1.5em 0;
   padding: 1rem 1.1rem;
   border-radius: 8px;
@@ -14,17 +14,17 @@
   border: 1px solid var(--color-border);
 }
 
-.swilread-codefile {
+.swirlread-codefile {
   margin: 1.5em 0;
   font-family: var(--font-serif);
   color: var(--color-text);
 }
 
-.swilread-codefile pre {
+.swirlread-codefile pre {
   margin: 0;
 }
 
-.swilread-codefile__status {
+.swirlread-codefile__status {
   margin: 1.5em 0 0.5em;
   color: var(--color-text-muted);
   font-family: var(--font-sans);
@@ -32,7 +32,7 @@
   font-style: italic;
 }
 
-.swilread-unsupported {
+.swirlread-unsupported {
   margin: 2.5rem auto 0;
   max-width: 460px;
   padding: 1.6rem 1.5rem;
@@ -44,12 +44,12 @@
   color: var(--color-text);
 }
 
-.swilread-unsupported__icon {
+.swirlread-unsupported__icon {
   color: var(--color-text-muted);
   margin-bottom: 0.6rem;
 }
 
-.swilread-unsupported__title {
+.swirlread-unsupported__title {
   margin: 0;
   font-family: var(--font-serif);
   font-size: 1.15rem;
@@ -57,14 +57,14 @@
   word-break: break-word;
 }
 
-.swilread-unsupported__body {
+.swirlread-unsupported__body {
   margin: 0.6rem 0 1rem;
   color: var(--color-text-muted);
   font-size: 0.9rem;
   line-height: 1.5;
 }
 
-.swilread-unsupported__body code {
+.swirlread-unsupported__body code {
   padding: 0 0.3rem;
   border-radius: 4px;
   background: var(--color-code-bg);
@@ -73,7 +73,7 @@
   font-size: 0.82rem;
 }
 
-.swilread-unsupported__meta {
+.swirlread-unsupported__meta {
   margin: 0;
   display: grid;
   grid-template-columns: max-content 1fr;
@@ -81,16 +81,16 @@
   font-size: 0.84rem;
 }
 
-.swilread-unsupported__meta dt {
+.swirlread-unsupported__meta dt {
   color: var(--color-text-muted);
 }
 
-.swilread-unsupported__meta dd {
+.swirlread-unsupported__meta dd {
   margin: 0;
   color: var(--color-text);
 }
 
-.swilread-unsupported__path {
+.swirlread-unsupported__path {
   font-family: var(--font-mono);
   font-size: 0.78rem;
   word-break: break-all;
@@ -98,13 +98,13 @@
 }
 
 /* JSON tree renderer (M7.4) ──────────────────────────────────────────── */
-.swilread-json {
+.swirlread-json {
   margin: 1.5rem 0 0;
   font-family: var(--font-sans);
   color: var(--color-text);
 }
 
-.swilread-json__toolbar {
+.swirlread-json__toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -112,13 +112,13 @@
   margin-bottom: 0.6rem;
 }
 
-.swilread-json__error {
+.swirlread-json__error {
   color: var(--color-text-muted);
   font-size: 0.82rem;
   font-style: italic;
 }
 
-.swilread-json__search {
+.swirlread-json__search {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -131,7 +131,7 @@
   flex: 0 1 280px;
 }
 
-.swilread-json__search input {
+.swirlread-json__search input {
   flex: 1;
   border: 0;
   background: transparent;
@@ -141,18 +141,18 @@
   min-width: 0;
 }
 
-.swilread-json__search input::placeholder {
+.swirlread-json__search input::placeholder {
   color: var(--color-text-muted);
 }
 
-.swilread-json__match {
+.swirlread-json__match {
   background: color-mix(in srgb, var(--color-accent) 26%, transparent);
   color: var(--color-text);
   border-radius: 2px;
   padding: 0 0.1em;
 }
 
-.swilread-json__toggle {
+.swirlread-json__toggle {
   display: inline-flex;
   border: 1px solid var(--color-border);
   border-radius: 6px;
@@ -160,7 +160,7 @@
   margin-left: auto;
 }
 
-.swilread-json__toggle-btn {
+.swirlread-json__toggle-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
@@ -173,25 +173,25 @@
   cursor: pointer;
 }
 
-.swilread-json__toggle-btn + .swilread-json__toggle-btn {
+.swirlread-json__toggle-btn + .swirlread-json__toggle-btn {
   border-left: 1px solid var(--color-border);
 }
 
-.swilread-json__toggle-btn:hover:not(:disabled) {
+.swirlread-json__toggle-btn:hover:not(:disabled) {
   color: var(--color-text);
 }
 
-.swilread-json__toggle-btn.is-active {
+.swirlread-json__toggle-btn.is-active {
   background: color-mix(in srgb, var(--color-accent) 12%, transparent);
   color: var(--color-text);
 }
 
-.swilread-json__toggle-btn:disabled {
+.swirlread-json__toggle-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.swilread-json__tree {
+.swirlread-json__tree {
   padding: 0.9rem 1rem;
   border: 1px solid var(--color-border);
   border-radius: 8px;
@@ -202,19 +202,19 @@
   overflow-x: auto;
 }
 
-.swilread-json__row {
+.swirlread-json__row {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
   flex-wrap: wrap;
 }
 
-.swilread-json__row--leaf,
-.swilread-json__row--collection {
+.swirlread-json__row--leaf,
+.swirlread-json__row--collection {
   position: relative;
 }
 
-.swilread-json__copy {
+.swirlread-json__copy {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
@@ -231,22 +231,22 @@
   font-family: var(--font-sans);
 }
 
-.swilread-json__row:hover .swilread-json__copy,
-.swilread-json__copy:focus-visible {
+.swirlread-json__row:hover .swirlread-json__copy,
+.swirlread-json__copy:focus-visible {
   opacity: 1;
 }
 
-.swilread-json__copy:hover {
+.swirlread-json__copy:hover {
   color: var(--color-text);
   border-color: var(--color-border);
   background: color-mix(in srgb, var(--color-surface) 50%, transparent);
 }
 
-.swilread-json__copied {
+.swirlread-json__copied {
   margin-left: 0.2rem;
 }
 
-.swilread-json__toggle-row {
+.swirlread-json__toggle-row {
   background: none;
   border: none;
   padding: 0;
@@ -257,72 +257,72 @@
   text-align: left;
 }
 
-.swilread-json__toggle-row:hover .swilread-json__brace,
-.swilread-json__toggle-row:hover .swilread-json__chevron {
+.swirlread-json__toggle-row:hover .swirlread-json__brace,
+.swirlread-json__toggle-row:hover .swirlread-json__chevron {
   color: var(--color-accent);
 }
 
-.swilread-json__chevron {
+.swirlread-json__chevron {
   color: var(--color-text-muted);
   flex-shrink: 0;
 }
 
-.swilread-json__list {
+.swirlread-json__list {
   list-style: none;
   margin: 0;
   padding: 0 0 0 1.4rem;
   border-left: 1px solid var(--color-border);
 }
 
-.swilread-json__item {
+.swirlread-json__item {
   margin: 0;
 }
 
-.swilread-json__close {
+.swirlread-json__close {
   margin-left: 1.4rem;
 }
 
-.swilread-json__key {
+.swirlread-json__key {
   color: var(--color-accent);
 }
 
-.swilread-json__colon {
+.swirlread-json__colon {
   color: var(--color-text-muted);
 }
 
-.swilread-json__brace,
-.swilread-json__bracket {
+.swirlread-json__brace,
+.swirlread-json__bracket {
   color: var(--color-text-muted);
 }
 
-.swilread-json__summary {
+.swirlread-json__summary {
   color: var(--color-text-muted);
   font-style: italic;
   margin: 0 0.3rem;
 }
 
-.swilread-json__string {
+.swirlread-json__string {
   color: var(--color-text);
 }
 
-.swilread-json__number {
+.swirlread-json__number {
   color: color-mix(in srgb, var(--color-accent) 70%, var(--color-text));
 }
 
-.swilread-json__boolean,
-.swilread-json__null {
+.swirlread-json__boolean,
+.swirlread-json__null {
   color: var(--color-text-muted);
   font-style: italic;
 }
 
 /* HTML sandboxed renderer (M7.5) ─────────────────────────────────────── */
-.swilread-html {
+.swirlread-html {
   margin: 1.5rem 0 0;
   font-family: var(--font-sans);
   color: var(--color-text);
 }
 
-.swilread-html__toolbar {
+.swirlread-html__toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -331,7 +331,7 @@
   font-size: 0.82rem;
 }
 
-.swilread-html__badge {
+.swirlread-html__badge {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
@@ -345,14 +345,14 @@
   text-transform: uppercase;
 }
 
-.swilread-html__toggle {
+.swirlread-html__toggle {
   display: inline-flex;
   border: 1px solid var(--color-border);
   border-radius: 6px;
   overflow: hidden;
 }
 
-.swilread-html__toggle-btn {
+.swirlread-html__toggle-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
@@ -365,20 +365,20 @@
   cursor: pointer;
 }
 
-.swilread-html__toggle-btn + .swilread-html__toggle-btn {
+.swirlread-html__toggle-btn + .swirlread-html__toggle-btn {
   border-left: 1px solid var(--color-border);
 }
 
-.swilread-html__toggle-btn:hover {
+.swirlread-html__toggle-btn:hover {
   color: var(--color-text);
 }
 
-.swilread-html__toggle-btn.is-active {
+.swirlread-html__toggle-btn.is-active {
   background: color-mix(in srgb, var(--color-accent) 12%, transparent);
   color: var(--color-text);
 }
 
-.swilread-html__frame {
+.swirlread-html__frame {
   width: 100%;
   height: 70vh;
   min-height: 320px;
@@ -388,27 +388,27 @@
 }
 
 /* CSV / TSV table renderer (M7.3) ────────────────────────────────────── */
-.swilread-csv {
+.swirlread-csv {
   margin: 1.5rem 0 0;
   font-family: var(--font-sans);
   color: var(--color-text);
 }
 
-.swilread-csv__scroll {
+.swirlread-csv__scroll {
   overflow-x: auto;
   border: 1px solid var(--color-border);
   border-radius: 8px;
   background: color-mix(in srgb, var(--color-surface) 50%, transparent);
 }
 
-.swilread-csv__table {
+.swirlread-csv__table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.86rem;
 }
 
-.swilread-csv__table th,
-.swilread-csv__table td {
+.swirlread-csv__table th,
+.swirlread-csv__table td {
   padding: 0.5rem 0.7rem;
   border-bottom: 1px solid var(--color-border);
   text-align: left;
@@ -417,28 +417,28 @@
   font-variant-numeric: tabular-nums;
 }
 
-.swilread-csv__table th {
+.swirlread-csv__table th {
   background: color-mix(in srgb, var(--color-accent) 10%, transparent);
   font-weight: 600;
   position: sticky;
   top: 0;
 }
 
-.swilread-csv__table tbody tr:nth-child(even) td {
+.swirlread-csv__table tbody tr:nth-child(even) td {
   background: color-mix(in srgb, var(--color-surface) 30%, transparent);
 }
 
-.swilread-csv__table tbody tr:last-child td {
+.swirlread-csv__table tbody tr:last-child td {
   border-bottom: none;
 }
 
-.swilread-csv__meta {
+.swirlread-csv__meta {
   margin: 0.7rem 0 0;
   color: var(--color-text-muted);
   font-size: 0.82rem;
 }
 
-.swilread-csv__load-more {
+.swirlread-csv__load-more {
   background: none;
   border: none;
   padding: 0;
@@ -449,11 +449,11 @@
   text-underline-offset: 3px;
 }
 
-.swilread-csv__load-more:hover {
+.swirlread-csv__load-more:hover {
   color: var(--color-accent);
 }
 
-.swilread-csv__status {
+.swirlread-csv__status {
   margin: 1.5rem 0 0;
   color: var(--color-text-muted);
   font-style: italic;

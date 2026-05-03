@@ -1,0 +1,307 @@
+/* DocumentEditSurface — Phase 2C lightweight editor chrome.
+ *
+ * The CodeMirror runtime injects its own styles via EditorView.theme();
+ * the rules below cover the SwirlRead chrome around the editor (toolbar,
+ * banners, status pills) plus a thin override layer for the editor
+ * surface itself so it inherits SwirlRead's theme variables instead of
+ * CodeMirror's defaults.
+ */
+
+.swirlread-edit {
+  margin: 1.5rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.swirlread-edit__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.swirlread-edit__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: var(--color-text-muted);
+}
+
+.swirlread-edit__status--dirty {
+  color: var(--color-accent, var(--color-text));
+  border-color: currentColor;
+}
+
+.swirlread-edit__spacer {
+  flex: 1;
+}
+
+.swirlread-edit__btn {
+  appearance: none;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+  padding: 0.35rem 0.85rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+.swirlread-edit__btn:hover:not(:disabled) {
+  background: var(--color-surface);
+  border-color: var(--color-text-muted);
+}
+
+.swirlread-edit__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.swirlread-edit__btn--primary {
+  background: var(--color-text);
+  color: var(--color-bg);
+  border-color: var(--color-text);
+}
+
+.swirlread-edit__btn--primary:hover:not(:disabled) {
+  background: var(--color-text);
+  opacity: 0.9;
+}
+
+.swirlread-edit__banner {
+  padding: 0.7rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.swirlread-edit__banner--conflict {
+  border-color: var(--color-warning, #b58900);
+}
+
+.swirlread-edit__banner--error {
+  border-color: var(--color-danger, #b03a2e);
+}
+
+.swirlread-edit__banner-title {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.swirlread-edit__banner-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.swirlread-edit__editor {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg);
+  overflow: hidden;
+}
+
+/* Override CodeMirror's defaults so the editor adopts SwirlRead theme tokens.
+ * CodeMirror exposes `.cm-editor`, `.cm-content`, `.cm-gutters`, etc; we
+ * scope every override under `.swirlread-edit__editor` so other CodeMirror
+ * instances (if any land in the future) stay un-themed by default. */
+
+.swirlread-edit__editor .cm-editor {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.swirlread-edit__editor .cm-editor.cm-focused {
+  outline: none;
+}
+
+.swirlread-edit__editor .cm-scroller {
+  font-family: var(--font-mono);
+}
+
+.swirlread-edit__editor .cm-gutters {
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  border-right: 1px solid var(--color-border);
+}
+
+.swirlread-edit__editor .cm-activeLineGutter,
+.swirlread-edit__editor .cm-activeLine {
+  background: color-mix(in srgb, var(--color-text) 5%, transparent);
+}
+
+.swirlread-edit__editor .cm-cursor,
+.swirlread-edit__editor .cm-dropCursor {
+  border-left-color: var(--color-text);
+}
+
+.swirlread-edit__editor .cm-selectionBackground,
+.swirlread-edit__editor.cm-focused .cm-selectionBackground,
+.swirlread-edit__editor ::selection {
+  background: color-mix(
+    in srgb,
+    var(--color-accent, var(--color-text)) 25%,
+    transparent
+  );
+}
+
+.swirlread-edit__editor .cm-panels {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+.swirlread-edit__editor .cm-panels .cm-button {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.swirlread-edit__editor .cm-panels input[type='text'],
+.swirlread-edit__editor .cm-panels input[type='checkbox'] {
+  background: var(--color-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.swirlread-doc-header__edit {
+  margin-top: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.32rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition:
+    color 120ms ease,
+    border-color 120ms ease;
+}
+
+.swirlread-doc-header__edit:hover {
+  color: var(--color-text);
+  border-color: var(--color-text-muted);
+}
+
+.swirlread-doc-header__edit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Confirm dialog (Radix) — used by the dirty-navigation guard and
+ * editor cancel flow. Sized small + destructive accent on the primary
+ * button so users can decide quickly without losing the page context. */
+
+.swirlread-confirm__overlay {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--color-text) 35%, transparent);
+  backdrop-filter: blur(2px);
+  z-index: 90;
+  animation: swirlread-confirm-fade-in 120ms ease-out;
+}
+
+.swirlread-confirm {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(440px, calc(100vw - 2rem));
+  background: var(--color-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 1.4rem 1.4rem 1.2rem;
+  z-index: 91;
+  box-shadow: 0 20px 60px -10px
+    color-mix(in srgb, var(--color-text) 25%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  font-family: var(--font-sans);
+  animation: swirlread-confirm-rise 140ms ease-out;
+}
+
+.swirlread-confirm__title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.swirlread-confirm__desc {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.swirlread-confirm__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  padding-top: 0.35rem;
+}
+
+.swirlread-confirm__btn--danger {
+  background: var(--color-danger, #b03a2e);
+  border-color: var(--color-danger, #b03a2e);
+  color: #fff;
+}
+
+.swirlread-confirm__btn--danger:hover:not(:disabled) {
+  background: var(--color-danger, #b03a2e);
+  opacity: 0.9;
+}
+
+@keyframes swirlread-confirm-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes swirlread-confirm-rise {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -46%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}

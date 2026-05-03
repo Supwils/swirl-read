@@ -1,4 +1,4 @@
-# SwilRead — AI Roadmap
+# SwirlRead — AI Roadmap
 
 > Status: Decided 2026-05-01 — **AI deferred to Phase 2** · Living document
 
@@ -8,7 +8,7 @@
 
 > AI serves reading, not replaces it.
 
-AI features are **additive**, not central. SwilRead must be a great reading experience without AI. AI is a Phase 2+ feature that makes a great experience even better.
+AI features are **additive**, not central. SwirlRead must be a great reading experience without AI. AI is a Phase 2+ feature that makes a great experience even better.
 
 ---
 
@@ -52,7 +52,7 @@ No vault-wide indexing yet. AI only sees what's currently in view.
 
 ### Phase 3 — Cross-Vault Recall (Killer Feature)
 
-This is where SwilRead becomes irreplaceable:
+This is where SwirlRead becomes irreplaceable:
 
 - **Local embeddings**: `transformers.js` runs in-browser, indexes the entire vault to IndexedDB
   - Default model: `Xenova/all-MiniLM-L6-v2` (30MB, English-tuned)
@@ -85,7 +85,7 @@ Privacy guarantee: embeddings are computed locally, never sent to an API. Only t
 
 ## API Access Model
 
-This is a unique area for SwilRead — most AI tools force users to either pay a subscription or paste an API key. SwilRead aims to support **multiple access paths** so users can leverage credits they already have.
+This is a unique area for SwirlRead — most AI tools force users to either pay a subscription or paste an API key. SwirlRead aims to support **multiple access paths** so users can leverage credits they already have.
 
 ### Tier 1: User-supplied API Key (always available, MVP-ready when AI ships)
 
@@ -109,7 +109,7 @@ Many developers already have active subscriptions or unused credits in CLI tools
 - **OpenAI Codex CLI** — uses OpenAI auth
 - **GitHub Copilot CLI** — GitHub OAuth
 
-Why this matters: subscribed developers often have **unused token allowances** in their existing CLI subscriptions. If SwilRead can route AI requests through those credentials, users get AI features for free (in marginal cost terms).
+Why this matters: subscribed developers often have **unused token allowances** in their existing CLI subscriptions. If SwirlRead can route AI requests through those credentials, users get AI features for free (in marginal cost terms).
 
 **Feasibility analysis**:
 
@@ -124,7 +124,7 @@ Why this matters: subscribed developers often have **unused token allowances** i
 
 - Web MVP: Tier 1 only (user pastes API key)
 - Tauri desktop release: Tier 2 — auto-detect Claude Code CLI credentials, offer "Use my Claude Code subscription"
-- Web Phase 3+ (optional): a tiny local daemon (`swilread-bridge`) that exposes credentials over localhost; web app detects it and offers "Connect to local CLI"
+- Web Phase 3+ (optional): a tiny local daemon (`swirlread-bridge`) that exposes credentials over localhost; web app detects it and offers "Connect to local CLI"
 
 **Important clarification**:
 
@@ -133,7 +133,7 @@ Why this matters: subscribed developers often have **unused token allowances** i
 - The bridge daemon is open source and inspectable
 - This is just a UX convenience: "you already have credits, why not use them"
 
-### Tier 3: Hosted SwilRead AI (paid SaaS, future)
+### Tier 3: Hosted SwirlRead AI (paid SaaS, future)
 
 For users who don't want to deal with API keys at all:
 
@@ -181,7 +181,7 @@ These are non-negotiable and enforced architecturally:
 
 To keep the product focused:
 
-- ❌ **An AI chat sidebar** that's permanently visible (that's ChatGPT, not SwilRead)
+- ❌ **An AI chat sidebar** that's permanently visible (that's ChatGPT, not SwirlRead)
 - ❌ **AI that auto-edits your files** (the user owns their content)
 - ❌ **AI that generates new content** unprompted (we read; we don't write for you)
 - ❌ **Provider lock-in** — every AI feature must work across providers

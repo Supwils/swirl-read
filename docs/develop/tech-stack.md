@@ -1,4 +1,4 @@
-# SwilRead — Tech Stack
+# SwirlRead — Tech Stack
 
 > Status: Decided 2026-05-01
 
@@ -188,7 +188,7 @@ For future lightweight current-document source editing:
 
 - **Vercel** or **Netlify** — static hosting + edge config
 - **GitHub Actions** for CI (lint, type-check, test, build)
-- **Custom domain**: `swilread.app` (or whatever's available)
+- **Custom domain**: `swirlread.app` (or whatever's available)
 
 ---
 

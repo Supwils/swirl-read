@@ -1,10 +1,10 @@
-# SwilRead — Open Source Strategy
+# SwirlRead — Open Source Strategy
 
 > Status: Brainstorming · Last updated: 2026-04-30
 
 ---
 
-## Should SwilRead Be Open Source?
+## Should SwirlRead Be Open Source?
 
 Short answer: **Yes, and it's the right default for this type of product.**
 
@@ -12,7 +12,7 @@ Here's why:
 
 ### 1. The Product's Core Promise Is Privacy
 
-The entire value proposition of SwilRead includes "your data never leaves your machine." Open source is the strongest possible proof of that claim. Users can inspect the code and verify there's no telemetry, no hidden upload, no tracking.
+The entire value proposition of SwirlRead includes "your data never leaves your machine." Open source is the strongest possible proof of that claim. Users can inspect the code and verify there's no telemetry, no hidden upload, no tracking.
 
 A closed-source local-first tool is a contradiction. Users have to trust your word. Open source makes trust verifiable.
 
@@ -49,7 +49,7 @@ All of these channels favor open source projects. A closed-source Markdown reade
 ```
 Pros:
 - Maximum adoption: anyone can use, modify, distribute
-- Developers can embed SwilRead in their own tools
+- Developers can embed SwirlRead in their own tools
 - Lowest friction for community contributions
 - Consistent with "this is a tool for developers" brand
 
@@ -62,7 +62,7 @@ Cons:
 
 ```
 Pros:
-- Network copyleft: if someone hosts SwilRead as a service, they must open source their version
+- Network copyleft: if someone hosts SwirlRead as a service, they must open source their version
 - Protects your potential SaaS business from competitors who would run a hosted version
 
 Cons:
@@ -81,7 +81,7 @@ Cons:
 
 ### Open Source Core (Always Free)
 
-Everything that makes SwilRead useful for personal use:
+Everything that makes SwirlRead useful for personal use:
 
 - Vault reading engine (File System Access API + local FS)
 - Markdown renderer (remark/rehype pipeline)
@@ -119,7 +119,7 @@ The line: **anything that runs entirely on the user's machine is free and open s
 
 ### Phase 1: Show HN / Soft Launch (Month 3-4)
 
-- Polish a demo: record a 90-second screen recording showing your vault in SwilRead vs. VS Code
+- Polish a demo: record a 90-second screen recording showing your vault in SwirlRead vs. VS Code
 - Post to: Hacker News (Show HN), r/ObsidianMD, r/PKM, Twitter/X dev community
 - README must answer: what it is, how to try it in 2 minutes, screenshot, why local-first
 - License and CONTRIBUTING.md in place before launch
@@ -135,13 +135,13 @@ The line: **anything that runs entirely on the user's machine is free and open s
 
 - Light plugin API for: custom renderers, additional AI providers, custom search backends
 - Modeled after Vite's plugin system — simple, composable, well-documented
-- This is what turns SwilRead from a tool into a platform
+- This is what turns SwirlRead from a tool into a platform
 
 ---
 
 ## Monetization Roadmap
 
-### Revenue Stream 1: SwilRead Cloud (SaaS)
+### Revenue Stream 1: SwirlRead Cloud (SaaS)
 
 - Upload your vault (or connect a Git repo / iCloud / Dropbox)
 - Read from any device without the File System Access API limitation
@@ -154,7 +154,7 @@ Pricing model: freemium
 - Pro ($6/month): unlimited vaults, shareable links, priority sync
 - Team ($12/user/month): shared vaults, team search, access control
 
-### Revenue Stream 2: SwilRead Desktop (One-time Purchase)
+### Revenue Stream 2: SwirlRead Desktop (One-time Purchase)
 
 - Native Tauri app with full OS filesystem access (no browser permission dance)
 - Offline AI (runs a local LLM for semantic search, no API key needed)
@@ -162,7 +162,7 @@ Pricing model: freemium
 
 ### Revenue Stream 3: Consulting / Integration
 
-- Help teams integrate SwilRead into their internal documentation workflow
+- Help teams integrate SwirlRead into their internal documentation workflow
 - Custom vault adapters for enterprise knowledge systems
 
 ### Non-Revenue That Builds the Business

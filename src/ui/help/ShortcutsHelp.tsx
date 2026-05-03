@@ -1,6 +1,6 @@
 /**
  * ShortcutsHelp (M9.4) — single-source-of-truth list of every keyboard
- * binding in SwilRead, surfaced as a Radix Dialog overlay.
+ * binding in SwirlRead, surfaced as a Radix Dialog overlay.
  *
  * Triggered by `?` from anywhere outside a text-entry surface. Lazy-
  * loaded by `AppShell` so the Radix Dialog instance only ships when the
@@ -67,22 +67,22 @@ export function ShortcutsHelp(): ReactNode {
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Portal>
-        <Dialog.Overlay className="swilread-shortcuts__overlay" />
+        <Dialog.Overlay className="swirlread-shortcuts__overlay" />
         <Dialog.Content
-          className="swilread-shortcuts"
+          className="swirlread-shortcuts"
           aria-label="Keyboard shortcuts"
         >
-          <header className="swilread-shortcuts__header">
-            <div className="swilread-shortcuts__heading">
+          <header className="swirlread-shortcuts__header">
+            <div className="swirlread-shortcuts__heading">
               <Keyboard size={18} aria-hidden="true" />
-              <Dialog.Title className="swilread-shortcuts__title">
+              <Dialog.Title className="swirlread-shortcuts__title">
                 Keyboard shortcuts
               </Dialog.Title>
             </div>
             <Dialog.Close asChild>
               <button
                 type="button"
-                className="swilread-shortcuts__close"
+                className="swirlread-shortcuts__close"
                 aria-label="Close shortcuts"
               >
                 <X size={18} aria-hidden="true" />
@@ -90,34 +90,34 @@ export function ShortcutsHelp(): ReactNode {
             </Dialog.Close>
           </header>
           <Dialog.Description className="sr-only">
-            A list of every keyboard shortcut available in SwilRead.
+            A list of every keyboard shortcut available in SwirlRead.
           </Dialog.Description>
-          <div className="swilread-shortcuts__body">
+          <div className="swirlread-shortcuts__body">
             {SHORTCUT_GROUPS.map((group) => (
               <section
                 key={group.heading}
-                className="swilread-shortcuts__group"
+                className="swirlread-shortcuts__group"
               >
-                <h3 className="swilread-shortcuts__group-heading">
+                <h3 className="swirlread-shortcuts__group-heading">
                   {group.heading}
                 </h3>
-                <ul className="swilread-shortcuts__list">
+                <ul className="swirlread-shortcuts__list">
                   {group.shortcuts.map((shortcut) => (
                     <li
                       key={shortcut.description}
-                      className="swilread-shortcuts__item"
+                      className="swirlread-shortcuts__item"
                     >
-                      <span className="swilread-shortcuts__keys">
+                      <span className="swirlread-shortcuts__keys">
                         {shortcut.keys.map((key, i) => (
                           <kbd
                             key={`${shortcut.description}-${String(i)}`}
-                            className="swilread-shortcuts__kbd"
+                            className="swirlread-shortcuts__kbd"
                           >
                             {key}
                           </kbd>
                         ))}
                       </span>
-                      <span className="swilread-shortcuts__description">
+                      <span className="swirlread-shortcuts__description">
                         {shortcut.description}
                       </span>
                     </li>

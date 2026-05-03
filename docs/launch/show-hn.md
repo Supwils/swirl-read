@@ -7,7 +7,7 @@
 ## Title
 
 ```
-Show HN: SwilRead – a reading-first interface for your Markdown vault
+Show HN: SwirlRead – a reading-first interface for your Markdown vault
 ```
 
 (80 chars. Under HN's 80-char limit. Avoid emojis, "the AI era",
@@ -16,7 +16,7 @@ Show HN: SwilRead – a reading-first interface for your Markdown vault
 ## URL
 
 ```
-https://swilread.app
+https://swirlread.app
 ```
 
 (Replace with the actual production URL once the domain is live.)
@@ -24,13 +24,13 @@ https://swilread.app
 ## First comment (the explainer)
 
 ```
-Author here. SwilRead is a local-first, web-based, read-optimised
+Author here. SwirlRead is a local-first, web-based, read-optimised
 interface for Markdown knowledge vaults — a calmer place to RE-READ
 your own notes, not another writer.
 
 Most Markdown apps optimise for editing: a sidebar tree, a preview
 pane, a toolbar of formatting shortcuts. The text gets second billing.
-SwilRead does the opposite. The reading column is the centre of
+SwirlRead does the opposite. The reading column is the centre of
 gravity; everything else hovers in or out as needed. There's a
 Sepia-Light-Dark-OLED theme set tuned for long-form reading, a zen
 mode (F), serif typography (Source Serif 4 + Noto Serif SC for
@@ -74,12 +74,12 @@ Caveats:
 - The bundle is ~248 KB gz; lazy chunks bring in heavier surfaces
   (KaTeX, Mermaid, Shiki extras) on demand.
 
-Code: <https://github.com/your-handle-here/swil-read>
+Code: <https://github.com/your-handle-here/swirl-read>
 Docs (design + implementation): in `docs/` in the repo.
 
 I'd love feedback from anyone who lives in their own knowledge vault
 — what does "calm" mean for your reading flow, and where does
-SwilRead get in the way?
+SwirlRead get in the way?
 ```
 
 ## Things to NOT say

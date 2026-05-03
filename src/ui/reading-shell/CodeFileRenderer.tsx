@@ -60,7 +60,7 @@ export function CodeFileRenderer({
 
   if (state.kind === 'loading') {
     return (
-      <p className="swilread-codefile__status" role="status">
+      <p className="swirlread-codefile__status" role="status">
         Highlighting…
       </p>
     )
@@ -71,16 +71,16 @@ export function CodeFileRenderer({
     // straight to a plain pre so the user can still read the source.
     return (
       <div data-testid="code-file-renderer-fallback">
-        <p className="swilread-codefile__status" role="alert">
+        <p className="swirlread-codefile__status" role="alert">
           Couldn&apos;t highlight: {state.message}
         </p>
-        <pre className="swilread-plaintext">{source}</pre>
+        <pre className="swirlread-plaintext">{source}</pre>
       </div>
     )
   }
 
   return (
-    <div className="swilread-codefile" data-testid="code-file-renderer">
+    <div className="swirlread-codefile" data-testid="code-file-renderer">
       {state.tree}
     </div>
   )

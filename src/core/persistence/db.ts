@@ -1,5 +1,5 @@
 /**
- * Dexie schema for SwilRead's persistent state.
+ * Dexie schema for SwirlRead's persistent state.
  *
  * Tables:
  *   - `vaults`           — vault metadata records (one row per registered vault)
@@ -81,7 +81,7 @@ export interface OpenTabRow {
   openedAtMs: number
 }
 
-interface SwilReadDB extends Dexie {
+interface SwirlReadDB extends Dexie {
   vaults: EntityTable<StoredVault, 'id'>
   preferences: EntityTable<PreferenceRow, 'key'>
   recentFiles: EntityTable<RecentFileRow, 'id'>
@@ -91,8 +91,8 @@ interface SwilReadDB extends Dexie {
   openTabs: EntityTable<OpenTabRow, 'id'>
 }
 
-function buildDb(): SwilReadDB {
-  const db = new Dexie('swilread') as SwilReadDB
+function buildDb(): SwirlReadDB {
+  const db = new Dexie('swirlread') as SwirlReadDB
   db.version(1).stores({
     // Indexes: id (primary), name (queryable), lastOpenedAtMs (sortable)
     vaults: 'id, name, lastOpenedAtMs',
@@ -136,7 +136,7 @@ function buildDb(): SwilReadDB {
   return db
 }
 
-export const db: SwilReadDB = buildDb()
+export const db: SwirlReadDB = buildDb()
 
 /* ─── conversion helpers between StoredVault and VaultMeta ───────────── */
 

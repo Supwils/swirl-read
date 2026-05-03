@@ -29,7 +29,7 @@ describe('MathInline', () => {
     render(<MathInline data-source="x + y" />)
 
     const el = await waitFor(() => screen.getByText(/RENDERED:x \+ y/))
-    expect(el.parentElement?.className).toContain('swilread-math--inline')
+    expect(el.parentElement?.className).toContain('swirlread-math--inline')
   })
 
   it('renders nothing when data-source is empty', () => {
@@ -46,7 +46,7 @@ describe('MathBlock', () => {
 
     const el = await waitFor(() => screen.getByText(/RENDERED:\\int_0\^1 x\^2/))
     expect(el.getAttribute('data-display')).toBe('block')
-    expect(el.parentElement?.className).toContain('swilread-math--display')
+    expect(el.parentElement?.className).toContain('swirlread-math--display')
   })
 
   it('falls back to source-as-code on KaTeX failure', async () => {
@@ -60,7 +60,7 @@ describe('MathBlock', () => {
     render(<MathBlock data-source={'\\bad'} />)
 
     await waitFor(() => {
-      const code = document.querySelector('.swilread-math--error code')
+      const code = document.querySelector('.swirlread-math--error code')
       expect(code).not.toBeNull()
       expect(code?.textContent).toBe('\\bad')
     })
@@ -72,7 +72,7 @@ describe('MathBlock', () => {
 
     await waitFor(() => {
       expect(
-        document.querySelector('.swilread-math--error'),
+        document.querySelector('.swirlread-math--error'),
       ).toBeInTheDocument()
     })
   })
@@ -91,7 +91,7 @@ describe('MathBlock', () => {
     )
     render(<MathBlock data-source="x" />)
     expect(
-      document.querySelector('.swilread-math--loading'),
+      document.querySelector('.swirlread-math--loading'),
     ).toBeInTheDocument()
     // Resolve so the test doesn't leak a pending promise into other cases.
     resolveLoader({ renderToString: (s) => s })

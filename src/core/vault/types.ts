@@ -1,7 +1,7 @@
 /**
  * Core vault types and abstractions.
  *
- * A "vault" is any folder of files that SwilRead can read. Concrete adapters
+ * A "vault" is any folder of files that SwirlRead can read. Concrete adapters
  * (FSAPI, Sample, future Tauri) implement {@link VaultFileSystem}; the rest
  * of the app only knows the interface.
  */
@@ -134,6 +134,22 @@ export interface VaultFileSystem {
    *   read-only adapter, …).
    */
   writeText(path: VaultPath, content: string): Promise<void>
+
+  /**
+   * Synchronous capability flag — `true` if this adapter cannot ever
+   * accept a `writeText` call (e.g. the bundled sample vault). The
+   * editor surface uses this to pre-flight-gate the Edit affordance so
+   * the user never enters edit mode just to bounce off a read-only
+   * error on first save.
+   *
+   * Distinct from {@link hasWritePermission}: `isReadOnly` is a static
+   * property of the adapter (sample is always read-only); permission
+   * is a per-handle runtime check that can be elevated by user action.
+   * An FSAPI adapter is `isReadOnly === false` even before the user
+   * has granted readwrite — the elevation flow handles that on first
+   * save.
+   */
+  readonly isReadOnly: boolean
 
   /**
    * Whether the adapter is allowed to call `writeText`. Read-only

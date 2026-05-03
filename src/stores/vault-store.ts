@@ -19,6 +19,7 @@ import { create } from 'zustand'
 import { db, metaToStored, storedToMeta } from '@/core/persistence/db'
 import { deleteHandle } from '@/core/vault'
 import { invalidateBacklinks } from '@/core/navigation/backlinks'
+import { useEditorStore } from '@/stores/editor-store'
 import { useReaderStore } from '@/stores/reader-store'
 import { useTabsStore } from '@/stores/tabs-store'
 import type { VaultFileSystem, VaultId, VaultMeta } from '@/core/vault'
@@ -60,6 +61,11 @@ async function invalidateVaultCachesLazy(id: VaultId): Promise<void> {
     import('@/ui/command-palette/full-text-cache')
       .then((m) => {
         m.invalidateFullTextIndex(id)
+      })
+      .catch(() => undefined),
+    import('@/ui/file-tree/vault-graph')
+      .then((m) => {
+        m.invalidateVaultGraph(id)
       })
       .catch(() => undefined),
   ])
@@ -219,6 +225,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     invalidateBacklinks(id)
     useReaderStore.getState().forgetVault(id)
     useTabsStore.getState().forgetVault(id)
+    useEditorStore.getState().forgetVault(id)
     // Heavy / lazy caches: don't block removal on these resolving.
     void invalidateVaultCachesLazy(id)
 

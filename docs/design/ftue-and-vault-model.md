@@ -1,11 +1,11 @@
-# SwilRead — First-Time UX & Vault Model
+# SwirlRead — First-Time UX & Vault Model
 
 > Status: Decided 2026-05-01 · Living document
 
 This document covers two intertwined topics:
 
 1. **First-time user experience** — the first 60 seconds determine whether a user stays
-2. **Vault model** — how SwilRead thinks about structure, both within one vault and across multiple
+2. **Vault model** — how SwirlRead thinks about structure, both within one vault and across multiple
 
 ---
 
@@ -13,12 +13,12 @@ This document covers two intertwined topics:
 
 ### Landing Page Strategy: Hybrid Single-Page
 
-The user lands on `swilread.app` and sees:
+The user lands on `swirlread.app` and sees:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                                                             │
-│                       SwilRead                              │
+│                       SwirlRead                              │
 │                                                             │
 │         Read your knowledge. Beautifully.                   │
 │                                                             │
@@ -37,7 +37,7 @@ The user lands on `swilread.app` and sees:
        ↓ scroll down for features ↓
 
 ┌─────────────────────────────────────────────────────────────┐
-│ Why SwilRead                                                │
+│ Why SwirlRead                                                │
 │                                                             │
 │  • Beautiful reading, not editing                           │
 │  • Your files stay on your device                           │
@@ -68,7 +68,7 @@ The user lands on `swilread.app` and sees:
 ### The 30-Second First Run
 
 ```
-T+0s   User opens swilread.app
+T+0s   User opens swirlread.app
 T+1s   Hero loads. Two buttons visible.
 T+3s   User clicks "Try with sample vault"
 T+3.5s Sample vault loaded (instant; bundled or lazy-fetched)
@@ -94,7 +94,7 @@ The sample vault is itself a piece of content the user wants to read. It demonst
 
 **Theme: "Reading in the Age of AI"** — see [`brand-and-positioning.md`](./brand-and-positioning.md) for the canonical content list and structure. (Earlier drafts of this document proposed "The Art of Reading"; the brand doc is the source of truth and supersedes that.)
 
-The vault contains ~15 files across three sections: `reading/`, `thinking/`, `knowing/`, plus an `index.md`, `why-this-vault-exists.md`, `recommended-readings.md`, and a closing `about-swilread.md`. Every essay subtly reinforces the brand thesis (deep reading as a counter to passive AI consumption) without lecturing.
+The vault contains ~15 files across three sections: `reading/`, `thinking/`, `knowing/`, plus an `index.md`, `why-this-vault-exists.md`, `recommended-readings.md`, and a closing `about-swirlread.md`. Every essay subtly reinforces the brand thesis (deep reading as a counter to passive AI consumption) without lecturing.
 
 **Why this content** (in either earlier or final form):
 
@@ -102,7 +102,7 @@ The vault contains ~15 files across three sections: `reading/`, `thinking/`, `kn
 - Demonstrates every Markdown feature naturally
 - Shows the structured navigation pattern (map files, subdirectories)
 - Subtly proves the product's thesis: "this is how knowledge should feel"
-- `about-swilread.md` at the end is the soft pitch, not a hard sell
+- `about-swirlread.md` at the end is the soft pitch, not a hard sell
 
 **Bundling**: ship as a JSON blob in the app bundle (~150KB compressed). Loads instantly.
 
@@ -127,7 +127,7 @@ Inline panel slides up (NOT a system modal yet):
   │ Open your vault                                │
   │                                                │
   │ Choose any folder containing your              │
-  │ Markdown files. SwilRead reads them            │
+  │ Markdown files. SwirlRead reads them            │
   │ directly from your device. Nothing             │
   │ is uploaded.                                   │
   │                                                │
@@ -154,7 +154,7 @@ Sticky toast: "✅ Connected to my-vault. Welcome back."
 
 ### Returning User Flow
 
-When a user with a previously-opened vault comes back to `swilread.app`:
+When a user with a previously-opened vault comes back to `swirlread.app`:
 
 ```
 Page load
@@ -207,7 +207,7 @@ A vault is just a folder. Inside it, structure is conveyed by:
 2. **Map files** (`*-map.md` or `index.md` per directory)
 3. **Wikilinks** (cross-cutting threads)
 
-SwilRead treats a single vault with rich subdirectory structure as a **first-class experience**. You don't need to split your knowledge into multiple vaults to get organized navigation — the existing folder structure IS the organization.
+SwirlRead treats a single vault with rich subdirectory structure as a **first-class experience**. You don't need to split your knowledge into multiple vaults to get organized navigation — the existing folder structure IS the organization.
 
 **Wilson's vault is the canonical example**:
 
@@ -229,7 +229,7 @@ supwil/                          ← The vault
     └── ai-map.md
 ```
 
-When the user opens `supwil/`, SwilRead:
+When the user opens `supwil/`, SwirlRead:
 
 - Renders `index.md` as vault home
 - Recognizes each top-level folder as a "section" with its own home (`*-map.md`)
@@ -243,7 +243,7 @@ This means **one vault = one knowledge OS**, with sub-areas that feel like dedic
 
 ### Section Detection
 
-SwilRead automatically identifies sections within a vault using these signals (in order):
+SwirlRead automatically identifies sections within a vault using these signals (in order):
 
 1. **Top-level directory contains a `*-map.md` file** → it's a section, the map file is its home
 2. **Top-level directory contains an `index.md`** → it's a section, index is its home
@@ -253,7 +253,7 @@ SwilRead automatically identifies sections within a vault using these signals (i
 
 This is **pure convention, no config required**. Wilson's vault works out of the box because he already follows the `*-map.md` pattern.
 
-For users who want explicit control, an optional `swilread.config.json` at vault root can override:
+For users who want explicit control, an optional `swirlread.config.json` at vault root can override:
 
 ```json
 {
@@ -271,7 +271,7 @@ But config is opt-in. **Convention over configuration.**
 
 ### Multi-Vault Support
 
-For users who want hard separation between domains (e.g., personal knowledge vs. hobby vs. work), SwilRead supports multiple registered vaults.
+For users who want hard separation between domains (e.g., personal knowledge vs. hobby vs. work), SwirlRead supports multiple registered vaults.
 
 **Vault switcher (top-left, hover summoned)**:
 
@@ -303,7 +303,7 @@ For users who want hard separation between domains (e.g., personal knowledge vs.
 
 ### Vault Type Adapters
 
-Different PKM tools have slightly different conventions. SwilRead auto-detects:
+Different PKM tools have slightly different conventions. SwirlRead auto-detects:
 
 | Vault Type    | Detection Signal                            | Adapter Behavior                                                                        |
 | ------------- | ------------------------------------------- | --------------------------------------------------------------------------------------- |
@@ -331,4 +331,4 @@ The adapter only affects parsing nuances; the reading experience is unified.
 | Multi-vault            | Supported via top-left vault switcher                                                               |
 | Cross-vault search     | Phase 2+                                                                                            |
 | Vault adapters         | Auto-detect Obsidian / Logseq / Foam / plain                                                        |
-| Config file            | Optional (`swilread.config.json`); convention-first                                                 |
+| Config file            | Optional (`swirlread.config.json`); convention-first                                                |

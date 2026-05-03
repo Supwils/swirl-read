@@ -52,7 +52,7 @@ describe('ErrorFallback (M9.5)', () => {
     // it, so we filter to the dedicated message element only.
     expect(
       screen.getByText(/boom — deliberate render error/i, {
-        selector: '.swilread-error__message',
+        selector: '.swirlread-error__message',
       }),
     ).toBeInTheDocument()
   })

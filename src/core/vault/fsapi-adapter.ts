@@ -38,6 +38,8 @@ export class FSAPIVaultAdapter implements VaultFileSystem {
   readonly id: VaultId
   readonly name: string
   readonly rootHandle: FileSystemDirectoryHandle
+  /** Real on-disk vaults always carry write capability potential. */
+  readonly isReadOnly = false
 
   /** Cache of blob URLs by path so repeated reads of the same image are cheap. */
   private readonly blobURLs = new Map<VaultPath, string>()

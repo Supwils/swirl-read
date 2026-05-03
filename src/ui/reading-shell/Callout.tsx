@@ -148,14 +148,18 @@ export function Callout(props: CalloutProps): ReactNode {
 
   return (
     <aside
-      className={`swilread-callout ${def.cssClass}`}
+      className={`swirlread-callout ${def.cssClass}`}
       data-callout-type={rawType}
     >
-      <header className="swilread-callout__header">
-        <Icon className="swilread-callout__icon" size={16} aria-hidden="true" />
-        <span className="swilread-callout__title">{title}</span>
+      <header className="swirlread-callout__header">
+        <Icon
+          className="swirlread-callout__icon"
+          size={16}
+          aria-hidden="true"
+        />
+        <span className="swirlread-callout__title">{title}</span>
       </header>
-      <div className="swilread-callout__body">{props.children}</div>
+      <div className="swirlread-callout__body">{props.children}</div>
     </aside>
   )
 }

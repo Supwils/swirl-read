@@ -33,7 +33,7 @@ describe('LandingPage', () => {
   it('renders the brand wordmark', () => {
     renderWithRouter(<LandingPage />)
     expect(
-      screen.getByRole('heading', { level: 1, name: /swilread/i }),
+      screen.getByRole('heading', { level: 1, name: /swirlread/i }),
     ).toBeInTheDocument()
   })
 

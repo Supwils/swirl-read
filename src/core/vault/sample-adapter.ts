@@ -3,7 +3,7 @@
  *
  * In-memory `VaultFileSystem` backed by a static path → contents map.
  * Used for the "Try sample vault" CTA on the landing page so a fresh user
- * can see SwilRead render without granting File System Access permission
+ * can see SwirlRead render without granting File System Access permission
  * to a real folder.
  *
  * Permission API is trivially `true` (the bytes ship with the bundle).
@@ -40,6 +40,8 @@ export interface SampleVaultSpec {
 export class SampleVaultAdapter implements VaultFileSystem {
   readonly id: VaultId
   readonly name: string
+  /** The bundled sample vault is fixture data — never writeable. */
+  readonly isReadOnly = true
 
   /** Path → bytes (string treated as utf-8). */
   private readonly files: Map<VaultPath, SampleFileContent>

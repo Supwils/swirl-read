@@ -57,18 +57,18 @@ export function ErrorFallback(): ReactNode {
   const normalized = normalizeError(error)
 
   return (
-    <div className="swilread-error" role="alert">
-      <div className="swilread-error__card">
-        <div className="swilread-error__badge" aria-hidden="true">
+    <div className="swirlread-error" role="alert">
+      <div className="swirlread-error__card">
+        <div className="swirlread-error__badge" aria-hidden="true">
           <AlertCircle size={24} />
         </div>
-        <h1 className="swilread-error__title">{normalized.title}</h1>
-        <p className="swilread-error__message">{normalized.message}</p>
-        <p className="swilread-error__path">
+        <h1 className="swirlread-error__title">{normalized.title}</h1>
+        <p className="swirlread-error__message">{normalized.message}</p>
+        <p className="swirlread-error__path">
           while loading <code>{location.pathname}</code>
         </p>
-        <div className="swilread-error__actions">
-          <Link to="/" className="swilread-error__action">
+        <div className="swirlread-error__actions">
+          <Link to="/" className="swirlread-error__action">
             Back to start
           </Link>
           <button
@@ -76,15 +76,15 @@ export function ErrorFallback(): ReactNode {
             onClick={() => {
               window.location.reload()
             }}
-            className="swilread-error__action swilread-error__action--secondary"
+            className="swirlread-error__action swirlread-error__action--secondary"
           >
             Reload
           </button>
         </div>
         {normalized.details && (
-          <details className="swilread-error__details">
+          <details className="swirlread-error__details">
             <summary>Technical details</summary>
-            <pre className="swilread-error__stack">{normalized.details}</pre>
+            <pre className="swirlread-error__stack">{normalized.details}</pre>
           </details>
         )}
       </div>

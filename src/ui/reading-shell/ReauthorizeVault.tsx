@@ -81,21 +81,21 @@ export function ReauthorizeVault({
   }
 
   return (
-    <div className="swilread-reauthorize">
-      <div className="swilread-reauthorize__icon" aria-hidden="true">
+    <div className="swirlread-reauthorize">
+      <div className="swirlread-reauthorize__icon" aria-hidden="true">
         <LockKeyhole size={22} />
       </div>
-      <h2 className="swilread-reauthorize__title">{vaultId}</h2>
+      <h2 className="swirlread-reauthorize__title">{vaultId}</h2>
       {state.kind === 'has-handle' && (
         <>
-          <p className="swilread-reauthorize__body">
+          <p className="swirlread-reauthorize__body">
             The browser requires you to re-grant read access for this vault
             after a reload. Your saved handle is intact — one click brings the
             vault back.
           </p>
           <button
             type="button"
-            className="swilread-reauthorize__button"
+            className="swirlread-reauthorize__button"
             onClick={() => {
               void handleClick()
             }}
@@ -104,7 +104,7 @@ export function ReauthorizeVault({
             {busy ? 'Waiting for browser…' : 'Re-authorize this vault'}
           </button>
           {error && (
-            <p className="swilread-reauthorize__error" role="alert">
+            <p className="swirlread-reauthorize__error" role="alert">
               {error}
             </p>
           )}
@@ -112,17 +112,17 @@ export function ReauthorizeVault({
       )}
       {state.kind === 'no-handle' && (
         <>
-          <p className="swilread-reauthorize__body">
+          <p className="swirlread-reauthorize__body">
             No saved handle for this vault. Pick the folder again from the
             landing page to register it.
           </p>
-          <Link to="/" className="swilread-reauthorize__button">
+          <Link to="/" className="swirlread-reauthorize__button">
             Back to landing
           </Link>
         </>
       )}
       {state.kind === 'checking' && (
-        <p className="swilread-reauthorize__body">Checking saved handles…</p>
+        <p className="swirlread-reauthorize__body">Checking saved handles…</p>
       )}
     </div>
   )

@@ -1,4 +1,4 @@
-# SwilRead — Launch Checklist (M9.8)
+# SwirlRead — Launch Checklist (M9.8)
 
 > Run through this list before flipping the repo public and posting Show
 > HN. Everything below is one-time setup; the goal is to leave nothing
@@ -15,11 +15,11 @@
       (date, commit SHA, deploy URL)
 - [ ] No `TODO(M9.x)` comments left referring to launch-blocking work
 - [ ] `LICENSE` copyright line names a real entity (replace
-      "SwilRead contributors" if a single human or org wants the line)
+      "SwirlRead contributors" if a single human or org wants the line)
 
 ### 2. Domain + Vercel
 
-- [ ] Domain registered (`swilread.app` is the design-doc placeholder
+- [ ] Domain registered (`swirlread.app` is the design-doc placeholder
       — verify availability or pick a substitute)
 - [ ] Vercel project created and linked to this repo via the GitHub
       integration

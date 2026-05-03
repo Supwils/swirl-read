@@ -232,7 +232,7 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
           }
           // A.L4 — notify when the cap fires; surface a one-time hint.
           console.warn(
-            `[SwilRead] Tab cap reached for vault ${vaultId} — oldest tab evicted. Limit: ${String(MAX_TABS_PER_VAULT)}.`,
+            `[SwirlRead] Tab cap reached for vault ${vaultId} — oldest tab evicted. Limit: ${String(MAX_TABS_PER_VAULT)}.`,
           )
           if (!get().tabCapHit) set({ tabCapHit: true })
         }

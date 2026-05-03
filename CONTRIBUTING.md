@@ -1,6 +1,6 @@
-# Contributing to SwilRead
+# Contributing to SwirlRead
 
-Thanks for considering a contribution. SwilRead is a small, opinionated
+Thanks for considering a contribution. SwirlRead is a small, opinionated
 project — most of the value comes from the things we say "no" to. Read
 this once before opening a PR.
 

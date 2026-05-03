@@ -112,7 +112,7 @@ export function VaultLayout() {
 
   return (
     <div
-      className={`swilread-vault-layout swilread-vault-layout--${chromeMode}`}
+      className={`swirlread-vault-layout swirlread-vault-layout--${chromeMode}`}
     >
       {/* Edge hover zones — invisible 14 px strips along the page edges.
           Active in every chrome mode; CSS hides them only when their
@@ -120,7 +120,7 @@ export function VaultLayout() {
           don't fight a sidebar that already owns the same column. */}
       {!fileTreePersistent && (
         <div
-          className="swilread-vault-layout__hover-zone swilread-vault-layout__hover-zone--left"
+          className="swirlread-vault-layout__hover-zone swirlread-vault-layout__hover-zone--left"
           aria-hidden="true"
           onMouseEnter={() => {
             cancelTimer(fileTreeTimerRef)
@@ -130,7 +130,7 @@ export function VaultLayout() {
       )}
       {!tocPersistent && (
         <div
-          className="swilread-vault-layout__hover-zone swilread-vault-layout__hover-zone--right"
+          className="swirlread-vault-layout__hover-zone swirlread-vault-layout__hover-zone--right"
           aria-hidden="true"
           onMouseEnter={() => {
             cancelTimer(tocTimerRef)
@@ -143,9 +143,9 @@ export function VaultLayout() {
         <>
           <button
             type="button"
-            className={`swilread-vault-layout__sidebar-backdrop${
+            className={`swirlread-vault-layout__sidebar-backdrop${
               fileTreeFloating
-                ? ' swilread-vault-layout__sidebar-backdrop--floating'
+                ? ' swirlread-vault-layout__sidebar-backdrop--floating'
                 : ''
             }`}
             aria-label="Dismiss file tree"
@@ -159,9 +159,9 @@ export function VaultLayout() {
             }}
           />
           <aside
-            className={`swilread-vault-layout__sidebar${
+            className={`swirlread-vault-layout__sidebar${
               fileTreeFloating
-                ? ' swilread-vault-layout__sidebar--floating'
+                ? ' swirlread-vault-layout__sidebar--floating'
                 : ''
             }`}
             aria-label="File tree"
@@ -183,13 +183,13 @@ export function VaultLayout() {
           </aside>
         </>
       )}
-      <div className="swilread-vault-layout__content">
+      <div className="swirlread-vault-layout__content">
         <Outlet />
       </div>
       {showToc && vaultId && (
         <aside
-          className={`swilread-vault-layout__toc${
-            tocFloating ? ' swilread-vault-layout__toc--floating' : ''
+          className={`swirlread-vault-layout__toc${
+            tocFloating ? ' swirlread-vault-layout__toc--floating' : ''
           }`}
           aria-label="Table of contents"
           onMouseEnter={() => {

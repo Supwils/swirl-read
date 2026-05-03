@@ -40,7 +40,7 @@ export function Wikilink(props: WikilinkProps): ReactNode {
 
   if (!target) {
     return (
-      <span className="swilread-wikilink swilread-wikilink--broken">
+      <span className="swirlread-wikilink swirlread-wikilink--broken">
         {label}
       </span>
     )
@@ -49,7 +49,7 @@ export function Wikilink(props: WikilinkProps): ReactNode {
   if (!ctx?.index) {
     return (
       <span
-        className="swilread-wikilink swilread-wikilink--pending"
+        className="swirlread-wikilink swirlread-wikilink--pending"
         data-target={target}
         title="Resolving link…"
       >
@@ -62,7 +62,7 @@ export function Wikilink(props: WikilinkProps): ReactNode {
   if (!resolved) {
     return (
       <span
-        className="swilread-wikilink swilread-wikilink--broken"
+        className="swirlread-wikilink swirlread-wikilink--broken"
         data-target={target}
         title={`No file found for "${target}"`}
       >
@@ -130,7 +130,7 @@ function ResolvedWikilink({
         resolved={resolved}
         vaultId={vaultId}
         dataTarget={dataTarget}
-        className="swilread-wikilink swilread-wikilink--resolved"
+        className="swirlread-wikilink swirlread-wikilink--resolved"
       >
         {children}
       </Preview>
@@ -141,7 +141,7 @@ function ResolvedWikilink({
     <Link
       to={to}
       data-target={dataTarget}
-      className="swilread-wikilink swilread-wikilink--resolved"
+      className="swirlread-wikilink swirlread-wikilink--resolved"
       onMouseEnter={() => {
         void loadPreview().then((Component) => {
           setPreview(() => Component)

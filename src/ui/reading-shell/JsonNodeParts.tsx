@@ -25,7 +25,7 @@ function highlight(text: string, query: string): ReactNode {
     }
     if (idx > i) parts.push(text.slice(i, idx))
     parts.push(
-      <mark key={key++} className="swilread-json__match">
+      <mark key={key++} className="swirlread-json__match">
         {text.slice(idx, idx + q.length)}
       </mark>,
     )
@@ -48,7 +48,7 @@ export function LeafRow({
   rendered: ReactNode
 }): ReactNode {
   return (
-    <span className="swilread-json__row swilread-json__row--leaf">
+    <span className="swirlread-json__row swirlread-json__row--leaf">
       <KeyLabel keyName={keyName} query={query} />
       <span className={valueClass}>{rendered}</span>
       <CopyPathButton path={path} />
@@ -80,11 +80,11 @@ export function CollectionNode({
   children: ReactNode
 }): ReactNode {
   return (
-    <div className="swilread-json__collection" data-depth={depth}>
-      <span className="swilread-json__row swilread-json__row--collection">
+    <div className="swirlread-json__collection" data-depth={depth}>
+      <span className="swirlread-json__row swirlread-json__row--collection">
         <button
           type="button"
-          className="swilread-json__toggle-row"
+          className="swirlread-json__toggle-row"
           aria-expanded={open}
           onClick={onToggle}
         >
@@ -92,21 +92,21 @@ export function CollectionNode({
             <ChevronDown
               size={12}
               aria-hidden="true"
-              className="swilread-json__chevron"
+              className="swirlread-json__chevron"
             />
           ) : (
             <ChevronRight
               size={12}
               aria-hidden="true"
-              className="swilread-json__chevron"
+              className="swirlread-json__chevron"
             />
           )}
           <KeyLabel keyName={keyName} query={query} />
-          <span className="swilread-json__brace">{openMark}</span>
+          <span className="swirlread-json__brace">{openMark}</span>
           {!open && (
             <>
-              <span className="swilread-json__summary">{summary}</span>
-              <span className="swilread-json__brace">{closeMark}</span>
+              <span className="swirlread-json__summary">{summary}</span>
+              <span className="swirlread-json__brace">{closeMark}</span>
             </>
           )}
         </button>
@@ -114,9 +114,9 @@ export function CollectionNode({
       </span>
       {open && (
         <>
-          <ul className="swilread-json__list">{children}</ul>
-          <span className="swilread-json__row swilread-json__close">
-            <span className="swilread-json__brace">{closeMark}</span>
+          <ul className="swirlread-json__list">{children}</ul>
+          <span className="swirlread-json__row swirlread-json__close">
+            <span className="swirlread-json__brace">{closeMark}</span>
           </span>
         </>
       )}
@@ -134,10 +134,10 @@ export function KeyLabel({
   if (keyName === undefined) return null
   return (
     <>
-      <span className="swilread-json__key">
+      <span className="swirlread-json__key">
         &quot;{highlight(keyName, query)}&quot;
       </span>
-      <span className="swilread-json__colon">:</span>
+      <span className="swirlread-json__colon">:</span>
     </>
   )
 }
@@ -156,7 +156,7 @@ export function CopyPathButton({
   return (
     <button
       type="button"
-      className="swilread-json__copy"
+      className="swirlread-json__copy"
       aria-label={`Copy path ${formatJsonPath(path)}`}
       title={`Copy path · ${formatJsonPath(path)}`}
       data-testid="json-copy-path"
@@ -183,7 +183,7 @@ export function CopyPathButton({
       }}
     >
       <Copy size={11} aria-hidden="true" />
-      {copied && <span className="swilread-json__copied">Copied</span>}
+      {copied && <span className="swirlread-json__copied">Copied</span>}
     </button>
   )
 }

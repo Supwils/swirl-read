@@ -1,5 +1,5 @@
 /* Shortcuts help (M9.4) ──────────────────────────────────────────────── */
-.swilread-shortcuts__overlay {
+.swirlread-shortcuts__overlay {
   position: fixed;
   inset: 0;
   z-index: 95;
@@ -7,7 +7,7 @@
   backdrop-filter: blur(2px);
 }
 
-.swilread-shortcuts {
+.swirlread-shortcuts {
   position: fixed;
   z-index: 100;
   top: 12vh;
@@ -28,7 +28,7 @@
   overflow: hidden;
 }
 
-.swilread-shortcuts__header {
+.swirlread-shortcuts__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -37,14 +37,14 @@
   border-bottom: 1px solid var(--color-border);
 }
 
-.swilread-shortcuts__heading {
+.swirlread-shortcuts__heading {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
   color: var(--color-accent);
 }
 
-.swilread-shortcuts__title {
+.swirlread-shortcuts__title {
   margin: 0;
   font-family: var(--font-serif);
   font-size: 1.15rem;
@@ -52,7 +52,7 @@
   color: var(--color-text);
 }
 
-.swilread-shortcuts__close {
+.swirlread-shortcuts__close {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -66,23 +66,23 @@
   cursor: pointer;
 }
 
-.swilread-shortcuts__close:hover {
+.swirlread-shortcuts__close:hover {
   color: var(--color-text);
   background: color-mix(in srgb, var(--color-accent) 12%, transparent);
 }
 
-.swilread-shortcuts__body {
+.swirlread-shortcuts__body {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   padding: 0.6rem 1rem 1rem;
 }
 
-.swilread-shortcuts__group {
+.swirlread-shortcuts__group {
   margin-top: 0.6rem;
 }
 
-.swilread-shortcuts__group-heading {
+.swirlread-shortcuts__group-heading {
   margin: 0 0 0.4rem;
   font-size: 0.72rem;
   font-weight: 500;
@@ -91,7 +91,7 @@
   color: var(--color-text-muted);
 }
 
-.swilread-shortcuts__list {
+.swirlread-shortcuts__list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -100,7 +100,7 @@
   gap: 0.05rem;
 }
 
-.swilread-shortcuts__item {
+.swirlread-shortcuts__item {
   display: flex;
   align-items: center;
   gap: 0.85rem;
@@ -108,11 +108,11 @@
   border-radius: 4px;
 }
 
-.swilread-shortcuts__item:hover {
+.swirlread-shortcuts__item:hover {
   background: color-mix(in srgb, var(--color-accent) 8%, transparent);
 }
 
-.swilread-shortcuts__keys {
+.swirlread-shortcuts__keys {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
@@ -120,7 +120,7 @@
   min-width: 88px;
 }
 
-.swilread-shortcuts__kbd {
+.swirlread-shortcuts__kbd {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -135,14 +135,14 @@
   line-height: 1.4;
 }
 
-.swilread-shortcuts__description {
+.swirlread-shortcuts__description {
   flex: 1;
   font-size: 0.92rem;
   color: var(--color-text);
 }
 
 /* Tags panel — Radix Dialog overlay listing tagged files */
-.swilread-tags-panel__overlay {
+.swirlread-tags-panel__overlay {
   position: fixed;
   inset: 0;
   z-index: 95;
@@ -150,7 +150,7 @@
   backdrop-filter: blur(2px);
 }
 
-.swilread-tags-panel {
+.swirlread-tags-panel {
   position: fixed;
   z-index: 100;
   top: 14vh;
@@ -171,7 +171,7 @@
   overflow: hidden;
 }
 
-.swilread-tags-panel__header {
+.swirlread-tags-panel__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -180,14 +180,14 @@
   border-bottom: 1px solid var(--color-border);
 }
 
-.swilread-tags-panel__heading {
+.swirlread-tags-panel__heading {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
   color: var(--color-accent);
 }
 
-.swilread-tags-panel__title {
+.swirlread-tags-panel__title {
   margin: 0;
   font-family: var(--font-serif);
   font-size: 1.15rem;
@@ -195,7 +195,7 @@
   color: var(--color-text);
 }
 
-.swilread-tags-panel__close {
+.swirlread-tags-panel__close {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -209,19 +209,19 @@
   cursor: pointer;
 }
 
-.swilread-tags-panel__close:hover {
+.swirlread-tags-panel__close:hover {
   color: var(--color-text);
   background: color-mix(in srgb, var(--color-accent) 12%, transparent);
 }
 
-.swilread-tags-panel__body {
+.swirlread-tags-panel__body {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   padding: 0.4rem 0.6rem 0.6rem;
 }
 
-.swilread-tags-panel__status {
+.swirlread-tags-panel__status {
   margin: 0;
   padding: 1.2rem 1rem;
   text-align: center;
@@ -230,7 +230,7 @@
   font-size: 0.9rem;
 }
 
-.swilread-tags-panel__list {
+.swirlread-tags-panel__list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -239,12 +239,12 @@
   gap: 0.15rem;
 }
 
-.swilread-tags-panel__item {
+.swirlread-tags-panel__item {
   margin: 0;
   padding: 0;
 }
 
-.swilread-tags-panel__link {
+.swirlread-tags-panel__link {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
@@ -255,29 +255,29 @@
   transition: background-color 120ms ease;
 }
 
-.swilread-tags-panel__link:hover,
-.swilread-tags-panel__link:focus-visible {
+.swirlread-tags-panel__link:hover,
+.swirlread-tags-panel__link:focus-visible {
   background: color-mix(in srgb, var(--color-accent) 12%, transparent);
   outline: none;
 }
 
-.swilread-tags-panel__link-name {
+.swirlread-tags-panel__link-name {
   font-weight: 500;
 }
 
-.swilread-tags-panel__link-path {
+.swirlread-tags-panel__link-path {
   font-family: var(--font-mono);
   font-size: 0.74rem;
   color: var(--color-text-muted);
 }
 
 /* Math (M3.11) ───────────────────────────────────────────────────────── */
-.swilread-prose .swilread-math--inline {
+.swirlread-prose .swirlread-math--inline {
   /* Inline math sits in the prose flow; KaTeX gives it the right baseline. */
   font-size: 1em;
 }
 
-.swilread-prose .swilread-math--display {
+.swirlread-prose .swirlread-math--display {
   display: block;
   margin: 1.4em 0;
   text-align: center;
@@ -287,14 +287,14 @@
   padding: 0.4em 0;
 }
 
-.swilread-prose .swilread-math--loading {
+.swirlread-prose .swirlread-math--loading {
   color: var(--color-text-muted);
   font-family: var(--font-mono);
   font-size: 0.85em;
   font-style: italic;
 }
 
-.swilread-prose .swilread-math--error {
+.swirlread-prose .swirlread-math--error {
   font-family: var(--font-mono);
   font-size: 0.88em;
   color: var(--color-text-muted);
@@ -304,13 +304,13 @@
   padding: 0.1em 0.4em;
 }
 
-.swilread-prose .swilread-math--error[class*='--error'] code {
+.swirlread-prose .swirlread-math--error[class*='--error'] code {
   background: transparent;
   padding: 0;
 }
 
 /* Mermaid diagrams (M3.13) ───────────────────────────────────────────── */
-.swilread-prose .swilread-mermaid {
+.swirlread-prose .swirlread-mermaid {
   display: flex;
   justify-content: center;
   margin: 1.6em 0;
@@ -321,12 +321,12 @@
   overflow-x: auto;
 }
 
-.swilread-prose .swilread-mermaid svg {
+.swirlread-prose .swirlread-mermaid svg {
   max-width: 100%;
   height: auto;
 }
 
-.swilread-prose .swilread-mermaid--loading {
+.swirlread-prose .swirlread-mermaid--loading {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -337,14 +337,14 @@
   font-size: 0.9em;
 }
 
-.swilread-prose .swilread-mermaid--error {
+.swirlread-prose .swirlread-mermaid--error {
   display: block;
   border-style: dashed;
   border-color: var(--color-text-muted);
   background: color-mix(in srgb, var(--color-surface) 30%, transparent);
 }
 
-.swilread-prose .swilread-mermaid__caption {
+.swirlread-prose .swirlread-mermaid__caption {
   margin: 0 0 0.6em;
   font-family: var(--font-sans);
   font-size: 0.8em;
@@ -353,7 +353,7 @@
   letter-spacing: 0.04em;
 }
 
-.swilread-prose .swilread-mermaid__source {
+.swirlread-prose .swirlread-mermaid__source {
   margin: 0;
   padding: 0.8em 1em;
   background: var(--color-code-bg);
@@ -366,7 +366,7 @@
 }
 
 /* Frontmatter panel (M3.10) ──────────────────────────────────────────── */
-.swilread-frontmatter {
+.swirlread-frontmatter {
   margin-bottom: 2rem;
   padding-bottom: 1.4rem;
   border-bottom: 1px solid var(--color-border);
@@ -374,7 +374,7 @@
   color: var(--color-text);
 }
 
-.swilread-frontmatter__title {
+.swirlread-frontmatter__title {
   margin: 0;
   font-family: var(--font-serif);
   font-size: 2.2rem;
@@ -384,7 +384,7 @@
   letter-spacing: -0.005em;
 }
 
-.swilread-frontmatter__description {
+.swirlread-frontmatter__description {
   margin: 0.6rem 0 0;
   font-family: var(--font-serif);
   font-size: 1.05rem;
@@ -393,7 +393,7 @@
   color: var(--color-text-muted);
 }
 
-.swilread-frontmatter__meta {
+.swirlread-frontmatter__meta {
   list-style: none;
   margin: 1rem 0 0;
   padding: 0;
@@ -404,23 +404,23 @@
   color: var(--color-text-muted);
 }
 
-.swilread-frontmatter__meta-item {
+.swirlread-frontmatter__meta-item {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
 }
 
-.swilread-frontmatter__meta-item--tags {
+.swirlread-frontmatter__meta-item--tags {
   align-items: flex-start;
 }
 
-.swilread-frontmatter__meta-item svg {
+.swirlread-frontmatter__meta-item svg {
   flex-shrink: 0;
   color: var(--color-text-muted);
   opacity: 0.85;
 }
 
-.swilread-frontmatter__tags {
+.swirlread-frontmatter__tags {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -429,7 +429,7 @@
   gap: 0.3rem;
 }
 
-.swilread-frontmatter__tag {
+.swirlread-frontmatter__tag {
   display: inline-flex;
   align-items: center;
   padding: 0.05em 0.5em;
@@ -442,14 +442,14 @@
 }
 
 /* Raw view — full key/value table for power readers. */
-.swilread-frontmatter--raw {
+.swirlread-frontmatter--raw {
   border: 1px solid var(--color-border);
   border-radius: 8px;
   background: color-mix(in srgb, var(--color-surface) 50%, transparent);
   padding: 0.8rem 1rem;
 }
 
-.swilread-frontmatter__raw-header {
+.swirlread-frontmatter__raw-header {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -461,35 +461,35 @@
   color: var(--color-text-muted);
 }
 
-.swilread-frontmatter__raw-label {
+.swirlread-frontmatter__raw-label {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   font-weight: 600;
 }
 
-.swilread-frontmatter__raw-format {
+.swirlread-frontmatter__raw-format {
   font-family: var(--font-mono);
 }
 
-.swilread-frontmatter__raw-list {
+.swirlread-frontmatter__raw-list {
   margin: 0;
   display: grid;
   grid-template-columns: minmax(80px, max-content) 1fr;
   gap: 0.35rem 1rem;
 }
 
-.swilread-frontmatter__raw-row {
+.swirlread-frontmatter__raw-row {
   display: contents;
 }
 
-.swilread-frontmatter__raw-key {
+.swirlread-frontmatter__raw-key {
   font-family: var(--font-mono);
   font-size: 0.82rem;
   color: var(--color-text-muted);
   margin: 0;
 }
 
-.swilread-frontmatter__raw-value {
+.swirlread-frontmatter__raw-value {
   margin: 0;
   font-family: var(--font-serif);
   font-size: 0.92rem;

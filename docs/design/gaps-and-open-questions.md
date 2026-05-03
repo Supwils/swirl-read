@@ -1,4 +1,4 @@
-# SwilRead — Gaps and Open Questions
+# SwirlRead — Gaps and Open Questions
 
 > Status: Brainstorming · Last updated: 2026-04-30
 
@@ -58,7 +58,7 @@ This document is intentionally honest about what we don't know yet, where the pr
 
 **Phase 2 — Annotations (in-app, not sidecar files)**:
 
-- Highlights, margin notes, bookmarks stored in IndexedDB (or `.swilread/` sidecar later)
+- Highlights, margin notes, bookmarks stored in IndexedDB (or `.swirlread/` sidecar later)
 - **Integrated into other features**, not as a standalone tool:
   - "Show me what I highlighted in this topic" view
   - AI uses highlights as signal of importance ("you cared about this")
@@ -79,7 +79,7 @@ This document is intentionally honest about what we don't know yet, where the pr
 
 ### OQ-03: How to Handle Real-Time File Changes?
 
-**The problem**: The vault is a live folder. The user might have VS Code or Obsidian open simultaneously, editing files while SwilRead displays them.
+**The problem**: The vault is a live folder. The user might have VS Code or Obsidian open simultaneously, editing files while SwirlRead displays them.
 
 - File System Access API: can check if a file was modified via `getFile()` again, but no native file-watching event
 - Tauri: full `fs::read_dir` watch via `tauri-plugin-fs-watch`
@@ -203,7 +203,7 @@ Different PKM tools use slightly different wikilink syntax:
 
 ### PG-01: The "Read-Only" Problem — Will Users Accept It?
 
-**The risk**: Users will naturally want to fix typos, add a quick note, or update a checklist while reading. If they can't, they'll find SwilRead frustrating and prefer Obsidian.
+**The risk**: Users will naturally want to fix typos, add a quick note, or update a checklist while reading. If they can't, they'll find SwirlRead frustrating and prefer Obsidian.
 
 **Evidence in both directions**:
 
@@ -215,7 +215,7 @@ Different PKM tools use slightly different wikilink syntax:
 
 - In Phase 1, make the "Open in editor" path extremely fast
 - In Phase 2, add a lightweight current-file text edit mode for quick repairs so the user does not have to context-switch for every typo
-- Keep the boundary strict enough that SwilRead does not become another general-purpose editor
+- Keep the boundary strict enough that SwirlRead does not become another general-purpose editor
 
 **Status**: Decision updated — Phase 1 still ships read-only; Phase 2 adds limited quick-edit capability.
 
@@ -229,7 +229,7 @@ Different PKM tools use slightly different wikilink syntax:
 
 **What needs to exist**:
 
-1. A sample vault bundled with the app (or linkable) so users can try SwilRead before connecting their own files
+1. A sample vault bundled with the app (or linkable) so users can try SwirlRead before connecting their own files
 2. A "what is a vault?" explainer on the empty state screen
 3. Clear error states: "no markdown files found in this folder" → "here's what to do"
 
@@ -267,7 +267,7 @@ Different PKM tools use slightly different wikilink syntax:
 
 **Reality**: Many users' vaults are flat folders of files named `2024-03-15 meeting notes.md`. Zero structure. No wikilinks. Just files.
 
-**What should happen**: SwilRead should degrade gracefully:
+**What should happen**: SwirlRead should degrade gracefully:
 
 - No map files → auto-generate navigation from folder tree
 - No wikilinks → skip backlinks panel; no errors
@@ -281,9 +281,9 @@ Different PKM tools use slightly different wikilink syntax:
 
 ### MG-01: Obsidian Is Getting Better
 
-Obsidian is actively improving its reading experience and mobile app. If they ship a "reading mode" that matches SwilRead's core feature, the differentiation narrows.
+Obsidian is actively improving its reading experience and mobile app. If they ship a "reading mode" that matches SwirlRead's core feature, the differentiation narrows.
 
-**Counter**: SwilRead's differentiation is not just reading mode — it's local-first AI Q&A + vault-structure-aware navigation + open source trust. Obsidian is unlikely to open source or make AI fully local.
+**Counter**: SwirlRead's differentiation is not just reading mode — it's local-first AI Q&A + vault-structure-aware navigation + open source trust. Obsidian is unlikely to open source or make AI fully local.
 
 **Monitor**: Obsidian release notes quarterly.
 
@@ -293,7 +293,7 @@ Obsidian is actively improving its reading experience and mobile app. If they sh
 
 Google's NotebookLM does AI Q&A over uploaded documents and is well-resourced. If it adds local file support, it becomes a direct competitor.
 
-**Counter**: NotebookLM requires uploading files to Google. It will never be local-first by design — Google's business model requires data access. SwilRead's privacy positioning is structurally differentiated.
+**Counter**: NotebookLM requires uploading files to Google. It will never be local-first by design — Google's business model requires data access. SwirlRead's privacy positioning is structurally differentiated.
 
 **Monitor**: Any NotebookLM announcements about offline/local mode.
 
@@ -307,7 +307,7 @@ Google's NotebookLM does AI Q&A over uploaded documents and is well-resourced. I
 
 - Obsidian has 1M+ active users. Even 5% of that is 50,000 potential users.
 - The "markdown knowledge system" workflow is growing: more people are choosing local-first PKM
-- SwilRead doesn't need millions of users to be successful. 10,000 daily active users of an open-source tool with a paid cloud tier = viable side business.
+- SwirlRead doesn't need millions of users to be successful. 10,000 daily active users of an open-source tool with a paid cloud tier = viable side business.
 
 **The real question**: Can we reach the right community without paid marketing? (Yes — HN, GitHub, PKM subreddits are organic channels that reach exactly this audience.)
 

@@ -58,10 +58,10 @@ describe('JsonRenderer (M7.4)', () => {
     const { container } = render(
       <JsonRenderer source='{"s":"x","n":42,"b":true,"z":null}' />,
     )
-    expect(container.querySelector('.swilread-json__string')).not.toBeNull()
-    expect(container.querySelector('.swilread-json__number')).not.toBeNull()
-    expect(container.querySelector('.swilread-json__boolean')).not.toBeNull()
-    expect(container.querySelector('.swilread-json__null')).not.toBeNull()
+    expect(container.querySelector('.swirlread-json__string')).not.toBeNull()
+    expect(container.querySelector('.swirlread-json__number')).not.toBeNull()
+    expect(container.querySelector('.swirlread-json__boolean')).not.toBeNull()
+    expect(container.querySelector('.swirlread-json__null')).not.toBeNull()
   })
 
   it('collapses deeper levels by default and expands on click', async () => {
@@ -135,7 +135,7 @@ describe('JsonRenderer (M7.4)', () => {
       screen.getByText((_, el) => el?.textContent === '"target"'),
     ).toBeInTheDocument()
     // The matched key is wrapped in <mark>.
-    const mark = document.querySelector('.swilread-json__match')
+    const mark = document.querySelector('.swirlread-json__match')
     expect(mark?.textContent).toBe('target')
   })
 
@@ -143,7 +143,7 @@ describe('JsonRenderer (M7.4)', () => {
     render(<JsonRenderer source='{"k":"Hello World"}' />)
     const search = screen.getByTestId('json-renderer-search')
     await userEvent.type(search, 'WORLD')
-    const mark = document.querySelector('.swilread-json__match')
+    const mark = document.querySelector('.swirlread-json__match')
     expect(mark?.textContent).toBe('World')
   })
 

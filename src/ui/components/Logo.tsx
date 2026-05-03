@@ -7,7 +7,7 @@ type LogoProps = Omit<SVGProps<SVGSVGElement>, 'children'> & {
 }
 
 /**
- * SwilRead brand mark — a folded-corner page with three text lines.
+ * SwirlRead brand mark — a folded-corner page with three text lines.
  * Pure currentColor strokes so the mark inherits the active theme's
  * text colour when placed beside the wordmark; the bottom line uses
  * the accent token for a single restrained warm note.
@@ -18,7 +18,7 @@ type LogoProps = Omit<SVGProps<SVGSVGElement>, 'children'> & {
  */
 export function Logo({
   size = 22,
-  title = 'SwilRead',
+  title = 'SwirlRead',
   decorative,
   ...rest
 }: LogoProps): ReactNode {

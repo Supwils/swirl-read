@@ -45,6 +45,9 @@ export type FrontmatterDisplay = 'metadata' | 'raw' | 'hidden'
  */
 export type ChromeMode = 'reading' | 'working'
 
+/** Editor font-size keyword (Phase 2D). Maps to actual px in EDITOR_FONT_SIZE_PX. */
+export type EditorFontSize = 'sm' | 'md' | 'lg'
+
 export const FONT_SIZE_MIN = 14
 export const FONT_SIZE_MAX = 22
 export const LINE_HEIGHT_MIN = 1.4
@@ -62,6 +65,9 @@ export const DEFAULT_FILE_TREE_WIDTH = 280
 export const DEFAULT_TOC_OPEN = true
 export const DEFAULT_FRONTMATTER_DISPLAY: FrontmatterDisplay = 'metadata'
 export const DEFAULT_CHROME_MODE: ChromeMode = 'reading'
+export const DEFAULT_EDITOR_LINE_NUMBERS = false
+export const DEFAULT_EDITOR_LINE_WRAP = true
+export const DEFAULT_EDITOR_FONT_SIZE: EditorFontSize = 'md'
 
 const PREF_PREFIX = 'ui:'
 
@@ -79,6 +85,9 @@ interface UIStoreState {
   shortcutsHelpOpen: boolean
   frontmatterDisplay: FrontmatterDisplay
   chromeMode: ChromeMode
+  editorLineNumbers: boolean
+  editorLineWrap: boolean
+  editorFontSize: EditorFontSize
   /** True after `init()` has finished loading from Dexie. */
   ready: boolean
 }
@@ -104,6 +113,9 @@ interface UIStoreActions {
   setFrontmatterDisplay: (display: FrontmatterDisplay) => Promise<void>
   setChromeMode: (mode: ChromeMode) => Promise<void>
   toggleChromeMode: () => Promise<void>
+  setEditorLineNumbers: (on: boolean) => Promise<void>
+  setEditorLineWrap: (on: boolean) => Promise<void>
+  setEditorFontSize: (size: EditorFontSize) => Promise<void>
   resetToDefaults: () => Promise<void>
 }
 
@@ -155,6 +167,10 @@ const VALID_CHROME_MODES = new Set<ChromeMode>(['reading', 'working'])
 const isChromeMode = (v: unknown): v is ChromeMode =>
   typeof v === 'string' && VALID_CHROME_MODES.has(v as ChromeMode)
 
+const VALID_EDITOR_FONT_SIZES = new Set<EditorFontSize>(['sm', 'md', 'lg'])
+const isEditorFontSize = (v: unknown): v is EditorFontSize =>
+  typeof v === 'string' && VALID_EDITOR_FONT_SIZES.has(v as EditorFontSize)
+
 const isFiniteNumber = (v: unknown): v is number =>
   typeof v === 'number' && Number.isFinite(v)
 
@@ -176,6 +192,9 @@ export const useUIStore = create<UIStore>((set, get) => ({
   shortcutsHelpOpen: false,
   frontmatterDisplay: DEFAULT_FRONTMATTER_DISPLAY,
   chromeMode: DEFAULT_CHROME_MODE,
+  editorLineNumbers: DEFAULT_EDITOR_LINE_NUMBERS,
+  editorLineWrap: DEFAULT_EDITOR_LINE_WRAP,
+  editorFontSize: DEFAULT_EDITOR_FONT_SIZE,
   ready: false,
 
   async init() {
@@ -191,6 +210,9 @@ export const useUIStore = create<UIStore>((set, get) => ({
       tocOpen,
       frontmatterDisplay,
       chromeMode,
+      editorLineNumbers,
+      editorLineWrap,
+      editorFontSize,
     ] = await Promise.all([
       readPref('theme', isTheme, DEFAULT_THEME),
       readPref('fontFamily', isFontFamily, DEFAULT_FONT_FAMILY),
@@ -206,6 +228,9 @@ export const useUIStore = create<UIStore>((set, get) => ({
         DEFAULT_FRONTMATTER_DISPLAY,
       ),
       readPref('chromeMode', isChromeMode, DEFAULT_CHROME_MODE),
+      readPref('editorLineNumbers', isBoolean, DEFAULT_EDITOR_LINE_NUMBERS),
+      readPref('editorLineWrap', isBoolean, DEFAULT_EDITOR_LINE_WRAP),
+      readPref('editorFontSize', isEditorFontSize, DEFAULT_EDITOR_FONT_SIZE),
     ])
     set({
       theme,
@@ -222,6 +247,9 @@ export const useUIStore = create<UIStore>((set, get) => ({
       tocOpen,
       frontmatterDisplay,
       chromeMode,
+      editorLineNumbers,
+      editorLineWrap,
+      editorFontSize,
       ready: true,
     })
   },
@@ -322,6 +350,21 @@ export const useUIStore = create<UIStore>((set, get) => ({
     await writePref('chromeMode', next)
   },
 
+  async setEditorLineNumbers(on) {
+    set({ editorLineNumbers: on })
+    await writePref('editorLineNumbers', on)
+  },
+
+  async setEditorLineWrap(on) {
+    set({ editorLineWrap: on })
+    await writePref('editorLineWrap', on)
+  },
+
+  async setEditorFontSize(size) {
+    set({ editorFontSize: size })
+    await writePref('editorFontSize', size)
+  },
+
   async resetToDefaults() {
     set({
       theme: DEFAULT_THEME,
@@ -334,6 +377,9 @@ export const useUIStore = create<UIStore>((set, get) => ({
       tocOpen: DEFAULT_TOC_OPEN,
       frontmatterDisplay: DEFAULT_FRONTMATTER_DISPLAY,
       chromeMode: DEFAULT_CHROME_MODE,
+      editorLineNumbers: DEFAULT_EDITOR_LINE_NUMBERS,
+      editorLineWrap: DEFAULT_EDITOR_LINE_WRAP,
+      editorFontSize: DEFAULT_EDITOR_FONT_SIZE,
     })
     await Promise.all([
       writePref('theme', DEFAULT_THEME),
@@ -346,6 +392,9 @@ export const useUIStore = create<UIStore>((set, get) => ({
       writePref('tocOpen', DEFAULT_TOC_OPEN),
       writePref('frontmatterDisplay', DEFAULT_FRONTMATTER_DISPLAY),
       writePref('chromeMode', DEFAULT_CHROME_MODE),
+      writePref('editorLineNumbers', DEFAULT_EDITOR_LINE_NUMBERS),
+      writePref('editorLineWrap', DEFAULT_EDITOR_LINE_WRAP),
+      writePref('editorFontSize', DEFAULT_EDITOR_FONT_SIZE),
     ])
   },
 }))
@@ -374,4 +423,20 @@ export const FRONTMATTER_DISPLAY_OPTIONS: {
   { value: 'metadata', label: 'Metadata' },
   { value: 'raw', label: 'All' },
   { value: 'hidden', label: 'Hidden' },
+]
+
+/** Editor font size: keyword → px (Phase 2D). Used in the EditSurface. */
+export const EDITOR_FONT_SIZE_PX: Record<EditorFontSize, number> = {
+  sm: 13,
+  md: 15,
+  lg: 17,
+}
+
+export const EDITOR_FONT_SIZE_OPTIONS: {
+  value: EditorFontSize
+  label: string
+}[] = [
+  { value: 'sm', label: 'Small' },
+  { value: 'md', label: 'Medium' },
+  { value: 'lg', label: 'Large' },
 ]

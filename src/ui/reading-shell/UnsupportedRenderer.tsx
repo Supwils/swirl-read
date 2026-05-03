@@ -1,7 +1,7 @@
 /**
  * UnsupportedRenderer (M7.8).
  *
- * Quiet card shown for files we can't render in the current SwilRead build:
+ * Quiet card shown for files we can't render in the current SwirlRead build:
  * binaries (images / video / audio land here today; M7.6 will lift those
  * into a media renderer next), PDFs, archives, fonts, opaque blobs.
  *
@@ -27,21 +27,21 @@ export function UnsupportedRenderer({
   const name = basename(file.path) || file.path
   return (
     <section
-      className="swilread-unsupported"
+      className="swirlread-unsupported"
       role="status"
       aria-label="Unsupported file"
     >
       <FileQuestion
         size={28}
         aria-hidden="true"
-        className="swilread-unsupported__icon"
+        className="swirlread-unsupported__icon"
       />
-      <h2 className="swilread-unsupported__title">{name}</h2>
-      <p className="swilread-unsupported__body">
-        SwilRead doesn&apos;t render <code>{ext || 'extensionless'}</code> files
-        yet. The file is on disk; this view just isn&apos;t built for it.
+      <h2 className="swirlread-unsupported__title">{name}</h2>
+      <p className="swirlread-unsupported__body">
+        SwirlRead doesn&apos;t render <code>{ext || 'extensionless'}</code>{' '}
+        files yet. The file is on disk; this view just isn&apos;t built for it.
       </p>
-      <dl className="swilread-unsupported__meta">
+      <dl className="swirlread-unsupported__meta">
         <div>
           <dt>Size</dt>
           <dd>{formatSize(file.size)}</dd>
@@ -52,7 +52,7 @@ export function UnsupportedRenderer({
         </div>
         <div>
           <dt>Path</dt>
-          <dd className="swilread-unsupported__path">{file.path}</dd>
+          <dd className="swirlread-unsupported__path">{file.path}</dd>
         </div>
       </dl>
     </section>

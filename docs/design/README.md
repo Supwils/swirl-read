@@ -1,4 +1,4 @@
-# SwilRead — Design Docs Index
+# SwirlRead — Design Docs Index
 
 > Status: Design Complete · Last updated: 2026-05-01 · 实施进入 `docs/develop/`
 
@@ -42,7 +42,7 @@
 - [x] **2026-05-01** — FTUE：Hybrid landing（hero + 2 CTAs + scroll-to-features）；Sample Vault 主题为「Art of Reading」式精选知识；inline consent panel 引导文件夹授权；返回用户自动恢复 vault；无强制 onboarding tour，只有 contextual hints
 - [x] **2026-05-01** — Vault 模型：单 vault 内通过 `*-map.md` 自动识别 sections（一级目录 = 子知识库），多 vault 支持硬隔离切换；vault 类型自动识别（Obsidian / Logseq / Foam / plain）；约定优于配置
 - [x] **2026-05-01** — 品牌哲学：AI 时代的深度阅读避难所，「Read your knowledge. Beautifully. / A reading sanctuary for the AI era.」；声音文学、克制、温暖；Sample Vault 主题改为「Reading in the Age of AI」
-- [x] **2026-05-01** — Killer demo：VS Code vs SwilRead 对比图（hero）+ F 键禅模式 GIF + 60 秒导览视频
+- [x] **2026-05-01** — Killer demo：VS Code vs SwirlRead 对比图（hero）+ F 键禅模式 GIF + 60 秒导览视频
 - [x] **2026-05-01** — 视觉身份：Bookmark 概念 logo（一根竖线带书签缺口）；Source Serif 4 wordmark；品牌主色 sepia gold (#8b6f47) on cream
 - [x] **2026-05-01** — MVP scope 锁定：Phase 1 / Phase 2 / Phase 3 三阶段清晰划分；Phase 1 砍掉所有 AI、编辑、注释、PDF、图谱、桌面版
 - [x] **2026-05-01** — 实施计划完成：`docs/develop/phase-1-implementation-plan.md` 包含 M0-M9 共 70+ 个任务，按依赖排序，每个任务可独立由 AI agent 执行

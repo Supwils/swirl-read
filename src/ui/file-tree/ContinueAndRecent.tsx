@@ -61,13 +61,13 @@ function ContinueBlock({
 }): ReactNode {
   const isActive = currentPath === file.path
   return (
-    <nav className="swilread-file-tree__recent" aria-label="Continue reading">
-      <p className="swilread-file-tree__section-label">Continue</p>
+    <nav className="swirlread-file-tree__recent" aria-label="Continue reading">
+      <p className="swirlread-file-tree__section-label">Continue</p>
       <ul>
         <li>
           <Link
             to={`/app/${vaultId}/${file.path}`}
-            className={`swilread-file-tree__row swilread-file-tree__row--continue${
+            className={`swirlread-file-tree__row swirlread-file-tree__row--continue${
               isActive ? ' is-active' : ''
             }`}
             aria-label={`Resume reading ${file.path}`}
@@ -75,14 +75,17 @@ function ContinueBlock({
             title={`Resume ${file.path}`}
           >
             <BookOpen
-              className="swilread-file-tree__icon"
+              className="swirlread-file-tree__icon"
               size={14}
               aria-hidden="true"
             />
-            <span className="swilread-file-tree__name">
+            <span className="swirlread-file-tree__name">
               {basename(file.path)}
             </span>
-            <span className="swilread-file-tree__resume-tag" aria-hidden="true">
+            <span
+              className="swirlread-file-tree__resume-tag"
+              aria-hidden="true"
+            >
               Resume
             </span>
           </Link>
@@ -102,8 +105,8 @@ function RecentBlock({
   files: RecentFile[]
 }): ReactNode {
   return (
-    <nav className="swilread-file-tree__recent" aria-label="Recent files">
-      <p className="swilread-file-tree__section-label">Recent</p>
+    <nav className="swirlread-file-tree__recent" aria-label="Recent files">
+      <p className="swirlread-file-tree__section-label">Recent</p>
       <ul>
         {files.map((file) => {
           const isActive = currentPath === file.path
@@ -111,7 +114,7 @@ function RecentBlock({
             <li key={file.path}>
               <Link
                 to={`/app/${vaultId}/${file.path}`}
-                className={`swilread-file-tree__row swilread-file-tree__row--recent${
+                className={`swirlread-file-tree__row swirlread-file-tree__row--recent${
                   isActive ? ' is-active' : ''
                 }`}
                 aria-label={`Recent file ${file.path}`}
@@ -119,11 +122,11 @@ function RecentBlock({
                 title={file.path}
               >
                 <Clock
-                  className="swilread-file-tree__icon"
+                  className="swirlread-file-tree__icon"
                   size={13}
                   aria-hidden="true"
                 />
-                <span className="swilread-file-tree__name">
+                <span className="swirlread-file-tree__name">
                   {basename(file.path)}
                 </span>
               </Link>

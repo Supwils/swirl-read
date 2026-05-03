@@ -78,7 +78,7 @@ export function DirectoryListing({
           (this folder is empty)
         </p>
       ) : (
-        <ul className="swilread-directory mt-6">
+        <ul className="swirlread-directory mt-6">
           {sorted.map((entry) => (
             <DirectoryItem key={entry.path} vaultId={vaultId} entry={entry} />
           ))}
@@ -98,17 +98,17 @@ function DirectoryItem({
   const Icon = entry.isDirectory ? FolderClosed : FileText
   const to = `/app/${vaultId}/${entry.path}`
   return (
-    <li className="swilread-directory__row">
-      <Link to={to} className="swilread-directory__link">
+    <li className="swirlread-directory__row">
+      <Link to={to} className="swirlread-directory__link">
         <Icon
-          className="swilread-directory__icon"
+          className="swirlread-directory__icon"
           size={16}
           aria-hidden="true"
         />
-        <span className="swilread-directory__name">{entry.name}</span>
+        <span className="swirlread-directory__name">{entry.name}</span>
         {!entry.isDirectory && entry.size > 0 && (
           <span
-            className="swilread-directory__meta"
+            className="swirlread-directory__meta"
             aria-label={`${entry.size} bytes`}
           >
             {formatSize(entry.size)}
@@ -128,23 +128,23 @@ function Breadcrumbs({
 }): ReactNode {
   return (
     <nav
-      className="swilread-directory__breadcrumbs mt-3"
+      className="swirlread-directory__breadcrumbs mt-3"
       aria-label="Breadcrumb"
     >
-      <Link to={`/app/${vaultId}`} className="swilread-directory__crumb">
+      <Link to={`/app/${vaultId}`} className="swirlread-directory__crumb">
         Vault root
       </Link>
       {segments.map((seg, i) => {
         const segPath = segments.slice(0, i + 1).join('/')
         const isLast = i === segments.length - 1
         return (
-          <span key={segPath} className="swilread-directory__crumb-wrap">
-            <span className="swilread-directory__crumb-sep" aria-hidden="true">
+          <span key={segPath} className="swirlread-directory__crumb-wrap">
+            <span className="swirlread-directory__crumb-sep" aria-hidden="true">
               /
             </span>
             {isLast ? (
               <span
-                className="swilread-directory__crumb swilread-directory__crumb--current"
+                className="swirlread-directory__crumb swirlread-directory__crumb--current"
                 aria-current="page"
               >
                 {seg}
@@ -152,7 +152,7 @@ function Breadcrumbs({
             ) : (
               <Link
                 to={`/app/${vaultId}/${segPath}`}
-                className="swilread-directory__crumb"
+                className="swirlread-directory__crumb"
               >
                 {seg}
               </Link>

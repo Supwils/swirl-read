@@ -1,8 +1,8 @@
-# SwilRead — Use Cases
+# SwirlRead — Use Cases
 
 > Status: Brainstorming · Last updated: 2026-04-30
 
-This document maps out concrete use cases, ordered from highest-priority (your personal use) to broader public scenarios. Each case includes: who, when, current pain, what SwilRead does, and what success looks like.
+This document maps out concrete use cases, ordered from highest-priority (your personal use) to broader public scenarios. Each case includes: who, when, current pain, what SwirlRead does, and what success looks like.
 
 ---
 
@@ -21,7 +21,7 @@ This document maps out concrete use cases, ordered from highest-priority (your p
 - Obsidian requires finding the right vault file in a tree; graph view doesn't help under time pressure
 - No way to say "show me everything I know about React performance + system design + behavioral answers" in one view
 
-**What SwilRead does**:
+**What SwirlRead does**:
 
 1. Opens vault to interview-relevant knowledge in one action (`⌘K` → "interview")
 2. Surfaces a curated reading list based on keywords or a saved "Interview Mode" reading pack
@@ -44,7 +44,7 @@ This document maps out concrete use cases, ordered from highest-priority (your p
 - Comparing multiple STAR stories requires opening multiple tabs in VS Code
 - No way to quickly see "which of my experiences is most relevant to this JD?"
 
-**What SwilRead does**:
+**What SwirlRead does**:
 
 1. Side-by-side reading: open the JD summary next to `career/me/experience.md`
 2. AI-powered relevance: paste the job description → AI highlights which STAR stories match
@@ -67,7 +67,7 @@ This document maps out concrete use cases, ordered from highest-priority (your p
 - No visual connection between an inbox item and the existing knowledge page it should be integrated into
 - No reading progress tracking ("did I already process this section?")
 
-**What SwilRead does**:
+**What SwirlRead does**:
 
 1. Opens `inbox.md` in reading mode; each `[[wikilink]]` in the text is hoverable to preview the target
 2. Side panel shows "Related pages" for the section being read (based on shared terms/links)
@@ -89,7 +89,7 @@ This document maps out concrete use cases, ordered from highest-priority (your p
 - No quick summary or cross-week comparison
 - `log.md` is long and hard to skim
 
-**What SwilRead does**:
+**What SwirlRead does**:
 
 1. Timeline view for `tasks/weekly/` and `z-journal/` — shows entries chronologically in a readable format
 2. AI-assisted summary: "Based on this week's entries, what are my top 3 accomplishments and 2 blockers?"
@@ -111,7 +111,7 @@ This document maps out concrete use cases, ordered from highest-priority (your p
 - No way to ask a question in natural language and get an answer grounded in your own notes
 - ChatGPT answers from training data; it doesn't know what YOU specifically have learned or documented
 
-**What SwilRead does**:
+**What SwirlRead does**:
 
 1. Natural language query: "What's the difference between B-tree and B+tree as I understand it?"
    - Retrieves relevant sections from your knowledge notes
@@ -120,7 +120,7 @@ This document maps out concrete use cases, ordered from highest-priority (your p
 3. Gap detection: "You have notes on HTTP caching but nothing on service workers. Want to add a placeholder?"
 4. Works offline with local embedding (transformers.js); or optionally uses Claude API for richer answers
 
-**Success**: Before opening Google or ChatGPT, users habitually check SwilRead first to recall their own knowledge.
+**Success**: Before opening Google or ChatGPT, users habitually check SwirlRead first to recall their own knowledge.
 
 ---
 
@@ -134,7 +134,7 @@ This document maps out concrete use cases, ordered from highest-priority (your p
 - The files in `career/china-return/` are interconnected (analysis references todo, todo references timing) but there's no unified view
 - Opening each file individually loses the cross-file context
 
-**What SwilRead does**:
+**What SwirlRead does**:
 
 1. Context bundle: `career/china-return/` is treated as a thematic reading pack — open all related files in a tabbed reading session
 2. AI cross-reference: "What's still unresolved in my China return plan?" — reads all files in the bundle, surfaces open items
@@ -158,7 +158,7 @@ This document maps out concrete use cases, ordered from highest-priority (your p
 - On a borrowed or work machine, you don't want to install Obsidian just to read notes
 - GitHub rendering doesn't resolve `[[wikilinks]]` or render callouts
 
-**What SwilRead does**:
+**What SwirlRead does**:
 
 - Opens an Obsidian-formatted vault: resolves `[[page]]` and `[[page|alias]]` links
 - Renders Obsidian callouts (`> [!NOTE]`, `> [!WARNING]`) correctly
@@ -180,14 +180,14 @@ This document maps out concrete use cases, ordered from highest-priority (your p
 - Setting up GitBook or Docusaurus requires migration and cloud hosting
 - VS Code preview is per-file, not vault-aware
 
-**What SwilRead does**:
+**What SwirlRead does**:
 
 - Drop-in reader for any `docs/` directory in a Git repo
 - Auto-generates navigation from folder structure + `README.md` files
 - Full-text search across the entire docs folder
-- Sharable deep links: `swilread.app/read?path=docs/architecture/overview.md` (for hosted version)
+- Sharable deep links: `swirlread.app/read?path=docs/architecture/overview.md` (for hosted version)
 
-**Success**: A team switches from "just read it on GitHub" to using SwilRead as their internal docs reader, with zero migration.
+**Success**: A team switches from "just read it on GitHub" to using SwirlRead as their internal docs reader, with zero migration.
 
 ---
 
@@ -202,14 +202,14 @@ This document maps out concrete use cases, ordered from highest-priority (your p
 - No way to create a "study session" that covers notes from multiple topics
 - No AI review assistant that knows their specific course notes
 
-**What SwilRead does**:
+**What SwirlRead does**:
 
 - Groups files by folder; creates a reading flow for each folder
 - "Study Session" mode: select multiple files or folders → combined reading view with unified TOC
 - AI quiz mode: "Ask me questions based on these notes" — generates practice questions from vault content
 - Spaced repetition hint: highlights sections not reviewed in > 7 days (tracked in local storage)
 
-**Success**: Students use SwilRead as their primary exam-prep tool instead of re-reading raw files.
+**Success**: Students use SwirlRead as their primary exam-prep tool instead of re-reading raw files.
 
 ---
 
@@ -224,7 +224,7 @@ This document maps out concrete use cases, ordered from highest-priority (your p
 - Sending the raw `.md` file via email looks terrible to non-technical recipients
 - No quick way to publish a note to a shareable URL without setting up a static site generator
 
-**What SwilRead does** (future/hosted version):
+**What SwirlRead does** (future/hosted version):
 
 - "Share this page" button: generates a temporary read-only link to the rendered page
 - No account required for the recipient to view
@@ -246,10 +246,10 @@ This document maps out concrete use cases, ordered from highest-priority (your p
 - iCloud/Dropbox-synced markdown files open in Notes or Files app — no wikilinks, no formatting
 - VS Code mobile is unusable for reading
 
-**What SwilRead does**:
+**What SwirlRead does**:
 
 - Progressive Web App (PWA) installable on iOS/Android
-- Syncs via the same folder (iCloud, local, or Dropbox-backed) — SwilRead just reads whatever is there
+- Syncs via the same folder (iCloud, local, or Dropbox-backed) — SwirlRead just reads whatever is there
 - Mobile-optimized layout: larger touch targets, swipe to navigate, bottom navigation bar
 - Offline reading: recently opened files are cached in browser storage
 
@@ -278,11 +278,11 @@ This document maps out concrete use cases, ordered from highest-priority (your p
 ### Sensitive Content in Vault
 
 - Some users have vault folders they want to exclude (e.g., `private/`, `finance/`)
-- Must support `.swilreadignore` file (same pattern as `.gitignore`) to exclude directories from indexing and AI
+- Must support `.swirlreadignore` file (same pattern as `.gitignore`) to exclude directories from indexing and AI
 - Never log or transmit file paths or content to any external service without explicit user action
 
 ### Vault Structure Doesn't Match Expectations
 
 - Not all vaults have `*-map.md` files or `[[wikilinks]]`
-- SwilRead must degrade gracefully: plain folder tree + basic MD rendering still works without any special structure
+- SwirlRead must degrade gracefully: plain folder tree + basic MD rendering still works without any special structure
 - Vault adapters (future): pluggable parsers for Obsidian, Logseq, Foam, Roam export formats

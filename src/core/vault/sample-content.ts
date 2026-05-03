@@ -2,7 +2,7 @@
  * Sample vault content (M8.1).
  *
  * Seven short Markdown files written for a "Reading in the Age of AI"
- * theme. Together they exercise every feature SwilRead claims:
+ * theme. Together they exercise every feature SwirlRead claims:
  *
  *   - frontmatter (YAML)
  *   - GFM tables, task lists, footnotes
@@ -16,7 +16,7 @@
  *
  * Authoring guideline: every paragraph should be readable without context.
  * The point of the sample vault is to demonstrate the reading experience,
- * not to teach SwilRead syntax.
+ * not to teach SwirlRead syntax.
  */
 
 import type { SampleVaultSpec } from './sample-adapter'
@@ -24,7 +24,7 @@ import type { SampleVaultSpec } from './sample-adapter'
 const INDEX = `---
 title: Reading in the Age of AI
 description: A short series on why slow, deliberate reading still matters.
-author: SwilRead
+author: SwirlRead
 tags: [reading, ai]
 ---
 
@@ -51,7 +51,7 @@ interlinked. Open any of them in the file tree on the left, or use
 ## Why a sanctuary?
 
 Most apps that show you Markdown were built for engineers. They optimise
-for editing, not reading. SwilRead does the opposite: it tries to make
+for editing, not reading. SwirlRead does the opposite: it tries to make
 the **reading** part feel calm, focused, and beautiful. The features in
 this vault are here to support that, not to upstage it.
 
@@ -121,7 +121,7 @@ A vault you can re-read is worth ten you only ever wrote into.
 ## Why local-first
 
 A note that lives in someone else's database is a note you'll lose. The
-files in this vault are yours. SwilRead just reads them.[^1]
+files in this vault are yours. SwirlRead just reads them.[^1]
 
 [^1]: That's the whole product principle. Local-first, read-first, no
 upload. See also [[colophon]].
@@ -263,7 +263,7 @@ treat your own notes the way you treat books you respect.
 ## Where this fits
 
 > [!tip]
-> The Continue group on the left rail is your friend here. SwilRead
+> The Continue group on the left rail is your friend here. SwirlRead
 > remembers where you left off and surfaces it on every visit.
 
 See [[why-read]] for the longer argument, or [[knowledge-base]] for
@@ -290,7 +290,7 @@ feature works without touching your disk.
 | Reading shell | Same TOC / backlinks / palette |
 
 When you're done playing, click **Open my vault** in the header to grant
-SwilRead access to a real folder. Nothing about your reading state
+SwirlRead access to a real folder. Nothing about your reading state
 follows from one to the other — the sample vault is its own world.
 
 [[index|Back to the index.]]

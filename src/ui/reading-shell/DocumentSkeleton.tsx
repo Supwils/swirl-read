@@ -33,18 +33,18 @@ const PARAGRAPH_LINE_WIDTHS = [
 export function DocumentSkeleton(): ReactNode {
   return (
     <div
-      className="swilread-doc-skeleton"
+      className="swirlread-doc-skeleton"
       role="status"
       aria-busy="true"
       aria-label="Loading document"
     >
-      <div className="swilread-doc-skeleton__title" />
-      <div className="swilread-doc-skeleton__subtitle" />
-      <div className="swilread-doc-skeleton__paragraph">
+      <div className="swirlread-doc-skeleton__title" />
+      <div className="swirlread-doc-skeleton__subtitle" />
+      <div className="swirlread-doc-skeleton__paragraph">
         {PARAGRAPH_LINE_WIDTHS.map((width, idx) => (
           <div
             key={`${String(idx)}-${width}`}
-            className="swilread-doc-skeleton__line"
+            className="swirlread-doc-skeleton__line"
             style={{ width }}
           />
         ))}

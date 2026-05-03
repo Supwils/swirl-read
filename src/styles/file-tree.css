@@ -1,23 +1,23 @@
 @media (max-width: 1100px) {
-  .swilread-vault-layout__toc {
+  .swirlread-vault-layout__toc {
     display: none;
   }
 }
 /* Table of contents (M4.6) + context rail (RX4) ──────────────────────── */
-.swilread-toc {
+.swirlread-toc {
   display: flex;
   flex-direction: column;
   gap: 1em;
 }
 
-.swilread-toc__group {
+.swirlread-toc__group {
   display: flex;
   flex-direction: column;
   gap: 0.5em;
 }
 
 /* Context rail — page tags + counts ───────────────────────────────── */
-.swilread-toc__context {
+.swirlread-toc__context {
   display: flex;
   flex-direction: column;
   gap: 0.55em;
@@ -25,20 +25,20 @@
   border-bottom: 1px solid var(--color-border);
 }
 
-.swilread-toc__context-group {
+.swirlread-toc__context-group {
   display: flex;
   align-items: flex-start;
   gap: 0.4em;
   color: var(--color-text-muted);
 }
 
-.swilread-toc__context-icon {
+.swirlread-toc__context-icon {
   margin-top: 0.3em;
   flex-shrink: 0;
   color: var(--color-text-muted);
 }
 
-.swilread-toc__tag-list {
+.swirlread-toc__tag-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -49,7 +49,7 @@
   min-width: 0;
 }
 
-.swilread-toc__tag {
+.swirlread-toc__tag {
   display: inline-block;
   padding: 0.05em 0.45em;
   border: 0;
@@ -62,20 +62,20 @@
   cursor: pointer;
 }
 
-.swilread-toc__tag:hover,
-.swilread-toc__tag:focus-visible {
+.swirlread-toc__tag:hover,
+.swirlread-toc__tag:focus-visible {
   background: color-mix(in srgb, var(--color-accent) 22%, transparent);
   outline: none;
 }
 
-.swilread-toc__tag-more {
+.swirlread-toc__tag-more {
   font-family: var(--font-mono);
   font-size: 0.74em;
   color: var(--color-text-muted);
   padding: 0.05em 0.2em;
 }
 
-.swilread-toc__context-counts {
+.swirlread-toc__context-counts {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5em 0.9em;
@@ -83,14 +83,14 @@
   color: var(--color-text-muted);
 }
 
-.swilread-toc__count {
+.swirlread-toc__count {
   display: inline-flex;
   align-items: center;
   gap: 0.3em;
   white-space: nowrap;
 }
 
-.swilread-toc__title {
+.swirlread-toc__title {
   margin: 0 0 0.4em;
   padding: 0 0.3em;
   font-family: var(--font-sans);
@@ -101,7 +101,7 @@
   color: var(--color-text-muted);
 }
 
-.swilread-toc__empty {
+.swirlread-toc__empty {
   margin: 0;
   padding: 0 0.3em;
   color: var(--color-text-muted);
@@ -109,7 +109,7 @@
   font-size: 0.92em;
 }
 
-.swilread-toc__list {
+.swirlread-toc__list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -118,13 +118,13 @@
   gap: 0.05em;
 }
 
-.swilread-toc__item {
+.swirlread-toc__item {
   margin: 0;
   padding: 0;
   /* paddingLeft is set inline per-item from the heading depth. */
 }
 
-.swilread-toc__link {
+.swirlread-toc__link {
   display: block;
   width: 100%;
   padding: 0.28em 0.55em 0.28em 0.7em;
@@ -142,63 +142,63 @@
   word-break: break-word;
 }
 
-.swilread-toc__link:hover {
+.swirlread-toc__link:hover {
   color: var(--color-text);
   background: color-mix(in srgb, var(--color-accent) 8%, transparent);
 }
 
-.swilread-toc__link.is-active {
+.swirlread-toc__link.is-active {
   color: var(--color-text);
   border-left-color: var(--color-accent);
   background: color-mix(in srgb, var(--color-accent) 12%, transparent);
 }
 
-.swilread-toc__item[data-level='1'] .swilread-toc__link {
+.swirlread-toc__item[data-level='1'] .swirlread-toc__link {
   font-weight: 600;
   color: var(--color-text);
 }
-.swilread-toc__item[data-level='3'] .swilread-toc__link,
-.swilread-toc__item[data-level='4'] .swilread-toc__link {
+.swirlread-toc__item[data-level='3'] .swirlread-toc__link,
+.swirlread-toc__item[data-level='4'] .swirlread-toc__link {
   font-size: 0.96em;
 }
 
 /* File tree ──────────────────────────────────────────────────────────── */
-.swilread-file-tree__container {
+.swirlread-file-tree__container {
   display: flex;
   flex-direction: column;
   gap: 0.35em;
 }
 
-.swilread-file-tree__recent {
+.swirlread-file-tree__recent {
   border-bottom: 1px solid var(--color-border);
   padding: 0.15em 0 0.45em;
   margin-bottom: 0.2em;
 }
 
-.swilread-file-tree__recent ul {
+.swirlread-file-tree__recent ul {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
 /* Sections + Files headings (RX3) ─────────────────────────────────── */
-.swilread-file-tree__sections {
+.swirlread-file-tree__sections {
   border-bottom: 1px solid var(--color-border);
   padding: 0.15em 0 0.45em;
   margin-bottom: 0.2em;
 }
 
-.swilread-file-tree__sections ul {
+.swirlread-file-tree__sections ul {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.swilread-file-tree__files {
+.swirlread-file-tree__files {
   padding-top: 0.15em;
 }
 
-.swilread-file-tree__row--continue {
+.swirlread-file-tree__row--continue {
   display: flex;
   align-items: center;
   gap: 0.45em;
@@ -206,16 +206,16 @@
   font-weight: 500;
 }
 
-.swilread-file-tree__row--section-link {
+.swirlread-file-tree__row--section-link {
   padding-left: 0.7em;
   font-weight: 500;
 }
 
-.swilread-file-tree__row--section-link .swilread-file-tree__icon {
+.swirlread-file-tree__row--section-link .swirlread-file-tree__icon {
   color: var(--color-accent);
 }
 
-.swilread-file-tree__resume-tag {
+.swirlread-file-tree__resume-tag {
   margin-left: auto;
   padding: 0.05em 0.45em;
   border: 1px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
@@ -228,7 +228,7 @@
   text-transform: uppercase;
 }
 
-.swilread-file-tree__section-label {
+.swirlread-file-tree__section-label {
   margin: 0 0 0.2em;
   padding: 0 0.7em;
   font-family: var(--font-sans);
@@ -239,19 +239,19 @@
   color: var(--color-text-muted);
 }
 
-.swilread-file-tree {
+.swirlread-file-tree {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.swilread-file-tree ul {
+.swirlread-file-tree ul {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.swilread-file-tree__row {
+.swirlread-file-tree__row {
   display: flex;
   align-items: center;
   gap: 0.4em;
@@ -269,49 +269,49 @@
   transition: background-color 100ms ease;
 }
 
-.swilread-file-tree__row:hover {
+.swirlread-file-tree__row:hover {
   background: color-mix(in srgb, var(--color-accent) 10%, transparent);
 }
 
-.swilread-file-tree__row--recent {
+.swirlread-file-tree__row--recent {
   padding-left: 0.7em;
   font-size: 0.95em;
 }
 
-.swilread-file-tree__row.is-active {
+.swirlread-file-tree__row.is-active {
   background: color-mix(in srgb, var(--color-accent) 18%, transparent);
   color: var(--color-text);
   font-weight: 500;
 }
 
-.swilread-file-tree__row.is-ancestor {
+.swirlread-file-tree__row.is-ancestor {
   color: var(--color-text);
 }
 
-.swilread-file-tree__chevron {
+.swirlread-file-tree__chevron {
   flex-shrink: 0;
   color: var(--color-text-muted);
   transition: transform 120ms ease;
 }
-.swilread-file-tree__chevron.is-expanded {
+.swirlread-file-tree__chevron.is-expanded {
   transform: rotate(90deg);
 }
-.swilread-file-tree__chevron-spacer {
+.swirlread-file-tree__chevron-spacer {
   display: inline-block;
   width: 12px;
   flex-shrink: 0;
 }
 
-.swilread-file-tree__icon {
+.swirlread-file-tree__icon {
   flex-shrink: 0;
   color: var(--color-text-muted);
 }
-.swilread-file-tree__row:hover .swilread-file-tree__icon,
-.swilread-file-tree__row.is-active .swilread-file-tree__icon {
+.swirlread-file-tree__row:hover .swirlread-file-tree__icon,
+.swirlread-file-tree__row.is-active .swirlread-file-tree__icon {
   color: var(--color-accent);
 }
 
-.swilread-file-tree__name {
+.swirlread-file-tree__name {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -323,25 +323,31 @@
    The chevron and the name-link are rendered as separate controls so a
    click on the name navigates to the section home, while the chevron
    stays in charge of expansion. */
-.swilread-file-tree__row--section {
+.swirlread-file-tree__row--section {
   display: flex;
   align-items: center;
+  /* Same gap as regular rows so Library icon aligns with FolderOpen icon. */
+  gap: 0.4em;
   width: 100%;
   padding: 0.4em 0.6em 0.4em 0;
   border-radius: 0 4px 4px 0;
   margin-top: 0.25em;
 }
 
-.swilread-file-tree__row--section.is-active {
+.swirlread-file-tree__row--section.is-active {
   background: color-mix(in srgb, var(--color-accent) 18%, transparent);
 }
 
-.swilread-file-tree__chevron-btn {
+.swirlread-file-tree__chevron-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
+  /* Width matches the ChevronRight (12px) so the Library icon lands at the
+     same x-offset as FolderOpen in regular dir rows. Vertical extent stays
+     22px for an adequate click target. */
+  width: 12px;
   height: 22px;
+  flex-shrink: 0;
   padding: 0;
   border: none;
   background: transparent;
@@ -350,17 +356,18 @@
   border-radius: 3px;
 }
 
-.swilread-file-tree__chevron-btn:hover {
-  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+.swirlread-file-tree__chevron-btn:hover {
+  color: var(--color-text);
 }
 
-.swilread-file-tree__section-link {
+.swirlread-file-tree__section-link {
   display: inline-flex;
   align-items: center;
   gap: 0.45em;
   flex: 1;
   min-width: 0;
-  padding: 0.05em 0.3em;
+  /* No left padding — gap on the parent row provides the spacing. */
+  padding: 0.05em 0.3em 0.05em 0;
   font-family: var(--font-sans);
   font-weight: 600;
   font-size: 0.95em;
@@ -371,15 +378,15 @@
   transition: background-color 100ms ease;
 }
 
-.swilread-file-tree__section-link:hover {
+.swirlread-file-tree__section-link:hover {
   background: color-mix(in srgb, var(--color-accent) 10%, transparent);
 }
 
-.swilread-file-tree__row--section .swilread-file-tree__icon {
+.swirlread-file-tree__row--section .swirlread-file-tree__icon {
   color: var(--color-accent);
 }
 
-.swilread-file-tree__status {
+.swirlread-file-tree__status {
   padding: 0.4em 0.7em;
   color: var(--color-text-muted);
   font-style: italic;
@@ -387,7 +394,7 @@
 }
 
 /* Directory listing (vault home + folder view) ───────────────────────── */
-.swilread-directory {
+.swirlread-directory {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -396,11 +403,11 @@
   border-top: 1px solid var(--color-border);
 }
 
-.swilread-directory__row {
+.swirlread-directory__row {
   border-bottom: 1px solid var(--color-border);
 }
 
-.swilread-directory__link {
+.swirlread-directory__link {
   display: flex;
   align-items: center;
   gap: 0.7em;
@@ -411,34 +418,34 @@
   border-radius: 4px;
 }
 
-.swilread-directory__link:hover {
+.swirlread-directory__link:hover {
   background: color-mix(in srgb, var(--color-accent) 8%, transparent);
 }
 
-.swilread-directory__icon {
+.swirlread-directory__icon {
   flex-shrink: 0;
   color: var(--color-text-muted);
 }
 
-.swilread-directory__link:hover .swilread-directory__icon {
+.swirlread-directory__link:hover .swirlread-directory__icon {
   color: var(--color-accent);
 }
 
-.swilread-directory__name {
+.swirlread-directory__name {
   flex: 1;
   font-family: var(--font-serif);
   font-size: 1.05em;
   word-break: break-word;
 }
 
-.swilread-directory__meta {
+.swirlread-directory__meta {
   font-family: var(--font-mono);
   font-size: 0.78em;
   color: var(--color-text-muted);
   white-space: nowrap;
 }
 
-.swilread-directory__breadcrumbs {
+.swirlread-directory__breadcrumbs {
   font-family: var(--font-sans);
   font-size: 0.85em;
   color: var(--color-text-muted);
@@ -448,29 +455,259 @@
   gap: 0;
 }
 
-.swilread-directory__crumb-wrap {
+.swirlread-directory__crumb-wrap {
   display: inline-flex;
   align-items: baseline;
 }
 
-.swilread-directory__crumb {
+.swirlread-directory__crumb {
   color: var(--color-text-muted);
   text-decoration: none;
   border-bottom: 1px dashed transparent;
 }
 
-a.swilread-directory__crumb:hover {
+a.swirlread-directory__crumb:hover {
   color: var(--color-link);
   border-bottom-color: color-mix(in srgb, var(--color-link) 50%, transparent);
 }
 
-.swilread-directory__crumb--current {
+.swirlread-directory__crumb--current {
   color: var(--color-text);
   font-weight: 500;
 }
 
-.swilread-directory__crumb-sep {
+.swirlread-directory__crumb-sep {
   margin: 0 0.45em;
   color: var(--color-text-muted);
   opacity: 0.6;
+}
+
+/* View-mode toolbar (tree / graph toggle) ─────────────────────────── */
+.swirlread-file-tree__toolbar {
+  display: flex;
+  gap: 2px;
+  padding: 0.3em 0.5em 0.2em;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.swirlread-file-tree__view-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.swirlread-file-tree__view-btn:hover {
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  color: var(--color-text);
+}
+
+.swirlread-file-tree__view-btn--active {
+  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  color: var(--color-accent);
+}
+
+/* Graph-mode container ─────────────────────────────────────────────── */
+.swirlread-file-tree__container--graph {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Tag filter bar ───────────────────────────────────────────────────── */
+.swirlread-tag-filter {
+  padding: 0.4em 0.5em 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.swirlread-tag-filter__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3em;
+  padding-bottom: 0.4em;
+  max-height: 5.5em;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.swirlread-tag-filter__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2em;
+  padding: 0.15em 0.5em;
+  border: 1px solid var(--color-border);
+  border-radius: 100px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72em;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s,
+    background 0.15s;
+  line-height: 1.6;
+}
+
+.swirlread-tag-filter__chip:hover {
+  border-color: var(--color-accent);
+  color: var(--color-text);
+}
+
+.swirlread-tag-filter__chip--active {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+  color: var(--color-accent);
+}
+
+.swirlread-tag-filter__chip-hash {
+  opacity: 0.6;
+}
+
+.swirlread-tag-filter__chip-count {
+  font-size: 0.85em;
+  opacity: 0.6;
+  margin-left: 0.1em;
+}
+
+/* Tagged file list ─────────────────────────────────────────────────── */
+.swirlread-tag-results {
+  padding: 0.3em 0;
+}
+
+.swirlread-tag-results__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.swirlread-tag-results__item {
+  margin: 0;
+}
+
+.swirlread-tag-results__link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05em;
+  padding: 0.28em 0.75em;
+  text-decoration: none;
+  border-radius: 5px;
+  transition: background 0.12s;
+}
+
+.swirlread-tag-results__link:hover {
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+}
+
+.swirlread-tag-results__link--current .swirlread-tag-results__name {
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+.swirlread-tag-results__name {
+  font-size: 0.85em;
+  color: var(--color-text);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.swirlread-tag-results__folder {
+  font-size: 0.74em;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Knowledge graph view ─────────────────────────────────────────────── */
+.swirlread-graph-view {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: var(--color-surface);
+  min-height: 300px;
+}
+
+.swirlread-graph-view__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+
+.swirlread-graph-view__svg:active {
+  cursor: grabbing;
+}
+
+.swirlread-graph-view__edge {
+  stroke: var(--color-border);
+  stroke-width: 1;
+  stroke-opacity: 0.55;
+}
+
+.swirlread-graph-view__node {
+  fill: color-mix(
+    in srgb,
+    var(--color-accent) 20%,
+    var(--color-surface-raised)
+  );
+  stroke: var(--color-border);
+  stroke-width: 1;
+  transition: fill 0.1s;
+}
+
+.swirlread-graph-view__node--hovered {
+  fill: color-mix(
+    in srgb,
+    var(--color-accent) 50%,
+    var(--color-surface-raised)
+  );
+  stroke: var(--color-accent);
+  stroke-width: 1.5;
+}
+
+.swirlread-graph-view__node--current {
+  fill: var(--color-accent);
+  stroke: color-mix(in srgb, var(--color-accent) 60%, var(--color-text));
+  stroke-width: 1.5;
+}
+
+.swirlread-graph-view__status {
+  font-size: 0.82em;
+  color: var(--color-text-muted);
+  padding: 1em 0.75em;
+  text-align: center;
+}
+
+.swirlread-graph-view__status--error {
+  color: color-mix(in srgb, red 60%, var(--color-text-muted));
+}
+
+.swirlread-graph-view__tooltip {
+  position: absolute;
+  transform: translateX(-50%);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  padding: 0.2em 0.5em;
+  font-size: 0.74em;
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
 }

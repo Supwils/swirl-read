@@ -84,11 +84,11 @@ describe('TagsPanel (M3.14)', () => {
     // so the dialog's accessible name is the tag itself.
     const dialog = await screen.findByRole('dialog', { name: 'shared' })
     expect(
-      dialog.querySelector('.swilread-tags-panel__title'),
+      dialog.querySelector('.swirlread-tags-panel__title'),
     ).toHaveTextContent('shared')
     // Both `a.md` and `b.md` are listed; `c.md` is not.
     const links = await waitFor(() => {
-      const ls = dialog.querySelectorAll('a.swilread-tags-panel__link')
+      const ls = dialog.querySelectorAll('a.swirlread-tags-panel__link')
       expect(ls.length).toBe(2)
       return ls
     })
@@ -105,7 +105,7 @@ describe('TagsPanel (M3.14)', () => {
 
     const dialog = await screen.findByRole('dialog')
     const link = await waitFor(() => {
-      const ls = dialog.querySelectorAll('a.swilread-tags-panel__link')
+      const ls = dialog.querySelectorAll('a.swirlread-tags-panel__link')
       expect(ls.length).toBeGreaterThan(0)
       return ls[0] as HTMLElement
     })

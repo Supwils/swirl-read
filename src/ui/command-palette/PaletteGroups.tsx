@@ -22,13 +22,17 @@ export function HeadingItem({
     <Command.Item
       value={`heading ${heading.text}`}
       onSelect={() => onSelect(heading.id)}
-      className="swilread-cmdk__item"
+      className="swirlread-cmdk__item"
     >
-      <Hash className="swilread-cmdk__item-icon" size={14} aria-hidden="true" />
-      <span className="swilread-cmdk__item-primary">
+      <Hash
+        className="swirlread-cmdk__item-icon"
+        size={14}
+        aria-hidden="true"
+      />
+      <span className="swirlread-cmdk__item-primary">
         {heading.text || '(untitled)'}
       </span>
-      <span className="swilread-cmdk__item-secondary">H{heading.level}</span>
+      <span className="swirlread-cmdk__item-secondary">H{heading.level}</span>
     </Command.Item>
   )
 }
@@ -51,22 +55,22 @@ export function PaletteFilesGroup({
       {vaultFiles.status === 'ready' && (
         <Command.Group
           heading={`Files in ${vaultName ?? vaultId}`}
-          className="swilread-cmdk__group"
+          className="swirlread-cmdk__group"
         >
           {vaultFiles.files.map((file: VaultFile) => (
             <Command.Item
               key={`file::${vaultId}::${file.path}`}
               value={`${file.name} ${file.path}`}
               onSelect={() => onSelect(`/app/${vaultId}/${file.path}`)}
-              className="swilread-cmdk__item"
+              className="swirlread-cmdk__item"
             >
               <FileText
-                className="swilread-cmdk__item-icon"
+                className="swirlread-cmdk__item-icon"
                 size={14}
                 aria-hidden="true"
               />
-              <span className="swilread-cmdk__item-primary">{file.name}</span>
-              <span className="swilread-cmdk__item-secondary">
+              <span className="swirlread-cmdk__item-primary">{file.name}</span>
+              <span className="swirlread-cmdk__item-secondary">
                 {dirname(file.path) || '/'}
               </span>
             </Command.Item>
@@ -74,10 +78,10 @@ export function PaletteFilesGroup({
         </Command.Group>
       )}
       {vaultFiles.status === 'loading' && (
-        <p className="swilread-cmdk__status">Walking the vault…</p>
+        <p className="swirlread-cmdk__status">Walking the vault…</p>
       )}
       {vaultFiles.status === 'error' && (
-        <p className="swilread-cmdk__status" role="alert">
+        <p className="swirlread-cmdk__status" role="alert">
           Couldn't walk this vault: {vaultFiles.message}
         </p>
       )}
@@ -103,22 +107,22 @@ export function PaletteSearchResults({
       {fullText.status === 'ready' && fullText.hits.length > 0 && (
         <Command.Group
           heading={`Search results in ${vaultName ?? vaultId}`}
-          className="swilread-cmdk__group"
+          className="swirlread-cmdk__group"
         >
           {fullText.hits.map((hit) => (
             <Command.Item
               key={`search::${vaultId}::${hit.path}`}
               value={`${hit.path}::${String(hit.score)}`}
               onSelect={() => onSelect(`/app/${vaultId}/${hit.path}`)}
-              className="swilread-cmdk__item"
+              className="swirlread-cmdk__item"
             >
               <SearchIcon
-                className="swilread-cmdk__item-icon"
+                className="swirlread-cmdk__item-icon"
                 size={14}
                 aria-hidden="true"
               />
-              <span className="swilread-cmdk__item-primary">{hit.name}</span>
-              <span className="swilread-cmdk__item-secondary">
+              <span className="swirlread-cmdk__item-primary">{hit.name}</span>
+              <span className="swirlread-cmdk__item-secondary">
                 {hit.snippet || hit.path}
               </span>
             </Command.Item>
@@ -126,10 +130,10 @@ export function PaletteSearchResults({
         </Command.Group>
       )}
       {fullText.status === 'loading' && (
-        <p className="swilread-cmdk__status">Indexing vault content…</p>
+        <p className="swirlread-cmdk__status">Indexing vault content…</p>
       )}
       {fullText.status === 'error' && (
-        <p className="swilread-cmdk__status" role="alert">
+        <p className="swirlread-cmdk__status" role="alert">
           Couldn't index this vault: {fullText.message}
         </p>
       )}

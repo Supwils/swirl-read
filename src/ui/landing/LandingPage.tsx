@@ -56,7 +56,7 @@ export function LandingPage(): ReactNode {
           className="font-serif text-6xl font-semibold tracking-tight"
           style={{ color: 'var(--color-text)' }}
         >
-          SwilRead
+          SwirlRead
         </h1>
         <p
           className="mt-6 font-serif text-xl italic"
@@ -142,24 +142,24 @@ function ReturningSection({
   onPick: () => void
 }): ReactNode {
   return (
-    <section className="swilread-landing-recents" aria-label="Your vaults">
-      <p className="swilread-landing-recents__label">Your vaults</p>
-      <ul className="swilread-landing-recents__list">
+    <section className="swirlread-landing-recents" aria-label="Your vaults">
+      <p className="swirlread-landing-recents__label">Your vaults</p>
+      <ul className="swirlread-landing-recents__list">
         {vaults.map((vault) => (
-          <li key={vault.id} className="swilread-landing-recents__item">
+          <li key={vault.id} className="swirlread-landing-recents__item">
             <Link
               to={`/app/${vault.id}`}
-              className="swilread-landing-recents__link"
+              className="swirlread-landing-recents__link"
             >
               <Library
                 size={16}
                 aria-hidden="true"
-                className="swilread-landing-recents__icon"
+                className="swirlread-landing-recents__icon"
               />
-              <span className="swilread-landing-recents__name">
+              <span className="swirlread-landing-recents__name">
                 {vault.name}
               </span>
-              <span className="swilread-landing-recents__meta">
+              <span className="swirlread-landing-recents__meta">
                 {formatRelativeDate(vault.lastOpenedAt)}
               </span>
             </Link>
@@ -169,7 +169,7 @@ function ReturningSection({
       <button
         type="button"
         onClick={onPick}
-        className="swilread-landing-recents__cta"
+        className="swirlread-landing-recents__cta"
       >
         <Plus size={14} aria-hidden="true" />
         Open another vault

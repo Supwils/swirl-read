@@ -1,4 +1,4 @@
-# SwilRead — Product Vision
+# SwirlRead — Product Vision
 
 > Status: Decided · Foundational · Last updated: 2026-05-01
 
@@ -10,9 +10,9 @@ Every PKM (Personal Knowledge Management) tool ever built is optimized for **inp
 
 Nobody built a tool optimized for **output** — reading, recalling, reviewing, presenting.
 
-This is the gap SwilRead fills.
+This is the gap SwirlRead fills.
 
-A library has two rooms: the **cataloging room** (where librarians organize books) and the **reading room** (where readers actually consume knowledge). Obsidian, Notion, Logseq — they are all cataloging rooms. SwilRead is the reading room.
+A library has two rooms: the **cataloging room** (where librarians organize books) and the **reading room** (where readers actually consume knowledge). Obsidian, Notion, Logseq — they are all cataloging rooms. SwirlRead is the reading room.
 
 ---
 
@@ -61,53 +61,53 @@ This repo is accessed through:
 
 ## Product Vision Statement
 
-> SwilRead is a **local-first, read-optimized interface** for Markdown knowledge systems.
+> SwirlRead is a **local-first, read-optimized interface** for Markdown knowledge systems.
 >
 > It turns any folder of Markdown files into a beautiful, navigable, AI-augmented reading experience — without uploading your data to any cloud, without requiring a complex setup, and without trying to replace the tools you already use to write.
 >
-> When you need to fix a typo, tighten a sentence, or update a paragraph while reading, SwilRead may briefly enter a lightweight text-edit mode for the current document. It is still a reader first, not an all-day writing workspace.
+> When you need to fix a typo, tighten a sentence, or update a paragraph while reading, SwirlRead may briefly enter a lightweight text-edit mode for the current document. It is still a reader first, not an all-day writing workspace.
 
 ---
 
 ## The Deeper Mission — Reading in the Age of AI
 
-SwilRead exists for a reason that goes beyond rendering Markdown nicely.
+SwirlRead exists for a reason that goes beyond rendering Markdown nicely.
 
 In the AI era, knowledge is becoming disposable. Why memorize, why deeply read, why reflect — when AI can answer anything in seconds? But there is a quiet cost: people stop knowing things, critical thinking atrophies, and conversations with AI become one-sided. The mind becomes a search interface for someone else's index.
 
 The phrase that captures this: **being dragged by AI** instead of **walking with it**.
 
-SwilRead's stance:
+SwirlRead's stance:
 
 > In the age of AI, the people who think clearly are the ones who still read deeply. They build their own substrate of knowledge — slowly, attentively, through real engagement with ideas. That substrate is what lets them have meaningful conversations with AI instead of being passive recipients of it.
 
-SwilRead is a tool for those people. A **sanctuary for deep reading** in an era that increasingly devalues it.
+SwirlRead is a tool for those people. A **sanctuary for deep reading** in an era that increasingly devalues it.
 
 This is not anti-AI. AI is part of the roadmap. But the question is whose terms AI operates on:
 
 - AI working **for** the reader = augmenting recall, surfacing connections, asking good questions
 - AI working **on** the reader = generating answers that bypass thinking, summarizing things you should have read
 
-SwilRead picks the first.
+SwirlRead picks the first.
 
 **Brand promise (one sentence)**:
 
-> SwilRead helps you read your own knowledge so deeply that AI becomes your collaborator, not your replacement.
+> SwirlRead helps you read your own knowledge so deeply that AI becomes your collaborator, not your replacement.
 
 ---
 
-## What SwilRead Is NOT
+## What SwirlRead Is NOT
 
 Being explicit about this prevents scope creep:
 
-| It is NOT                  | Why this boundary matters                                                                                                            |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| A note-taking app          | You already have one. SwilRead reads what you wrote.                                                                                 |
-| An Obsidian replacement    | Obsidian wins at editing, linking while writing, and plugin ecosystem. SwilRead wins at reading.                                     |
-| A cloud knowledge base     | Notion, Confluence, GitBook exist. SwilRead is local-first by design.                                                                |
-| A second brain builder     | Building your knowledge base is out of scope. Reading it is the entire scope.                                                        |
-| A full authoring workspace | SwilRead may support quick text repairs, but long-form writing, heavy restructuring, and knowledge-base management belong elsewhere. |
-| An AI chatbot              | AI is a feature to enhance reading and recall, not the main product surface.                                                         |
+| It is NOT                  | Why this boundary matters                                                                                                             |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| A note-taking app          | You already have one. SwirlRead reads what you wrote.                                                                                 |
+| An Obsidian replacement    | Obsidian wins at editing, linking while writing, and plugin ecosystem. SwirlRead wins at reading.                                     |
+| A cloud knowledge base     | Notion, Confluence, GitBook exist. SwirlRead is local-first by design.                                                                |
+| A second brain builder     | Building your knowledge base is out of scope. Reading it is the entire scope.                                                         |
+| A full authoring workspace | SwirlRead may support quick text repairs, but long-form writing, heavy restructuring, and knowledge-base management belong elsewhere. |
+| An AI chatbot              | AI is a feature to enhance reading and recall, not the main product surface.                                                          |
 
 ---
 
@@ -124,7 +124,7 @@ Every UI decision optimizes for comfortable, focused reading:
 
 ### 2. Local-First, Privacy by Default
 
-Your personal knowledge often contains sensitive content: career plans, salary targets, personal reflections, private projects, health data. SwilRead never requires you to upload your files.
+Your personal knowledge often contains sensitive content: career plans, salary targets, personal reflections, private projects, health data. SwirlRead never requires you to upload your files.
 
 - Reads directly from your local filesystem (File System Access API in browser, or native FS in Tauri)
 - AI features send only the content of the specific file(s) you're actively reading — never bulk-indexes your vault to a third-party server by default
@@ -133,7 +133,7 @@ Your personal knowledge often contains sensitive content: career plans, salary t
 
 ### 3. Vault-Aware, Not Generic
 
-A generic Markdown renderer treats all files equally. SwilRead understands the shape of structured knowledge repositories:
+A generic Markdown renderer treats all files equally. SwirlRead understands the shape of structured knowledge repositories:
 
 - Recognizes `*-map.md` files as navigation hubs for their directory
 - Resolves `[[wikilinks]]` to actual files across the vault
@@ -186,7 +186,7 @@ Editing is allowed only when it preserves the reader's momentum:
 
 ### Tertiary: The Open Source / Community User
 
-- Developer who discovers SwilRead via GitHub or Hacker News
+- Developer who discovers SwirlRead via GitHub or Hacker News
 - Has an existing Markdown vault in any format (Obsidian, Logseq, plain files)
 - Wants to self-host or run locally without cloud dependency
 - May contribute themes, vault adapters, or integrations
@@ -195,7 +195,7 @@ Editing is allowed only when it preserves the reader's momentum:
 
 ## Competitive Landscape
 
-| Product    | Strength                                          | Why SwilRead is different                                  |
+| Product    | Strength                                          | Why SwirlRead is different                                 |
 | ---------- | ------------------------------------------------- | ---------------------------------------------------------- |
 | Obsidian   | Rich plugin ecosystem, graph view, desktop-native | Input-optimized; reading is an afterthought; closed source |
 | Logseq     | Open source, local-first, outline-based           | Still editor-first; not a dedicated reading interface      |
@@ -205,7 +205,7 @@ Editing is allowed only when it preserves the reader's momentum:
 | NotebookLM | AI-powered document Q&A                           | Cloud-only; you upload your content; no navigation layer   |
 | Typora     | Clean Markdown editing                            | Single-file editor; no vault/navigation support            |
 
-**The gap**: No product exists that is simultaneously (a) local-first, (b) read-optimized, (c) vault-aware, and (d) AI-augmented. SwilRead owns that intersection.
+**The gap**: No product exists that is simultaneously (a) local-first, (b) read-optimized, (c) vault-aware, and (d) AI-augmented. SwirlRead owns that intersection.
 
 ---
 

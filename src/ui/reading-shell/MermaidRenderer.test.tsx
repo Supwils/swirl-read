@@ -46,7 +46,7 @@ describe('MermaidRenderer (M3.13)', () => {
       expect.objectContaining({ startOnLoad: false }) as { startOnLoad: false },
     )
     expect(renderFn).toHaveBeenCalledWith(
-      expect.stringMatching(/swilread-mermaid-/) as string,
+      expect.stringMatching(/swirlread-mermaid-/) as string,
       source,
     )
   })

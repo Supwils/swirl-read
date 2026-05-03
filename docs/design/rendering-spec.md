@@ -1,17 +1,17 @@
-# SwilRead — Rendering & File Format Spec
+# SwirlRead — Rendering & File Format Spec
 
 > Status: Decided 2026-05-01 · Living document
 
-This document is the **completeness contract**: SwilRead must render anything a user reasonably puts in front of it, and render it beautifully. Any failure to render something correctly is a P1 bug.
+This document is the **completeness contract**: SwirlRead must render anything a user reasonably puts in front of it, and render it beautifully. Any failure to render something correctly is a P1 bug.
 
 ---
 
 ## Core Promise
 
-> If it's text-based and lives in a folder, SwilRead should read it.
-> If it's Markdown, SwilRead should render every feature anyone has reasonably defined for Markdown.
+> If it's text-based and lives in a folder, SwirlRead should read it.
+> If it's Markdown, SwirlRead should render every feature anyone has reasonably defined for Markdown.
 
-A user must never feel "I have to use Obsidian for this file because SwilRead breaks my callouts" or "I need GitHub to render this table."
+A user must never feel "I have to use Obsidian for this file because SwirlRead breaks my callouts" or "I need GitHub to render this table."
 
 ---
 
@@ -106,18 +106,18 @@ Custom callouts (`> [!my-custom-type]`) should fall back to a generic style with
 
 This deserves its own section because reading code in notes is critical for a developer audience.
 
-| Feature               | Implementation                                                             |
-| --------------------- | -------------------------------------------------------------------------- |
-| Syntax highlighting   | **Shiki** (VS Code grammars, accurate; ~600KB but worth it)                |
-| 100+ languages        | TypeScript, Python, Rust, Go, Java, C++, etc.                              |
-| Theme integration     | Highlighting matches SwilRead theme (Sepia / Light / Dark / OLED variants) |
-| Filename annotation   | ` ```typescript filename="app.ts"` → shown as a chip                       |
-| Line highlighting     | ` ```ts {1,3-5}` → those lines get a subtle background                     |
-| Diff blocks           | ` ```diff` with red/green for +/- lines                                    |
-| Copy button           | Appears on hover, top-right; copies to clipboard                           |
-| Optional line numbers | Setting toggle; off by default for cleaner reading                         |
-| Long line wrap toggle | Setting; default = horizontal scroll                                       |
-| Language icon         | Optional icon next to filename (Phase 2)                                   |
+| Feature               | Implementation                                                              |
+| --------------------- | --------------------------------------------------------------------------- |
+| Syntax highlighting   | **Shiki** (VS Code grammars, accurate; ~600KB but worth it)                 |
+| 100+ languages        | TypeScript, Python, Rust, Go, Java, C++, etc.                               |
+| Theme integration     | Highlighting matches SwirlRead theme (Sepia / Light / Dark / OLED variants) |
+| Filename annotation   | ` ```typescript filename="app.ts"` → shown as a chip                        |
+| Line highlighting     | ` ```ts {1,3-5}` → those lines get a subtle background                      |
+| Diff blocks           | ` ```diff` with red/green for +/- lines                                     |
+| Copy button           | Appears on hover, top-right; copies to clipboard                            |
+| Optional line numbers | Setting toggle; off by default for cleaner reading                          |
+| Long line wrap toggle | Setting; default = horizontal scroll                                        |
+| Language icon         | Optional icon next to filename (Phase 2)                                    |
 
 **Shiki vs alternatives**: Prism is faster but produces less accurate highlighting. Shiki uses the same grammars as VS Code, so the result looks "professional." We'll bundle a curated subset of grammars (top 30 languages) with on-demand loading for the rest.
 
@@ -125,9 +125,9 @@ This deserves its own section because reading code in notes is critical for a de
 
 ## Beyond Markdown — Generous File Reader
 
-> SwilRead is a Markdown reader, but a generous reader of related text-based formats.
+> SwirlRead is a Markdown reader, but a generous reader of related text-based formats.
 
-The principle: if a user has a folder of mixed content, SwilRead opens what it can and degrades gracefully on what it can't.
+The principle: if a user has a folder of mixed content, SwirlRead opens what it can and degrades gracefully on what it can't.
 
 ### Tier 1: Plain Text (MVP)
 
@@ -252,7 +252,7 @@ unified
   └─ rehype-react           (hast → React tree)
 ```
 
-Custom plugins (the `remark-wikilink`, `remark-callout`, `remark-embed`) are SwilRead's secret sauce. They're what makes the experience feel "vault-aware" instead of "generic markdown."
+Custom plugins (the `remark-wikilink`, `remark-callout`, `remark-embed`) are SwirlRead's secret sauce. They're what makes the experience feel "vault-aware" instead of "generic markdown."
 
 ---
 
@@ -271,7 +271,7 @@ Beyond correctness, the rendering must feel **crafted**:
 
 ## Edge Cases the Renderer Must Handle
 
-These are the cases that break most Markdown viewers. SwilRead must handle all of them:
+These are the cases that break most Markdown viewers. SwirlRead must handle all of them:
 
 - A document with **only frontmatter** — show metadata, not blank
 - A document **starting with a code block** — no orphan margin
