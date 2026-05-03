@@ -1,0 +1,460 @@
+/* M7 universal file reader ───────────────────────────────────────────── */
+.swilread-plaintext {
+  margin: 1.5em 0;
+  padding: 1rem 1.1rem;
+  border-radius: 8px;
+  background: var(--color-code-bg);
+  color: var(--color-code-text);
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+}
+
+.swilread-codefile {
+  margin: 1.5em 0;
+  font-family: var(--font-serif);
+  color: var(--color-text);
+}
+
+.swilread-codefile pre {
+  margin: 0;
+}
+
+.swilread-codefile__status {
+  margin: 1.5em 0 0.5em;
+  color: var(--color-text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+  font-style: italic;
+}
+
+.swilread-unsupported {
+  margin: 2.5rem auto 0;
+  max-width: 460px;
+  padding: 1.6rem 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-surface) 50%, transparent);
+  text-align: left;
+  font-family: var(--font-sans);
+  color: var(--color-text);
+}
+
+.swilread-unsupported__icon {
+  color: var(--color-text-muted);
+  margin-bottom: 0.6rem;
+}
+
+.swilread-unsupported__title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.swilread-unsupported__body {
+  margin: 0.6rem 0 1rem;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.swilread-unsupported__body code {
+  padding: 0 0.3rem;
+  border-radius: 4px;
+  background: var(--color-code-bg);
+  color: var(--color-code-text);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+}
+
+.swilread-unsupported__meta {
+  margin: 0;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.35rem 0.85rem;
+  font-size: 0.84rem;
+}
+
+.swilread-unsupported__meta dt {
+  color: var(--color-text-muted);
+}
+
+.swilread-unsupported__meta dd {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.swilread-unsupported__path {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  word-break: break-all;
+  color: var(--color-text-muted);
+}
+
+/* JSON tree renderer (M7.4) ──────────────────────────────────────────── */
+.swilread-json {
+  margin: 1.5rem 0 0;
+  font-family: var(--font-sans);
+  color: var(--color-text);
+}
+
+.swilread-json__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+
+.swilread-json__error {
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  font-style: italic;
+}
+
+.swilread-json__search {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.55rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-surface) 50%, transparent);
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  flex: 0 1 280px;
+}
+
+.swilread-json__search input {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  outline: none;
+  color: var(--color-text);
+  font: inherit;
+  min-width: 0;
+}
+
+.swilread-json__search input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.swilread-json__match {
+  background: color-mix(in srgb, var(--color-accent) 26%, transparent);
+  color: var(--color-text);
+  border-radius: 2px;
+  padding: 0 0.1em;
+}
+
+.swilread-json__toggle {
+  display: inline-flex;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-left: auto;
+}
+
+.swilread-json__toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.65rem;
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.swilread-json__toggle-btn + .swilread-json__toggle-btn {
+  border-left: 1px solid var(--color-border);
+}
+
+.swilread-json__toggle-btn:hover:not(:disabled) {
+  color: var(--color-text);
+}
+
+.swilread-json__toggle-btn.is-active {
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  color: var(--color-text);
+}
+
+.swilread-json__toggle-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.swilread-json__tree {
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-surface) 40%, transparent);
+  font-family: var(--font-mono);
+  font-size: 0.84rem;
+  line-height: 1.7;
+  overflow-x: auto;
+}
+
+.swilread-json__row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.swilread-json__row--leaf,
+.swilread-json__row--collection {
+  position: relative;
+}
+
+.swilread-json__copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.3rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 100ms ease;
+  font-size: 0.7rem;
+  font-family: var(--font-sans);
+}
+
+.swilread-json__row:hover .swilread-json__copy,
+.swilread-json__copy:focus-visible {
+  opacity: 1;
+}
+
+.swilread-json__copy:hover {
+  color: var(--color-text);
+  border-color: var(--color-border);
+  background: color-mix(in srgb, var(--color-surface) 50%, transparent);
+}
+
+.swilread-json__copied {
+  margin-left: 0.2rem;
+}
+
+.swilread-json__toggle-row {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.swilread-json__toggle-row:hover .swilread-json__brace,
+.swilread-json__toggle-row:hover .swilread-json__chevron {
+  color: var(--color-accent);
+}
+
+.swilread-json__chevron {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.swilread-json__list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 1.4rem;
+  border-left: 1px solid var(--color-border);
+}
+
+.swilread-json__item {
+  margin: 0;
+}
+
+.swilread-json__close {
+  margin-left: 1.4rem;
+}
+
+.swilread-json__key {
+  color: var(--color-accent);
+}
+
+.swilread-json__colon {
+  color: var(--color-text-muted);
+}
+
+.swilread-json__brace,
+.swilread-json__bracket {
+  color: var(--color-text-muted);
+}
+
+.swilread-json__summary {
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin: 0 0.3rem;
+}
+
+.swilread-json__string {
+  color: var(--color-text);
+}
+
+.swilread-json__number {
+  color: color-mix(in srgb, var(--color-accent) 70%, var(--color-text));
+}
+
+.swilread-json__boolean,
+.swilread-json__null {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* HTML sandboxed renderer (M7.5) ─────────────────────────────────────── */
+.swilread-html {
+  margin: 1.5rem 0 0;
+  font-family: var(--font-sans);
+  color: var(--color-text);
+}
+
+.swilread-html__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.82rem;
+}
+
+.swilread-html__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  color: var(--color-text);
+  font-size: 0.74rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.swilread-html__toggle {
+  display: inline-flex;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.swilread-html__toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.65rem;
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.swilread-html__toggle-btn + .swilread-html__toggle-btn {
+  border-left: 1px solid var(--color-border);
+}
+
+.swilread-html__toggle-btn:hover {
+  color: var(--color-text);
+}
+
+.swilread-html__toggle-btn.is-active {
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  color: var(--color-text);
+}
+
+.swilread-html__frame {
+  width: 100%;
+  height: 70vh;
+  min-height: 320px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: white;
+}
+
+/* CSV / TSV table renderer (M7.3) ────────────────────────────────────── */
+.swilread-csv {
+  margin: 1.5rem 0 0;
+  font-family: var(--font-sans);
+  color: var(--color-text);
+}
+
+.swilread-csv__scroll {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-surface) 50%, transparent);
+}
+
+.swilread-csv__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+
+.swilread-csv__table th,
+.swilread-csv__table td {
+  padding: 0.5rem 0.7rem;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.swilread-csv__table th {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+}
+
+.swilread-csv__table tbody tr:nth-child(even) td {
+  background: color-mix(in srgb, var(--color-surface) 30%, transparent);
+}
+
+.swilread-csv__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.swilread-csv__meta {
+  margin: 0.7rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+}
+
+.swilread-csv__load-more {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-link);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.swilread-csv__load-more:hover {
+  color: var(--color-accent);
+}
+
+.swilread-csv__status {
+  margin: 1.5rem 0 0;
+  color: var(--color-text-muted);
+  font-style: italic;
+}

@@ -1,7 +1,9 @@
 import { lazy, Suspense } from 'react'
-import { Link, Outlet } from 'react-router'
+import { Link, Outlet, useMatch } from 'react-router'
 import {
   BookOpen,
+  Maximize2,
+  Minimize2,
   PanelLeftClose,
   PanelLeftOpen,
   PanelRightClose,
@@ -12,7 +14,10 @@ import {
 } from 'lucide-react'
 import { useUIStore } from '@/stores/ui-store'
 import { useVaultStore } from '@/stores/vault-store'
+import { Logo } from '@/ui/components/Logo'
+import { TabStrip } from '@/ui/reading-shell/TabStrip'
 import { VaultSwitcher } from '@/ui/reading-shell/VaultSwitcher'
+import { deriveCurrentPathFromPathname } from './derive-current-path'
 import { useCommandPaletteHotkey } from './use-command-palette-hotkey'
 import { useShortcutsHelpHotkey } from './use-shortcuts-help-hotkey'
 import { useZenModeHotkey } from './use-zen-mode-hotkey'
@@ -44,6 +49,7 @@ const ShortcutsHelp = lazy(() =>
 export function AppShell() {
   const fileTreeOpen = useUIStore((s) => s.fileTreeOpen)
   const toggleFileTree = useUIStore((s) => s.toggleFileTree)
+  const setFileTreeOpen = useUIStore((s) => s.setFileTreeOpen)
   const tocOpen = useUIStore((s) => s.tocOpen)
   const toggleToc = useUIStore((s) => s.toggleToc)
   const commandPaletteOpen = useUIStore((s) => s.commandPaletteOpen)
@@ -51,10 +57,31 @@ export function AppShell() {
   const shortcutsHelpOpen = useUIStore((s) => s.shortcutsHelpOpen)
   const chromeMode = useUIStore((s) => s.chromeMode)
   const toggleChromeMode = useUIStore((s) => s.toggleChromeMode)
+  const setChromeMode = useUIStore((s) => s.setChromeMode)
+  const zenMode = useUIStore((s) => s.zenMode)
+  const toggleZenMode = useUIStore((s) => s.toggleZenMode)
+  // Whether the file tree is actually pinned (visible persistently).
+  // In reading mode the tree is never pinned — only hover-summoned.
+  const fileTreePinned = chromeMode === 'working' && fileTreeOpen
   const hasAnyVault = useVaultStore((s) => s.registeredVaults.length > 0)
   useCommandPaletteHotkey()
   useZenModeHotkey()
   useShortcutsHelpHotkey()
+
+  // The header's tab strip needs to know which vault we're inside and
+  // the active document path; both come from the URL. Matching here
+  // (rather than in TabStrip) keeps the strip a dumb child and lets us
+  // hide it cleanly when the user is on a non-vault route like `/app`.
+  const vaultMatch = useMatch('/app/:vaultId/*')
+  const vaultId = vaultMatch?.params.vaultId
+  // `useMatch` already decodes the splat segment-aware, but route
+  // parameters preserve `%` sequences as escaped — run through the
+  // shared deriver so we get the same result as `VaultLayout`.
+  const currentPath = vaultId
+    ? deriveCurrentPathFromPathname(
+        `/app/${vaultId}/${vaultMatch?.params['*'] ?? ''}`,
+      )
+    : ''
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -65,16 +92,28 @@ export function AppShell() {
           backgroundColor: 'var(--color-bg)',
         }}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
-            onClick={() => void toggleFileTree()}
+            onClick={() =>
+              void (async () => {
+                if (chromeMode === 'reading') {
+                  // Promote to working mode so the toggle has a visible
+                  // effect (A.H4). Ensure fileTreeOpen is true so the
+                  // sidebar appears immediately after the mode switch.
+                  await setChromeMode('working')
+                  if (!fileTreeOpen) await setFileTreeOpen(true)
+                } else {
+                  await toggleFileTree()
+                }
+              })()
+            }
             className="swilread-shell__icon-button"
-            aria-label={fileTreeOpen ? 'Hide file tree' : 'Show file tree'}
-            aria-pressed={fileTreeOpen}
-            title={fileTreeOpen ? 'Hide file tree' : 'Show file tree'}
+            aria-label={fileTreePinned ? 'Hide file tree' : 'Show file tree'}
+            aria-pressed={fileTreePinned}
+            title={fileTreePinned ? 'Hide file tree' : 'Show file tree'}
           >
-            {fileTreeOpen ? (
+            {fileTreePinned ? (
               <PanelLeftClose size={18} aria-hidden="true" />
             ) : (
               <PanelLeftOpen size={18} aria-hidden="true" />
@@ -82,14 +121,21 @@ export function AppShell() {
           </button>
           <Link
             to="/"
-            className="font-serif text-lg font-semibold"
+            className="flex items-center gap-1.5 font-serif text-lg font-semibold"
             style={{ color: 'var(--color-text)' }}
+            aria-label="SwilRead — back to vaults"
           >
-            SwilRead
+            <Logo size={20} decorative />
+            <span>SwilRead</span>
           </Link>
           {hasAnyVault && <VaultSwitcher />}
         </div>
-        <div className="flex items-center gap-1">
+        {vaultId && (
+          <div className="swilread-shell__tabs">
+            <TabStrip vaultId={vaultId} currentPath={currentPath} />
+          </div>
+        )}
+        <div className="flex shrink-0 items-center gap-1">
           <button
             type="button"
             onClick={() => void toggleChromeMode()}
@@ -110,6 +156,20 @@ export function AppShell() {
               <BookOpen size={18} aria-hidden="true" />
             ) : (
               <PanelTop size={18} aria-hidden="true" />
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={toggleZenMode}
+            className="swilread-shell__icon-button"
+            aria-label={zenMode ? 'Exit zen mode' : 'Enter zen mode'}
+            aria-pressed={zenMode}
+            title={zenMode ? 'Exit zen mode (F or Esc)' : 'Zen mode (F)'}
+          >
+            {zenMode ? (
+              <Minimize2 size={18} aria-hidden="true" />
+            ) : (
+              <Maximize2 size={18} aria-hidden="true" />
             )}
           </button>
           <button

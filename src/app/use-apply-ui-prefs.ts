@@ -35,6 +35,7 @@ export function useApplyUIPrefs(): void {
   const fontSize = useUIStore((s) => s.fontSize)
   const lineHeight = useUIStore((s) => s.lineHeight)
   const contentWidth = useUIStore((s) => s.contentWidth)
+  const fileTreeWidth = useUIStore((s) => s.fileTreeWidth)
   const zenMode = useUIStore((s) => s.zenMode)
 
   // Theme class on <body>
@@ -58,7 +59,8 @@ export function useApplyUIPrefs(): void {
       '--reader-content-width',
       `${String(CONTENT_WIDTH_PX[contentWidth])}px`,
     )
-  }, [fontFamily, fontSize, lineHeight, contentWidth])
+    root.style.setProperty('--file-tree-width', `${String(fileTreeWidth)}px`)
+  }, [fontFamily, fontSize, lineHeight, contentWidth, fileTreeWidth])
 
   // Zen mode toggles a body-level class so any rule can react.
   useEffect(() => {

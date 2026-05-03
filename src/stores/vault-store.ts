@@ -20,6 +20,7 @@ import { db, metaToStored, storedToMeta } from '@/core/persistence/db'
 import { deleteHandle } from '@/core/vault'
 import { invalidateBacklinks } from '@/core/navigation/backlinks'
 import { useReaderStore } from '@/stores/reader-store'
+import { useTabsStore } from '@/stores/tabs-store'
 import type { VaultFileSystem, VaultId, VaultMeta } from '@/core/vault'
 
 // Cache-invalidation imports for `removeVault` are dynamic (see the
@@ -181,6 +182,11 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
         .equals(id)
         .delete()
         .catch(() => 0),
+      db.openTabs
+        .where('vaultId')
+        .equals(id)
+        .delete()
+        .catch(() => 0),
     ])
     // FSAPI handle persists in idb-keyval (separate store from Dexie).
     try {
@@ -208,6 +214,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     // Dexie-backed sources have already been cleared above.
     invalidateBacklinks(id)
     useReaderStore.getState().forgetVault(id)
+    useTabsStore.getState().forgetVault(id)
     // Heavy / lazy caches: don't block removal on these resolving.
     void invalidateVaultCachesLazy(id)
 

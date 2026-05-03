@@ -1,0 +1,272 @@
+/* Backlinks panel ───────────────────────────────────────────────────── */
+.swilread-backlinks {
+  margin-top: 3rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--color-border);
+  font-family: var(--font-sans);
+  color: var(--color-text);
+}
+
+.swilread-backlinks__title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.swilread-backlinks__title svg {
+  color: var(--color-text-muted);
+}
+
+.swilread-backlinks__status {
+  margin: 0.7rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.86rem;
+  font-style: italic;
+}
+
+.swilread-backlinks__list {
+  list-style: none;
+  margin: 0.85rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.swilread-backlinks__item {
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  padding: 0.75rem 0.85rem;
+  background: color-mix(in srgb, var(--color-surface) 35%, transparent);
+}
+
+.swilread-backlinks__link {
+  color: var(--color-link);
+  font-size: 0.92rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.swilread-backlinks__link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.swilread-backlinks__path {
+  margin: 0.18rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  word-break: break-all;
+}
+
+.swilread-backlinks__context {
+  margin: 0.55rem 0 0;
+  color: var(--color-text-muted);
+  font-family: var(--font-serif);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.swilread-backlinks__mark {
+  background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+  color: var(--color-text);
+  padding: 0 0.18rem;
+  border-radius: 3px;
+  font-style: normal;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* First-time hints toast (M9.4) ──────────────────────────────────────── */
+.swilread-hint {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 95;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  max-width: min(520px, calc(100vw - 32px));
+  padding: 0.85rem 0.95rem 0.85rem 1.1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  box-shadow: 0 12px 32px var(--color-shadow);
+  font-family: var(--font-sans);
+}
+
+.swilread-hint__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.swilread-hint__title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 0.96rem;
+  font-weight: 600;
+}
+
+.swilread-hint__detail {
+  margin-top: 0.25rem;
+  font-size: 0.84rem;
+  color: var(--color-text-muted);
+  line-height: 1.45;
+}
+
+.swilread-hint__detail kbd {
+  display: inline-block;
+  padding: 0 0.3rem;
+  margin: 0 0.05rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.swilread-hint__close {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.swilread-hint__close:hover {
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+}
+
+body.zen-mode .swilread-hint {
+  display: none;
+}
+
+.swilread-media__video {
+  display: block;
+  max-width: 100%;
+  max-height: 75vh;
+  border-radius: 8px;
+  background: black;
+}
+
+/* (audio rule moved into the themed wrapper block above — M7 polish) */
+
+.swilread-media__caption {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.swilread-media__name {
+  font-family: var(--font-serif);
+  color: var(--color-text);
+}
+
+.swilread-media__size {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+}
+
+.swilread-media--pending,
+.swilread-media--broken {
+  padding: 1.2rem 1rem;
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-surface) 40%, transparent);
+  text-align: center;
+  align-items: stretch;
+}
+
+.swilread-media__title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.swilread-media__body {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.swilread-media__path {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  word-break: break-all;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Base layer — reset and global defaults.
+   ───────────────────────────────────────────────────────────────────────── */
+@layer base {
+  html {
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-serif);
+    color-scheme: light dark;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--color-bg);
+    color: var(--color-text);
+    transition:
+      background-color 200ms ease,
+      color 200ms ease;
+  }
+
+  /* Zen mode (M2.6) — F toggles. Hide every piece of chrome; reading
+     content stays. Article remains centered because the layout's
+     `__content` flex grows to fill the freed space. Esc exits.
+
+     Selector strategy: target chrome by its dedicated classes rather
+     than DOM position so the rules survive layout refactors. The
+     callout header and frontmatter title are reading content (not
+     chrome) so they stay visible. */
+  body.zen-mode .swilread-shell__header,
+  body.zen-mode .swilread-vault-layout__sidebar,
+  body.zen-mode .swilread-vault-layout__toc {
+    display: none;
+  }
+  body.zen-mode .swilread-vault-layout {
+    min-height: 100vh;
+  }
+
+  /* Respect reduced motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

@@ -5,8 +5,11 @@ import {
   DEFAULT_FONT_SIZE,
   DEFAULT_LINE_HEIGHT,
   DEFAULT_FILE_TREE_OPEN,
+  DEFAULT_FILE_TREE_WIDTH,
   DEFAULT_TOC_OPEN,
   DEFAULT_FRONTMATTER_DISPLAY,
+  FILE_TREE_WIDTH_MAX,
+  FILE_TREE_WIDTH_MIN,
   FONT_SIZE_MIN,
   FONT_SIZE_MAX,
   LINE_HEIGHT_MIN,
@@ -24,6 +27,7 @@ beforeEach(async () => {
     contentWidth: 'medium',
     zenMode: false,
     fileTreeOpen: DEFAULT_FILE_TREE_OPEN,
+    fileTreeWidth: DEFAULT_FILE_TREE_WIDTH,
     tocOpen: DEFAULT_TOC_OPEN,
     commandPaletteOpen: false,
     shortcutsHelpOpen: false,
@@ -145,6 +149,38 @@ describe('ui store — fileTreeOpen (M4.3)', () => {
     useUIStore.setState({ ready: false })
     await useUIStore.getState().init()
     expect(useUIStore.getState().fileTreeOpen).toBe(false)
+  })
+})
+
+describe('ui store — fileTreeWidth (resizable sidebar)', () => {
+  it('defaults to 280', () => {
+    expect(useUIStore.getState().fileTreeWidth).toBe(DEFAULT_FILE_TREE_WIDTH)
+  })
+
+  it('setFileTreeWidth clamps below the minimum', async () => {
+    await useUIStore.getState().setFileTreeWidth(50)
+    expect(useUIStore.getState().fileTreeWidth).toBe(FILE_TREE_WIDTH_MIN)
+    const row = await db.preferences.get('ui:fileTreeWidth')
+    expect(row?.value).toBe(FILE_TREE_WIDTH_MIN)
+  })
+
+  it('setFileTreeWidth clamps above the maximum', async () => {
+    await useUIStore.getState().setFileTreeWidth(2000)
+    expect(useUIStore.getState().fileTreeWidth).toBe(FILE_TREE_WIDTH_MAX)
+  })
+
+  it('setFileTreeWidth persists in-range values verbatim', async () => {
+    await useUIStore.getState().setFileTreeWidth(360)
+    expect(useUIStore.getState().fileTreeWidth).toBe(360)
+    const row = await db.preferences.get('ui:fileTreeWidth')
+    expect(row?.value).toBe(360)
+  })
+
+  it('init clamps a corrupt persisted width', async () => {
+    await db.preferences.put({ key: 'ui:fileTreeWidth', value: 9999 })
+    useUIStore.setState({ ready: false })
+    await useUIStore.getState().init()
+    expect(useUIStore.getState().fileTreeWidth).toBe(FILE_TREE_WIDTH_MAX)
   })
 
   it('init falls back to default for invalid stored values', async () => {

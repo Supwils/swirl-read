@@ -4,6 +4,348 @@
 
 ---
 
+## 2026-05-02 · Audit fixes pack 5 — A.L9 + A.L10 (acknowledged)
+
+**Status**: ✅ A.L9 shipped; A.L10 formally acknowledged as won't-fix. All audit items now closed.
+
+### What changed
+
+- **A.L9** — Added explicit zen mode button to the AppShell header.
+  - New `Maximize2`/`Minimize2` Lucide button inserted between the chrome-mode toggle and the command palette button.
+  - `title="Zen mode (F)"` / `title="Exit zen mode (F or Esc)"` surfaces the keyboard shortcut on hover.
+  - `aria-pressed` reflects live `zenMode` state. The F-key hotkey and Esc-to-exit still work unchanged — the button is an additional affordance, not a replacement.
+  - The HintToast in VaultLayout already mentioning "F" is unchanged and still present.
+
+- **A.L10** — Formally closed as won't-fix. `tabsStore.init()` fire-and-forget in `src/main.tsx:23–25` matches the existing `reader-store` pattern (same file, same treatment). No user-visible defect. Deferred until a "Hydrating…" splash is added; at that point gate on `tabsStore.ready`.
+
+- **Census table updated** — `docs/develop/audit-2026-05-02.md` census now reflects post-split LOC for all B.2–B.5 output files. No former offender remains above the 250-LOC bar.
+
+### Files modified
+
+- `src/app/AppShell.tsx` — added `zenMode`/`toggleZenMode` subscriptions and `Maximize2`/`Minimize2` button.
+- `docs/develop/audit-2026-05-02.md` — A.L9 `done (2026-05-02)`, A.L10 `won't fix (2026-05-02)`, census table updated.
+
+### Verification
+
+- `pnpm typecheck`: 0 errors
+- `pnpm lint --max-warnings 0`: 0 warnings
+- `pnpm format:check`: clean
+- `pnpm test`: **705 / 705 passing**
+- `pnpm build`: succeeded; main chunk **252.96 KB gz** (no regressions)
+
+---
+
+## 2026-05-02 · Audit fixes pack 4 — B.2 + B.3 + B.4 + B.5
+
+**Status**: ✅ Four large file-decoupling splits complete. All five B-series items now done.
+
+### What changed
+
+- **B.2 — CommandPalette.tsx (657 → 229 LOC)**
+  - `use-flat-recents.ts` (44 LOC): `RecentItem` type + `useFlatRecents()` hook — flattens per-vault recents into a recency-sorted cross-vault list, capped at 30.
+  - `use-palette-search.ts` (250 LOC): `PaletteMode` type, `classifyInput()`, `useCurrentVaultId()`, `useCurrentFilePath()`, `useVaultFiles()`, `useVaultSections()`, `useFullTextIndex()`. Also `placeholderFor()` and `emptyMessage()` (operate on `PaletteMode`).
+  - `PaletteGroups.tsx` (138 LOC): `HeadingItem`, `PaletteFilesGroup`, `PaletteSearchResults` components.
+  - `CommandPalette.tsx` trimmed to 229 LOC — dialog wrapper + `PaletteBody` only.
+
+- **B.3 — FileTree.tsx (611 → 125 LOC)**
+  - `file-tree-cache.ts` — added exported `sortEntries(entries)` utility (shared by FileTree and FileTreeNode).
+  - `ContinueAndRecent.tsx` (136 LOC): `ContinueAndRecent` component (internal `ContinueBlock`, `RecentBlock`).
+  - `SectionsNav.tsx` (80 LOC): `SectionsNav` component with lazy `detectSections` import.
+  - `FileTreeNode.tsx` (246 LOC): `FileTreeNode` + `FileTreeNodeProps`. Auto-expand, lazy-load children, section-home detection effects.
+  - `FileTree.tsx` trimmed to 125 LOC — slim shell with `FileTree` and internal `FilesNav`.
+
+- **B.4 — JsonRenderer.tsx (541 → 134 LOC)**
+  - `json-utils.ts` — added `pathKey(path)` and `collectMatchAncestors(value, queryLower, path, out)` exports.
+  - `JsonNodeParts.tsx` (189 LOC): `LeafRow`, `CollectionNode`, `KeyLabel`, `CopyPathButton`. Internal `highlight()` (uses JSX `<mark>`, not exported to satisfy react-refresh rule).
+  - `JsonTreeNode.tsx` (175 LOC): `JsonNode` + `NodeProps`. Its own internal `highlight()` for string value rendering.
+  - `JsonRenderer.tsx` trimmed to 134 LOC — shell with search state + tree root.
+
+- **B.5 — DocumentPage.tsx (523 → 151 LOC)**
+  - `document-components.ts` (28 LOC): neutral `.ts` (no JSX) re-exporting `customComponents` mapping object — avoids circular imports between `use-document-loader.ts` and `DocumentBodyView.tsx`.
+  - `use-document-loader.ts` (149 LOC): `LoadState` type + `useDocumentLoader({ vaultId, filePath, retryToken })` — owns the full stat→branch→read→render pipeline.
+  - `DocumentBodyView.tsx` (216 LOC): all lazy renderer imports (Code, CSV, HTML, JSON, Media, Unsupported) + the `<article>` shell with all state branches rendered.
+  - `DocumentPage.tsx` trimmed to 151 LOC — wikilink index effect, backlinks effect, TOC/context effects, scroll memory, title derivation, delegates rendering to `DocumentBodyView`.
+
+### Key decisions
+
+- `highlight()` internal copies: kept private in both `JsonNodeParts.tsx` and `JsonTreeNode.tsx` because JSX can't live in `.ts`, and exporting a non-component from a `.tsx` file triggers the `react-refresh/only-export-components` lint rule.
+- `customComponents` in a neutral `.ts` file: prevents the circular import that would arise if both `use-document-loader.ts` and `DocumentBodyView.tsx` imported from `DocumentPage.tsx`.
+
+### Files added
+
+- `src/ui/command-palette/use-flat-recents.ts`
+- `src/ui/command-palette/use-palette-search.ts`
+- `src/ui/command-palette/PaletteGroups.tsx`
+- `src/ui/file-tree/ContinueAndRecent.tsx`
+- `src/ui/file-tree/SectionsNav.tsx`
+- `src/ui/file-tree/FileTreeNode.tsx`
+- `src/ui/reading-shell/JsonNodeParts.tsx`
+- `src/ui/reading-shell/JsonTreeNode.tsx`
+- `src/ui/reading-shell/document-components.ts`
+- `src/ui/reading-shell/use-document-loader.ts`
+- `src/ui/reading-shell/DocumentBodyView.tsx`
+
+### Files modified
+
+- `src/ui/command-palette/CommandPalette.tsx` (657 → 229 LOC)
+- `src/ui/file-tree/FileTree.tsx` (611 → 125 LOC)
+- `src/ui/file-tree/file-tree-cache.ts` (added `sortEntries` export)
+- `src/ui/reading-shell/JsonRenderer.tsx` (541 → 134 LOC)
+- `src/ui/reading-shell/json-utils.ts` (added `pathKey`, `collectMatchAncestors`)
+- `src/ui/reading-shell/DocumentPage.tsx` (523 → 151 LOC)
+- `docs/develop/audit-2026-05-02.md` — B.2–B.5 flipped to `done (2026-05-02)`.
+
+### Verification
+
+- `pnpm typecheck`: 0 errors
+- `pnpm lint --max-warnings 0`: 0 warnings
+- `pnpm format:check`: clean
+- `pnpm test`: **705 / 705 passing**
+- `pnpm build`: succeeded; main chunk size unchanged from pre-split baseline.
+
+---
+
+## 2026-05-02 · Audit fixes pack 3 — A.H4 + B.1
+
+**Status**: ✅ Two audit items closed. A.H4 is a 15-LOC UX fix; B.1 is the globals.css → 14-shard split plus a build-time dead-code stripper.
+
+### What changed
+
+- **A.H4** — Header file-tree toggle now does something in reading mode.
+  - Old behaviour: clicking the panel-left button in reading mode called `toggleFileTree()`, which flipped `fileTreeOpen` but the sidebar never appeared (it's gated on `chromeMode === 'working'`).
+  - New behaviour (option a — Promote on click): if `chromeMode === 'reading'`, the click atomically calls `setChromeMode('working')` and, if `fileTreeOpen` was false, `setFileTreeOpen(true)`. The sidebar appears immediately.
+  - Added `fileTreePinned = chromeMode === 'working' && fileTreeOpen` in `AppShell` for accurate `aria-pressed` and icon toggling in both chrome modes.
+  - The subsequent click (now in working mode) calls `toggleFileTree()` as before.
+
+- **B.1** — globals.css (4098 LOC) split into 14 @imported shards.
+  - 14 new files in `src/styles/`: `themes.css`, `scrollbars.css`, `prose.css`, `code-shiki.css`, `layout.css`, `file-tree.css`, `tabs.css`, `command-palette.css`, `settings.css`, `landing.css`, `file-renderers.css`, `media.css`, `prose-ext.css`, `zen-mobile.css`. All ≤ 499 LOC.
+  - `globals.css` is now a 72-line entry point (`@import` chain + `@theme` block).
+  - **Bundle size issue and fix**: Tailwind v4's `@tailwindcss/vite` plugin runs Lightning CSS on each @imported shard independently during the compile pass, before the optimize pass (which uses modern targets). This adds one `@supports (color:color-mix(in lab,red,red))` wrapper per shard that contains `color-mix()` — 14 extra wrappers (+0.84 KB gz) that can't be removed by the optimize pass because they're already-compiled output.
+  - All SwilRead target browsers (Chrome ≥ 111, Edge ≥ 111, Firefox ≥ 113, Safari ≥ 16.2) support `color-mix()` natively, so these wrappers are dead code.
+  - Added `stripColorMixSupports()` Vite plugin (in `vite.config.ts`) that post-processes the CSS bundle and unwraps these blocks (brace-counting traversal, safe for cascade since the rules inside are deduplicated and don't have cross-shard conflicts).
+  - Added `"browserslist"` field to `package.json` documenting the target range: Chrome/Edge ≥ 111, Firefox ≥ 113, Safari ≥ 16.2.
+  - Verified: concatenating all shards into one file produces the same build hash as the split (@import) approach — confirming zero content duplication.
+
+### Files added
+
+- `src/styles/themes.css`, `scrollbars.css`, `prose.css`, `code-shiki.css`, `layout.css`, `file-tree.css`, `tabs.css`, `command-palette.css`, `settings.css`, `landing.css`, `file-renderers.css`, `media.css`, `prose-ext.css`, `zen-mobile.css` — 14 CSS shards.
+
+### Files modified
+
+- `src/styles/globals.css` — replaced 4098 lines of CSS with 72-line entry point + `@import` chain.
+- `src/app/AppShell.tsx` — A.H4 fix: promote-on-click logic + `fileTreePinned` computed value.
+- `vite.config.ts` — `stripColorMixSupports()` Vite plugin.
+- `package.json` — `"browserslist"` field.
+- `docs/develop/audit-2026-05-02.md` — A.H4 and B.1 flipped to `done (2026-05-02)`.
+
+### Verification
+
+- `pnpm typecheck`: 0 errors
+- `pnpm lint --max-warnings 0`: 0 warnings
+- `pnpm format:check`: clean (ran `pnpm format` to fix trailing-whitespace issues in 11 new shard files)
+- `pnpm test`: **704 / 704 passing** (unchanged)
+- `pnpm build`: CSS **23.43 KB gz** (split + strip); main chunk **252.19 KB gz**
+
+### Remaining open audit items (recommended next)
+
+- **A.M3 / A.M4** — design calls about back/forward and wikilink-driven preview replacement.
+- **A.L1–A.L5, A.L7–A.L10** — low-priority polish.
+- **B.2–B.5** — file-decoupling backlog.
+
+---
+
+## 2026-05-02 · Audit fixes pack 2 — A.H1 + A.M1 + A.M2 + A.L6
+
+**Status**: ✅ Four audit items closed, one new test file, three new tests, one helper extraction, one dead-code cleanup. Behaviour-preserving except for the two intentional UX fixes.
+
+### What changed
+
+- **A.H1** — Closing the last tab no longer silently re-opens the home file.
+  - `TabStrip.onClose` now navigates to `/app/${vaultId}?empty=1` when there's no neighbour tab to fall back on.
+  - `VaultHome` reads `?empty=1` from `useLocation().search` and skips the home-file auto-redirect when present, so the user lands on the directory listing (the natural empty-workspace surface) instead of having `index.md` re-opened as a fresh tab.
+  - New test file `src/ui/reading-shell/TabStrip.test.tsx` (3 tests): closing the last tab → store empty + URL is `/app/v?empty=1`; closing a non-last active tab → navigates to neighbour; closing an inactive tab → URL unchanged.
+
+- **A.M1** — Active tab is auto-scrolled into view after URL changes.
+  - `TabStrip` keeps a `useRef<HTMLDivElement>` on the active tab and a `useEffect([currentPath])` that calls `scrollIntoView({ block: 'nearest', inline: 'nearest' })`. `inline: 'nearest'` is no-op when the tab is already visible — so already-on-screen tabs don't trigger spurious motion.
+
+- **A.M2** — Dead `data-swilread-dragging-tab` writes removed from `TabStrip` (3 sites + the `DRAG_FLAG` constant). The original concern (hover-zone grace timer firing mid-drag) is moot now that the strip lives in the header band, far from the edge hover zones.
+
+- **A.L6** — Extracted the URL-pathname-to-vault-path helper.
+  - New `src/app/derive-current-path.ts` exports `deriveCurrentPathFromPathname(pathname)` plus a private `safeDecode` segment helper.
+  - `AppShell` and `VaultLayout` both use it; the duplicated `safeDecode` function in `VaultLayout` is gone.
+
+### Files added
+
+- `src/app/derive-current-path.ts` — single home for the route → vault-path translation.
+- `src/ui/reading-shell/TabStrip.test.tsx` — 3 tests covering A.H1.
+
+### Files modified
+
+- `src/ui/reading-shell/TabStrip.tsx` — A.H1 navigation, A.M1 ref + scroll effect, A.M2 cleanup.
+- `src/ui/reading-shell/VaultHome.tsx` — `?empty=1` opt-out branch in load effect.
+- `src/app/AppShell.tsx` — uses the shared deriver.
+- `src/ui/reading-shell/VaultLayout.tsx` — uses the shared deriver, drops local `safeDecode`.
+- `docs/develop/audit-2026-05-02.md` — four items flipped to `done (2026-05-02)`.
+
+### Verification
+
+- `pnpm typecheck`: 0 errors
+- `pnpm lint --max-warnings 0`: 0 warnings
+- `pnpm format:check`: clean
+- `pnpm test`: **704 / 704 passing** (was 701; +3 from the new TabStrip suite)
+- `pnpm build`: main chunk **252.17 KB gz** (was 252.09; +0.08 KB for the scroll effect + new helper)
+
+### Remaining open audit items (recommended next)
+
+- **A.H4** — header file-tree toggle no-op in reading mode (decision needed before code).
+- **A.M3 / A.M4** — design calls about back/forward and wikilink-driven preview replacement.
+- **A.L1–A.L5, A.L7–A.L10** — low-priority polish.
+- **B.1–B.5** — file-decoupling backlog (globals.css being the biggest ROI).
+
+---
+
+## 2026-05-02 · Audit fixes pack 1 — A.H2 + A.H3 + A.M7
+
+**Status**: ✅ Three audit items closed in one small PR (high-priority CSS / layout polish, no functional behaviour change).
+
+### What changed
+
+- **A.H2** — Hover-summoned floating sidebar now has a click-outside dismiss on desktop. Added `--floating` modifier on the backdrop element in `VaultLayout.tsx`; new CSS rule renders the backdrop as a transparent fullscreen click target whenever the sidebar is floating. Existing click handler in the layout already wired the dismiss path. Small-viewport `@media` block remains the source of the dark-overlay drawer treatment (rule order: base → `--floating` (transparent) → `@media` (dark on small viewport) means each context picks the correct background).
+- **A.H3** — `.swilread-vault-layout__sidebar.swilread-vault-layout__sidebar--floating { width: var(--file-tree-width) }` (specificity 0,2,0) was overriding the small-viewport drawer's `width: min(280px, 80vw)` (0,1,0) — so a custom-resized 480 px sidebar overflowed phone-width viewports. Added a matching-specificity override inside the existing `@media (max-width: 1024px)` block.
+- **A.M7** — Header brand cluster (logo + wordmark + vault switcher) and tools cluster (mode toggle / search / TOC / settings) now have `shrink-0` Tailwind class, so a wide tab strip in the middle can never squeeze them.
+
+### Files modified
+
+- `src/app/AppShell.tsx` — `shrink-0` on both header clusters.
+- `src/ui/reading-shell/VaultLayout.tsx` — backdrop receives `--floating` modifier when sidebar is floating.
+- `src/styles/globals.css` — new backdrop floating rule + small-viewport width override.
+- `docs/develop/audit-2026-05-02.md` — three items flipped to `done (2026-05-02)`.
+
+### Verification
+
+- `pnpm typecheck`: 0 errors
+- `pnpm lint --max-warnings 0`: 0 warnings
+- `pnpm format:check`: clean
+- `pnpm test`: **701 / 701 passing** (no behaviour change → no regression)
+- `pnpm build`: main chunk **252.09 KB gz** (was 252.08; +0.01 KB)
+
+Manual verification still owed by operator — narrow devtools to 1024 / 900 / 768 px to confirm A.H3 + A.M7; hover the left edge in default reading mode and click on the document area to confirm A.H2 dismiss.
+
+### Remaining open audit items (recommended next)
+
+1. **A.H1** — closing the last tab silently re-opens the home file. Standalone PR with regression test.
+2. **A.H4** — header file-tree toggle no-op in reading mode. Decision pass before code.
+3. **A.M1, A.M2, A.L6** — tab UX polish + dead-code cleanup.
+
+---
+
+## 2026-05-02 · Audit + refactor backlog (post-tabs review)
+
+**Status**: 📋 Two new tracking artefacts. No code changes; this is governance / hygiene.
+
+### What changed
+
+- New doc: [`docs/develop/audit-2026-05-02.md`](audit-2026-05-02.md) —
+  consolidated bug + UX backlog (Section A) and file-size decoupling
+  backlog (Section B) from the post-tabs debug pass. 25 items total
+  (4 high, 5 medium, 10 low + 5 refactor). Each carries severity, repro,
+  file paths with line numbers, acceptance criteria, and a recommended
+  sequencing order at the bottom.
+- New section in
+  [`docs/develop/engineering-principles.md`](engineering-principles.md) §
+  "File-size discipline" — soft 500-LOC ceiling for `.ts` / `.tsx` source
+  files, with rationale, per-category guidance (components ≤ 250,
+  stores 250–400, pure logic ≤ 500, data files exempt, CSS sectioned),
+  and the one-liner shell command to re-run the census.
+
+### Top-of-mind items pending operator review
+
+Recommended sequencing:
+
+1. **A.H3 + A.H2 + A.M7** as a single small CSS / layout PR — floating-sidebar width override at small viewport, click-outside-to-dismiss on desktop, brand-cluster shrink-0 protection.
+2. **A.H1** standalone PR — closing the last tab no longer silently re-opens the vault home file.
+3. **A.H4** decision pass first; default recommendation is to make the header file-tree toggle promote `chromeMode` to `working` when clicked in reading mode (~ 15 LOC).
+
+### Files modified
+
+- `docs/develop/engineering-principles.md` — added File-size discipline section.
+- `docs/develop/audit-2026-05-02.md` — new tracker.
+- `docs/develop/work-log.md` — this entry.
+
+---
+
+## 2026-05-02 · Sidebar craft pack + multi-tab UX (PR1–PR4)
+
+**Status**: ✅ Four sequential improvements landed against a single design plan covering the left sidebar and document workspace. Each PR independently passes the gate (`typecheck`, `lint --max-warnings 0`, `format:check`, full vitest suite, production build).
+
+### PR 1 — Left-edge sidebar gutter
+
+The sidebar's first column was kissing the viewport's left edge — visually cramped. New `--sidebar-gutter: 8px` token applied as `padding-inline-start` on `.swilread-vault-layout__sidebar`. The depth-based row indent in `FileTree.tsx` dropped its hardcoded `+8` so chevron position is unchanged; only the row hover/active background now stops at the gutter rather than bleeding to the screen edge.
+
+### PR 3 — Sticky folder collapse (regression fix)
+
+The `useEffect` at `FileTree.tsx:384–386` had `expanded` in its deps, so any user click that flipped `expanded=false` re-fired the auto-expand on the next render — making it impossible to collapse a folder that contained the active file. Replaced with a `useRef<VaultPath | null>` that records the `currentPath` for which we last auto-expanded; the effect only fires when the path itself changes. Rule reduces to "auto-expand fires once per (node, currentPath)". Manual collapses now stick until the user navigates to a sibling branch (matches VS Code Explorer). New regression test in `FileTree.test.tsx` exercises the case end-to-end.
+
+### PR 2 — Drag-to-resize sidebar width
+
+New `fileTreeWidth` global pref in `useUIStore` (clamp 220–520 px, default 280, persisted as `ui:fileTreeWidth`). `useApplyUIPrefs` reflects it into the `--file-tree-width` CSS var so existing layout rules just work. New `<SidebarResizeHandle />` renders a `position: fixed` button at the seam with an 8 px hit area + 1 px hairline (visible on hover/focus/drag); pointer-down captures the pointer and writes the live width to the CSS var directly each frame so drag is 60 fps without Zustand churn — pointer-up persists the final value once. Keyboard support: ArrowLeft/Right ±16 px, Shift accelerates ×4, Home/End jump to min/max, Enter resets to 280. Hidden in reading-mode hover-summon (avoid 800 ms grace timer fighting drag) and below 1024 px viewport (drawer mode). Four new clamp/persist tests in `ui-store.test.ts`.
+
+### PR 4 — Multi-file tabs with preview-then-pin
+
+User can now open multiple documents simultaneously with VS Code-style tabs.
+
+- **Dexie schema bump v5 → v6** — new `openTabs` table indexed by `id`, `vaultId`, `[vaultId+order]`, `openedAtMs`. Test reset transaction extended.
+- **New `useTabsStore`** (`src/stores/tabs-store.ts`) — `tabsByVault`, `recentlyClosedByVault`, `openOrFocus(vaultId, path, { pin? })`, `closeTab`, `pinTab`, `reorderTabs`, `reopenLastClosed`, `forgetVault`, `init`. Active tab is **not** stored — derived from URL to keep one source of truth. `openOrFocus` rules (preview replaces preview; pin is sticky; cap at `MAX_TABS_PER_VAULT = 20`) covered by 18 unit tests including init/hydration and Dexie persistence.
+- **`removeVault` fan-out** in `vault-store.ts` now bulk-deletes `openTabs` rows for the vault and calls `useTabsStore.forgetVault(id)`, mirroring the existing `recentFiles` / `scrollPositions` / `backlinks` cleanup.
+- **`<TabStrip />`** component sits inside `.swilread-vault-layout__content` above `<Outlet/>`. Sticky to the top of the reading column. Each tab supports: single click → activate, double-click → pin, middle-click → close, × button → close, native HTML5 `draggable` for reorder (zero deps, drop indicator via outline), keyboard ArrowLeft/Right/Home/End focus traversal. Sets `documentElement.dataset.swilreadDraggingTab` during drag so future hover-zone hooks can suspend their grace timer (not yet wired — hover hooks already have escape hatches).
+- **DocumentPage integration** — every URL-driven document load calls `openOrFocus(vaultId, path)`; if the URL hits a path already in tabs the call is idempotent, otherwise the preview tab is replaced. `markRecentFile` continues to fire alongside.
+- **File-tree `Cmd/Ctrl + click`** intercepts the `<Link>` click and pre-pins via `openOrFocus(..., { pin: true })`; the subsequent navigate triggers `DocumentPage`'s default `pin:false` call which finds the tab already pinned and no-ops.
+- **CSS** in globals.css adds the strip styling, preview-italic, drop-target outline, active-tab seam treatment, and a `body.zen-mode .swilread-tab-strip { display: none }` rule.
+- **Keyboard shortcuts deferred** — Cmd/Ctrl+W, Ctrl+Tab, Cmd+1..9 are heavily browser-reserved (especially on macOS Chrome/Safari), so this PR ships mouse + within-strip arrow navigation only. A follow-up PR can add a unique-modifier shortcut set if requested.
+
+### State + persistence summary
+
+| Per-vault data             | Where                                                     | Cap |
+| -------------------------- | --------------------------------------------------------- | --- |
+| `tabsByVault[v]`           | Dexie `openTabs` (id = `JSON.stringify([vaultId, path])`) | 20  |
+| `recentlyClosedByVault[v]` | Memory only (ephemeral undo for reopen)                   | 10  |
+
+`useTabsStore.init()` is wired into `main.tsx` alongside the other store hydrations.
+
+### Verification
+
+- `pnpm typecheck`: 0 errors
+- `pnpm lint --max-warnings 0`: 0 warnings
+- `pnpm format:check`: clean
+- `pnpm test`: **701 / 701 passing** (was 671 baseline; +5 ui-store, +1 file-tree regression, +18 tabs-store, no regressions)
+- `pnpm build`: main chunk **251.76 KB gz** (was 249.00; +2.76 within the +3 KB self-imposed budget for this pack)
+
+### Files added
+
+- `src/stores/tabs-store.ts` + `.test.ts` (18 tests)
+- `src/ui/reading-shell/SidebarResizeHandle.tsx`
+- `src/ui/reading-shell/TabStrip.tsx`
+
+### Files modified
+
+- `src/styles/globals.css` (gutter token, sidebar padding, resize-handle CSS, tab-strip CSS, mobile-drawer hide rule for resize handle)
+- `src/stores/ui-store.ts` (+ `.test.ts`) — `fileTreeWidth` field/action/clamp/init
+- `src/stores/vault-store.ts` — `openTabs` cleanup + `useTabsStore.forgetVault` in `removeVault` fan-out
+- `src/app/use-apply-ui-prefs.ts` — reflect `fileTreeWidth` to CSS var
+- `src/ui/file-tree/FileTree.tsx` (+ `.test.ts`) — sticky-collapse fix, depth indent gutter, modifier-click pin
+- `src/ui/reading-shell/VaultLayout.tsx` — render `SidebarResizeHandle` and `TabStrip`
+- `src/ui/reading-shell/DocumentPage.tsx` — `openOrFocus` on URL change
+- `src/core/persistence/db.ts` — schema v6 with `openTabs`
+- `src/main.tsx` — `useTabsStore.init()` boot
+
+### Open follow-ups
+
+- Keyboard shortcut hook (`use-tab-hotkeys.ts`) — design a unique modifier set that doesn't collide with browser tabbing
+- Visual polish iteration after dogfooding on the live vault
+- Optional `ui:tabPreviewMode` setting to opt out of preview behaviour if power users prefer always-pin
+
+---
+
 ## 2026-05-02 · M9.4 — First-time hints toast
 
 **Status**: ✅ A first-time visitor to a vault now sees a single 12-second toast pointing at the keyboard surfaces (⌘K / F / ?). Seen-state persists in IndexedDB; "Reset hints" in Settings brings it back.

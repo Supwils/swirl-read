@@ -141,6 +141,48 @@ describe('FileTree (M4.3) — active file + ancestor auto-expansion', () => {
       ).toBeInTheDocument()
     })
   })
+
+  // Regression: previously the auto-expand effect had `expanded` in its
+  // deps and fired on every render where `isAncestor && !expanded`. That
+  // overwrote the user's manual collapse on the next tick. The fix keys
+  // auto-expansion to currentPath changes via a ref, so a manual collapse
+  // sticks until the user navigates somewhere new.
+  it('keeps a folder collapsed after the user clicks to close it, even when it contains the open file', async () => {
+    const user = userEvent.setup()
+    await registerVault('sticky-collapse', {
+      career: {
+        me: { 'me.md': '# Me' },
+      },
+    })
+    renderAt('/app/sticky-collapse/career/me/me.md')
+
+    const sidebar = await waitFor(() => getSidebar())
+    // Auto-expansion makes the leaf visible.
+    await waitFor(() => {
+      expect(
+        within(sidebar).getByRole('link', { name: 'me.md' }),
+      ).toBeInTheDocument()
+    })
+
+    // User clicks the chevron on `career` to collapse it.
+    const careerToggle = within(sidebar).getByRole('button', {
+      name: /collapse career/i,
+    })
+    await user.click(careerToggle)
+
+    // The leaf disappears and stays gone — the auto-expand effect must not
+    // re-run for the same currentPath.
+    await waitFor(() => {
+      expect(
+        within(sidebar).queryByRole('link', { name: 'me.md' }),
+      ).not.toBeInTheDocument()
+    })
+    // Hold for a couple of frames so any latent re-render had a chance.
+    await new Promise((r) => setTimeout(r, 50))
+    expect(
+      within(sidebar).queryByRole('link', { name: 'me.md' }),
+    ).not.toBeInTheDocument()
+  })
 })
 
 describe('FileTree (M4.3) — visibility toggle', () => {

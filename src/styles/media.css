@@ -1,0 +1,236 @@
+/* Media renderer (M7.6) ──────────────────────────────────────────────── */
+.swilread-media {
+  margin: 1.5rem 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  font-family: var(--font-sans);
+}
+
+.swilread-media__image {
+  display: block;
+  max-width: 100%;
+  max-height: 75vh;
+  height: auto;
+  border-radius: 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.swilread-media__image-trigger {
+  position: relative;
+  appearance: none;
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: zoom-in;
+  border-radius: 8px;
+}
+
+.swilread-media__image-trigger:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 4px;
+}
+
+.swilread-media__zoom-hint {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.45);
+  color: white;
+  opacity: 0;
+  transition: opacity 120ms ease;
+  pointer-events: none;
+}
+
+.swilread-media__image-trigger:hover .swilread-media__zoom-hint,
+.swilread-media__image-trigger:focus-visible .swilread-media__zoom-hint {
+  opacity: 1;
+}
+
+/* Audio wrapper themed to the reader (M7 polish) ─────────────────────── */
+.swilread-media__audio-wrap {
+  width: 100%;
+  max-width: 480px;
+  padding: 0.5rem 0.65rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+  border: 1px solid var(--color-border);
+}
+
+.swilread-media__audio {
+  width: 100%;
+  display: block;
+}
+
+/* Image lightbox (M7 polish) ─────────────────────────────────────────── */
+.swilread-lightbox__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgb(0 0 0 / 0.85);
+  backdrop-filter: blur(2px);
+}
+
+.swilread-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 4vh 4vw;
+  outline: none;
+}
+
+.swilread-lightbox__image {
+  max-width: 92vw;
+  max-height: 84vh;
+  height: auto;
+  width: auto;
+  border-radius: 6px;
+  box-shadow: 0 12px 48px rgb(0 0 0 / 0.6);
+  background: white;
+}
+
+.swilread-lightbox__close {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 0.3);
+  background: rgb(0 0 0 / 0.4);
+  color: white;
+  cursor: pointer;
+}
+
+.swilread-lightbox__close:hover {
+  background: rgb(0 0 0 / 0.6);
+}
+
+.swilread-lightbox__caption {
+  margin: 0;
+  color: rgb(255 255 255 / 0.85);
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+}
+
+/* Embeds ─────────────────────────────────────────────────────────────── */
+.swilread-prose .swilread-embed {
+  display: block;
+  margin: 1.4em 0;
+}
+
+.swilread-prose .swilread-embed--image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px var(--color-shadow);
+}
+
+.swilread-prose .swilread-embed--video,
+.swilread-prose .swilread-embed--audio {
+  width: 100%;
+  border-radius: 6px;
+  background: var(--color-surface);
+}
+
+.swilread-prose .swilread-embed--audio {
+  height: 40px;
+}
+
+.swilread-prose .swilread-embed--markdown {
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-accent);
+  background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+  border-radius: 6px;
+  padding: 0.6em 1em 0.9em;
+}
+
+.swilread-prose .swilread-embed__header {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  font-family: var(--font-sans);
+  font-size: 0.78em;
+  letter-spacing: 0.02em;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  margin-bottom: 0.6em;
+  padding-bottom: 0.4em;
+  border-bottom: 1px dashed var(--color-border);
+}
+
+.swilread-prose .swilread-embed__filename {
+  font-family: var(--font-mono);
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--color-text-muted);
+}
+
+.swilread-prose .swilread-embed__body > *:first-child {
+  margin-top: 0;
+}
+.swilread-prose .swilread-embed__body > *:last-child {
+  margin-bottom: 0;
+}
+
+.swilread-prose .swilread-embed--card {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0.7em 1em;
+  border: 1px dashed var(--color-border);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-surface) 40%, transparent);
+  color: var(--color-text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.9em;
+}
+
+.swilread-prose .swilread-embed__kind {
+  display: inline-block;
+  padding: 0.05em 0.5em;
+  border-radius: 3px;
+  background: var(--color-accent);
+  color: var(--color-bg);
+  font-size: 0.72em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.swilread-prose .swilread-embed--pending {
+  color: var(--color-text-muted);
+  font-style: italic;
+  cursor: progress;
+}
+
+.swilread-prose .swilread-embed--broken {
+  color: var(--color-text-muted);
+  font-style: italic;
+  border-left: 2px dotted var(--color-text-muted);
+  padding-left: 0.6em;
+}
+
+.swilread-prose .swilread-embed--cycle {
+  color: var(--color-text-muted);
+  border: 1px dashed var(--color-text-muted);
+  border-radius: 4px;
+  padding: 0.4em 0.7em;
+  font-size: 0.9em;
+}

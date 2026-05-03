@@ -1,0 +1,87 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Semantic theme tokens — overridden by `.theme-*` classes.
+   Components reference these via `bg-[var(--color-bg)]` etc.
+   ───────────────────────────────────────────────────────────────────────── */
+:root,
+.theme-sepia {
+  --color-bg: #f4ecd8;
+  --color-text: #3a2f24;
+  --color-text-muted: #6b5942;
+  --color-accent: #8b6f47;
+  --color-link: #8b6f47;
+  --color-code-bg: #ebe1c8;
+  --color-code-text: #3a2f24;
+  --color-border: #d4c8a8;
+  --color-surface: #ede2c5;
+  --color-shadow: rgb(58 47 36 / 0.08);
+}
+
+.theme-light {
+  --color-bg: #fafaf8;
+  --color-text: #1a1a1a;
+  --color-text-muted: #4a4a4a;
+  --color-accent: #0066cc;
+  --color-link: #0066cc;
+  --color-code-bg: #f0f0ee;
+  --color-code-text: #1a1a1a;
+  --color-border: #e0e0de;
+  --color-surface: #ffffff;
+  --color-shadow: rgb(0 0 0 / 0.06);
+}
+
+.theme-dark {
+  --color-bg: #1e1e1e;
+  --color-text: #d4d4d4;
+  --color-text-muted: #999999;
+  --color-accent: #7eb6ff;
+  --color-link: #7eb6ff;
+  --color-code-bg: #2a2a2a;
+  --color-code-text: #d4d4d4;
+  --color-border: #3a3a3a;
+  --color-surface: #252525;
+  --color-shadow: rgb(0 0 0 / 0.4);
+}
+
+.theme-oled {
+  --color-bg: #000000;
+  --color-text: #cccccc;
+  --color-text-muted: #888888;
+  --color-accent: #ff9d4d;
+  --color-link: #ff9d4d;
+  --color-code-bg: #111111;
+  --color-code-text: #cccccc;
+  --color-border: #222222;
+  --color-surface: #0a0a0a;
+  --color-shadow: rgb(0 0 0 / 0.6);
+}
+
+/* Auto: follow system. Sepia in light, Dark in dark. */
+@media (prefers-color-scheme: dark) {
+  .theme-auto {
+    --color-bg: #1e1e1e;
+    --color-text: #d4d4d4;
+    --color-text-muted: #999999;
+    --color-accent: #7eb6ff;
+    --color-link: #7eb6ff;
+    --color-code-bg: #2a2a2a;
+    --color-code-text: #d4d4d4;
+    --color-border: #3a3a3a;
+    --color-surface: #252525;
+    --color-shadow: rgb(0 0 0 / 0.4);
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  .theme-auto {
+    --color-bg: #f4ecd8;
+    --color-text: #3a2f24;
+    --color-text-muted: #6b5942;
+    --color-accent: #8b6f47;
+    --color-link: #8b6f47;
+    --color-code-bg: #ebe1c8;
+    --color-code-text: #3a2f24;
+    --color-border: #d4c8a8;
+    --color-surface: #ede2c5;
+    --color-shadow: rgb(58 47 36 / 0.08);
+  }
+}

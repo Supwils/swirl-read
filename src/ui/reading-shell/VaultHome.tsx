@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Navigate, useParams } from 'react-router'
+import { Navigate, useLocation, useParams } from 'react-router'
 import type { VaultEntry, VaultPath } from '@/core/vault'
 import { findVaultHome } from '@/core/navigation/section-detector'
 import { getAdapter } from '@/stores/vault-store'
@@ -16,6 +16,12 @@ type LoadState =
 
 export function VaultHome() {
   const { vaultId } = useParams<{ vaultId: string }>()
+  const { search } = useLocation()
+  // `?empty=1` opts the user out of the home-file auto-redirect.
+  // TabStrip.onClose appends this when the user closes the last tab so
+  // VaultHome doesn't silently re-open `index.md` and resurrect a tab
+  // the user just dismissed (audit A.H1).
+  const skipHomeRedirect = new URLSearchParams(search).get('empty') === '1'
   const [state, setState] = useState<LoadState>({ kind: 'idle' })
 
   useEffect(() => {
@@ -31,10 +37,13 @@ export function VaultHome() {
       try {
         // Try the home-detection lookup first. If a sensible home file
         // exists (`index.md`, `home.md`, `README.md`, …) we redirect into
-        // it so the user lands on content rather than a folder listing.
+        // it so the user lands on content rather than a folder listing —
+        // unless the URL carries the `empty=1` opt-out.
         const entries = await vault.list('')
         if (cancelled) return
-        const home = await findVaultHome(vault).catch(() => null)
+        const home = skipHomeRedirect
+          ? null
+          : await findVaultHome(vault).catch(() => null)
         if (cancelled) return
         if (home) {
           setState({ kind: 'redirect', to: home })
@@ -52,7 +61,7 @@ export function VaultHome() {
     return () => {
       cancelled = true
     }
-  }, [vaultId])
+  }, [vaultId, skipHomeRedirect])
 
   if (state.kind === 'redirect' && vaultId) {
     return <Navigate to={`/app/${vaultId}/${state.to}`} replace />

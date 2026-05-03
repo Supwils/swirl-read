@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="SwilRead">
+  <title>SwilRead</title>
+  <!--
+    Mark concept: a single folded-corner page (the act of reading one
+    document, mindfully) with three serif-weighted text lines. Brand
+    palette: cream paper, gold accent, dark ink. The light-on-dark
+    invert kicks in via prefers-color-scheme so the favicon never
+    blends into a dark browser chrome.
+  -->
+  <style>
+    .bg     { fill: #f4ecd8; }
+    .page   { fill: #fffaf0; stroke: #8b6f47; stroke-width: 1.4; stroke-linejoin: round; }
+    .fold   { fill: #e9dcb6; stroke: #8b6f47; stroke-width: 1.4; stroke-linejoin: round; }
+    .ink    { stroke: #3a2f24; stroke-width: 1.6; stroke-linecap: round; opacity: 0.85; }
+    .accent { stroke: #8b6f47; stroke-width: 1.6; stroke-linecap: round; }
+    @media (prefers-color-scheme: dark) {
+      .bg     { fill: #1e1e1e; }
+      .page   { fill: #2a241c; stroke: #c9a76b; }
+      .fold   { fill: #3a2f24; stroke: #c9a76b; }
+      .ink    { stroke: #e8dcc1; }
+      .accent { stroke: #ffb066; }
+    }
+  </style>
+  <rect class="bg" x="0" y="0" width="32" height="32" rx="6" />
+  <!-- Page body, with the top-right corner cut out for the fold -->
+  <path class="page" d="M7 5 H21 L26 10 V27 H7 Z" />
+  <!-- Folded corner triangle -->
+  <path class="fold" d="M21 5 V10 H26 Z" />
+  <!-- Text lines on the page (last short, like an end of paragraph) -->
+  <line class="ink"    x1="10.5" y1="15"   x2="22.5" y2="15" />
+  <line class="ink"    x1="10.5" y1="18.5" x2="22.5" y2="18.5" />
+  <line class="accent" x1="10.5" y1="22"   x2="18"   y2="22" />
+</svg>

@@ -42,6 +42,19 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
     ],
   },
   {
+    heading: 'Sidebar resize',
+    shortcuts: [
+      { keys: ['←', '→'], description: 'Narrow / widen sidebar by 16 px' },
+      {
+        keys: ['⇧', '←', '→'],
+        description: 'Narrow / widen sidebar by 64 px',
+      },
+      { keys: ['Home'], description: 'Collapse sidebar to minimum width' },
+      { keys: ['End'], description: 'Expand sidebar to maximum width' },
+      { keys: ['↵'], description: 'Reset sidebar to default width' },
+    ],
+  },
+  {
     heading: 'Help',
     shortcuts: [{ keys: ['?'], description: 'Show this list of shortcuts' }],
   },

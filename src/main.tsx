@@ -4,6 +4,7 @@ import { App } from '@/App'
 import { autoRestoreVaults } from '@/app/auto-restore'
 import { useHintsStore } from '@/stores/hints-store'
 import { useReaderStore } from '@/stores/reader-store'
+import { useTabsStore } from '@/stores/tabs-store'
 import { useVaultStore } from '@/stores/vault-store'
 import { useUIStore } from '@/stores/ui-store'
 import '@/styles/globals.css'
@@ -21,6 +22,7 @@ if (!rootElement) {
 void useVaultStore.getState().init()
 void useUIStore.getState().init()
 void useReaderStore.getState().init()
+void useTabsStore.getState().init()
 void useHintsStore.getState().init()
 // Auto-restore lives in its own task: re-attach FSAPI adapters whose
 // browser permission grant survived the page reload (M6.3).

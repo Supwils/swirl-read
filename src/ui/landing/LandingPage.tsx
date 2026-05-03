@@ -9,6 +9,7 @@ import {
   SAMPLE_VAULT_ID,
 } from '@/core/vault/sample-content'
 import { useVaultStore } from '@/stores/vault-store'
+import { Logo } from '@/ui/components/Logo'
 import { FolderPicker } from './FolderPicker'
 
 export function LandingPage(): ReactNode {
@@ -45,6 +46,12 @@ export function LandingPage(): ReactNode {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-6 py-10">
       <div className="w-full max-w-xl text-center">
+        <Logo
+          size={56}
+          decorative
+          className="mx-auto mb-4"
+          style={{ color: 'var(--color-text)' }}
+        />
         <h1
           className="font-serif text-6xl font-semibold tracking-tight"
           style={{ color: 'var(--color-text)' }}

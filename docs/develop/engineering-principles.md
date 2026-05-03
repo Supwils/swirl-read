@@ -110,6 +110,52 @@ These are enforced via lint rules where possible (`eslint-plugin-import` + custo
 
 ---
 
+## File-size discipline
+
+> **Soft ceiling: 500 lines per source file** (`.ts` / `.tsx`). The
+> threshold is heuristic, not hard — exceeding it is allowed when the
+> file's responsibility is genuinely cohesive and a split would create
+> more friction than clarity (deep prop drilling, helper-export gymnastics
+> for `react-refresh`). When you cross 500 lines, **document the split
+> plan or the explicit exemption** in `audit-YYYY-MM-DD.md`.
+
+Why the rule:
+
+- Files over ~500 lines stop fitting comfortably on one screen during
+  review; reviewers skim instead of read, and bugs slip through.
+- Large component files concentrate too many responsibilities. Editing
+  one block triggers re-renders / re-tests / merge conflicts on every
+  unrelated block.
+- The `react-refresh` lint rule (`react-refresh/only-export-components`)
+  already forces helper extraction for components — large files are
+  usually a sign helpers should have been extracted earlier.
+
+Practical guidance:
+
+- **Components** trend smaller. Aim for 100–250 LOC per `.tsx` file. If
+  a JSX tree spans hundreds of lines, look for natural sub-components.
+- **Stores** can run a little longer (250–400 LOC) because state +
+  actions + selectors live together for clarity.
+- **Pure-logic modules** (`core/*`) are fine up to 500 LOC if focused on
+  one concept; over that, split by sub-concept (e.g. `backlinks/build.ts`
+  - `backlinks/query.ts`).
+- **Data files** (`sample-content.ts`, generated fixtures) are exempt —
+  they're tables, not logic.
+- **CSS** has no fixed cap but follows the same instinct: a stylesheet
+  over ~ 800 LOC needs sectioning at minimum and is a candidate for
+  splitting by feature into multiple files imported from a shim.
+
+How to handle existing offenders: see the active backlog in
+`docs/develop/audit-2026-05-02.md` § Section B. New code that lands
+above the threshold without a documented plan should be flagged in PR
+review.
+
+Mechanically: `find src -name '*.ts*' ! -name '*.test.*' -exec wc -l {} \;`
+gives a sortable census. Re-run on a quarterly cadence and refresh the
+backlog.
+
+---
+
 ## Testing Philosophy
 
 - **Unit tests** for `core/` modules — they're pure logic, easy to test

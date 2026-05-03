@@ -9,6 +9,7 @@
  *   - `contentWidth`  — narrow (640) / medium (720) / wide (880)
  *   - `zenMode`             — F-key toggle, hides chrome (M2.6 wires the key)
  *   - `fileTreeOpen`        — left-rail file tree visibility (M4.3)
+ *   - `fileTreeWidth`       — left-rail width in px (220–520, drag-to-resize)
  *   - `tocOpen`             — right-rail table of contents visibility (M4.6)
  *   - `commandPaletteOpen`  — ⌘K palette open/closed (M5.1, transient)
  *   - `shortcutsHelpOpen`   — `?` overlay listing all keybindings (M9.4, transient)
@@ -48,6 +49,8 @@ export const FONT_SIZE_MIN = 14
 export const FONT_SIZE_MAX = 22
 export const LINE_HEIGHT_MIN = 1.4
 export const LINE_HEIGHT_MAX = 2.0
+export const FILE_TREE_WIDTH_MIN = 220
+export const FILE_TREE_WIDTH_MAX = 520
 
 export const DEFAULT_THEME: Theme = 'sepia'
 export const DEFAULT_FONT_FAMILY: FontFamily = 'serif'
@@ -55,6 +58,7 @@ export const DEFAULT_FONT_SIZE = 18
 export const DEFAULT_LINE_HEIGHT = 1.7
 export const DEFAULT_CONTENT_WIDTH: ContentWidth = 'medium'
 export const DEFAULT_FILE_TREE_OPEN = true
+export const DEFAULT_FILE_TREE_WIDTH = 280
 export const DEFAULT_TOC_OPEN = true
 export const DEFAULT_FRONTMATTER_DISPLAY: FrontmatterDisplay = 'metadata'
 export const DEFAULT_CHROME_MODE: ChromeMode = 'reading'
@@ -69,6 +73,7 @@ interface UIStoreState {
   contentWidth: ContentWidth
   zenMode: boolean
   fileTreeOpen: boolean
+  fileTreeWidth: number
   tocOpen: boolean
   commandPaletteOpen: boolean
   shortcutsHelpOpen: boolean
@@ -89,6 +94,7 @@ interface UIStoreActions {
   toggleZenMode: () => void
   setFileTreeOpen: (open: boolean) => Promise<void>
   toggleFileTree: () => Promise<void>
+  setFileTreeWidth: (width: number) => Promise<void>
   setTocOpen: (open: boolean) => Promise<void>
   toggleToc: () => Promise<void>
   setCommandPaletteOpen: (open: boolean) => void
@@ -164,6 +170,7 @@ export const useUIStore = create<UIStore>((set, get) => ({
   contentWidth: DEFAULT_CONTENT_WIDTH,
   zenMode: false,
   fileTreeOpen: DEFAULT_FILE_TREE_OPEN,
+  fileTreeWidth: DEFAULT_FILE_TREE_WIDTH,
   tocOpen: DEFAULT_TOC_OPEN,
   commandPaletteOpen: false,
   shortcutsHelpOpen: false,
@@ -180,6 +187,7 @@ export const useUIStore = create<UIStore>((set, get) => ({
       lineHeight,
       contentWidth,
       fileTreeOpen,
+      fileTreeWidth,
       tocOpen,
       frontmatterDisplay,
       chromeMode,
@@ -190,6 +198,7 @@ export const useUIStore = create<UIStore>((set, get) => ({
       readPref('lineHeight', isFiniteNumber, DEFAULT_LINE_HEIGHT),
       readPref('contentWidth', isContentWidth, DEFAULT_CONTENT_WIDTH),
       readPref('fileTreeOpen', isBoolean, DEFAULT_FILE_TREE_OPEN),
+      readPref('fileTreeWidth', isFiniteNumber, DEFAULT_FILE_TREE_WIDTH),
       readPref('tocOpen', isBoolean, DEFAULT_TOC_OPEN),
       readPref(
         'frontmatterDisplay',
@@ -205,6 +214,11 @@ export const useUIStore = create<UIStore>((set, get) => ({
       lineHeight: clamp(lineHeight, LINE_HEIGHT_MIN, LINE_HEIGHT_MAX),
       contentWidth,
       fileTreeOpen,
+      fileTreeWidth: clamp(
+        fileTreeWidth,
+        FILE_TREE_WIDTH_MIN,
+        FILE_TREE_WIDTH_MAX,
+      ),
       tocOpen,
       frontmatterDisplay,
       chromeMode,
@@ -256,6 +270,12 @@ export const useUIStore = create<UIStore>((set, get) => ({
     const next = !get().fileTreeOpen
     set({ fileTreeOpen: next })
     await writePref('fileTreeOpen', next)
+  },
+
+  async setFileTreeWidth(width) {
+    const clamped = clamp(width, FILE_TREE_WIDTH_MIN, FILE_TREE_WIDTH_MAX)
+    set({ fileTreeWidth: clamped })
+    await writePref('fileTreeWidth', clamped)
   },
 
   async setTocOpen(open) {
@@ -310,6 +330,7 @@ export const useUIStore = create<UIStore>((set, get) => ({
       lineHeight: DEFAULT_LINE_HEIGHT,
       contentWidth: DEFAULT_CONTENT_WIDTH,
       fileTreeOpen: DEFAULT_FILE_TREE_OPEN,
+      fileTreeWidth: DEFAULT_FILE_TREE_WIDTH,
       tocOpen: DEFAULT_TOC_OPEN,
       frontmatterDisplay: DEFAULT_FRONTMATTER_DISPLAY,
       chromeMode: DEFAULT_CHROME_MODE,
@@ -321,6 +342,7 @@ export const useUIStore = create<UIStore>((set, get) => ({
       writePref('lineHeight', DEFAULT_LINE_HEIGHT),
       writePref('contentWidth', DEFAULT_CONTENT_WIDTH),
       writePref('fileTreeOpen', DEFAULT_FILE_TREE_OPEN),
+      writePref('fileTreeWidth', DEFAULT_FILE_TREE_WIDTH),
       writePref('tocOpen', DEFAULT_TOC_OPEN),
       writePref('frontmatterDisplay', DEFAULT_FRONTMATTER_DISPLAY),
       writePref('chromeMode', DEFAULT_CHROME_MODE),

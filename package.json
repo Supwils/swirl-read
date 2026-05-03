@@ -53,6 +53,12 @@
     "unist-util-visit": "^5.1.0",
     "zustand": "^5.0.12"
   },
+  "browserslist": [
+    "Chrome >= 111",
+    "Edge >= 111",
+    "Safari >= 16.2",
+    "Firefox >= 113"
+  ],
   "devDependencies": {
     "@eslint/js": "^9.39.4",
     "@tailwindcss/vite": "^4.2.4",

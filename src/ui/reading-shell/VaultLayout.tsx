@@ -12,17 +12,22 @@
  * The sidebar is keyed on vaultId so switching vaults remounts the tree
  * (clears cached expansion state).
  *
- * RX2 + M2.5: chromeMode controls whether sidebars are persistent
- * (`working`) or hover-summoned (`reading`). In reading mode, edge
- * hover zones reveal the sidebar transiently — leaving the zone +
- * sidebar dismisses after a short grace period.
+ * RX2 + M2.5: hover-to-summon is the **primary** sidebar interaction in
+ * every chrome mode. Edge hover zones reveal a floating sidebar
+ * transiently; leaving the zone + sidebar dismisses after a short grace
+ * period. Working chrome additionally pins the sidebars in flex flow
+ * (sticky, takes layout space) when their persistent toggle is on —
+ * users who want a constantly-visible tree opt into that explicitly.
  */
 
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Outlet, useLocation, useParams } from 'react-router'
+import { deriveCurrentPathFromPathname } from '@/app/derive-current-path'
 import { useUIStore } from '@/stores/ui-store'
+import { MAX_TABS_PER_VAULT, useTabsStore } from '@/stores/tabs-store'
 import { FileTree } from '@/ui/file-tree/FileTree'
 import { HintToast } from './HintToast'
+import { SidebarResizeHandle } from './SidebarResizeHandle'
 
 const TableOfContents = lazy(() =>
   import('@/ui/reading-shell/TableOfContents').then((module) => ({
@@ -44,10 +49,14 @@ export function VaultLayout() {
   const setFileTreeOpen = useUIStore((s) => s.setFileTreeOpen)
   const tocOpen = useUIStore((s) => s.tocOpen)
   const chromeMode = useUIStore((s) => s.chromeMode)
+  const tabCapHit = useTabsStore((s) => s.tabCapHit)
   const { pathname } = useLocation()
 
-  // Transient hover-summoned visibility for reading mode. Working mode
-  // ignores these — its sidebars are driven by the persistent prefs.
+  // Transient hover-summoned visibility — works in both chrome modes.
+  // The persistent toggle (working mode + fileTreeOpen) is on top of
+  // this and pins the sidebar into flex flow; otherwise hover gives the
+  // user a peek-and-leave experience without permanently giving up
+  // reading width.
   const [hoverFileTree, setHoverFileTree] = useState(false)
   const [hoverToc, setHoverToc] = useState(false)
   const fileTreeTimerRef = useRef<number | null>(null)
@@ -66,22 +75,22 @@ export function VaultLayout() {
     }
   }, [])
 
-  // Reading mode hides persistent sidebars regardless of prefs; working
-  // mode honours them. Either mode can show a sidebar transiently when
-  // the user moves into the corresponding hover zone.
-  const showFileTree =
-    (chromeMode === 'working' && fileTreeOpen) ||
-    (chromeMode === 'reading' && hoverFileTree)
-  const showToc =
-    (chromeMode === 'working' && tocOpen) ||
-    (chromeMode === 'reading' && hoverToc)
+  // Two paths to visibility:
+  //   1. Persistent (working mode + the user's toggle is on) — sidebar
+  //      sits in flex flow, takes layout width, never auto-dismisses.
+  //   2. Hover-summon — works in any chrome mode, shows the floating
+  //      treatment, dismisses 800 ms after the cursor leaves.
+  const fileTreePersistent = chromeMode === 'working' && fileTreeOpen
+  const tocPersistent = chromeMode === 'working' && tocOpen
+  const showFileTree = fileTreePersistent || hoverFileTree
+  const showToc = tocPersistent || hoverToc
+  // When the sidebar is shown via hover (i.e. NOT persistent), render
+  // it floating regardless of chromeMode so it doesn't shove content
+  // sideways for a transient peek.
+  const fileTreeFloating = !fileTreePersistent
+  const tocFloating = !tocPersistent
 
-  const currentPath = pathname
-    .split('/')
-    .slice(3)
-    .map((seg) => safeDecode(seg))
-    .filter(Boolean)
-    .join('/')
+  const currentPath = deriveCurrentPathFromPathname(pathname)
 
   const cancelTimer = (ref: React.MutableRefObject<number | null>) => {
     if (ref.current !== null) {
@@ -105,34 +114,43 @@ export function VaultLayout() {
     <div
       className={`swilread-vault-layout swilread-vault-layout--${chromeMode}`}
     >
-      {/* Reading-mode hover zones — invisible 14 px strips along the page
-          edges. The CSS hides them in working mode so they don't compete
-          with the persistent sidebars there. */}
-      <div
-        className="swilread-vault-layout__hover-zone swilread-vault-layout__hover-zone--left"
-        aria-hidden="true"
-        onMouseEnter={() => {
-          cancelTimer(fileTreeTimerRef)
-          setHoverFileTree(true)
-        }}
-      />
-      <div
-        className="swilread-vault-layout__hover-zone swilread-vault-layout__hover-zone--right"
-        aria-hidden="true"
-        onMouseEnter={() => {
-          cancelTimer(tocTimerRef)
-          setHoverToc(true)
-        }}
-      />
+      {/* Edge hover zones — invisible 14 px strips along the page edges.
+          Active in every chrome mode; CSS hides them only when their
+          corresponding sidebar is already pinned persistently so they
+          don't fight a sidebar that already owns the same column. */}
+      {!fileTreePersistent && (
+        <div
+          className="swilread-vault-layout__hover-zone swilread-vault-layout__hover-zone--left"
+          aria-hidden="true"
+          onMouseEnter={() => {
+            cancelTimer(fileTreeTimerRef)
+            setHoverFileTree(true)
+          }}
+        />
+      )}
+      {!tocPersistent && (
+        <div
+          className="swilread-vault-layout__hover-zone swilread-vault-layout__hover-zone--right"
+          aria-hidden="true"
+          onMouseEnter={() => {
+            cancelTimer(tocTimerRef)
+            setHoverToc(true)
+          }}
+        />
+      )}
 
       {showFileTree && vaultId && (
         <>
           <button
             type="button"
-            className="swilread-vault-layout__sidebar-backdrop"
+            className={`swilread-vault-layout__sidebar-backdrop${
+              fileTreeFloating
+                ? ' swilread-vault-layout__sidebar-backdrop--floating'
+                : ''
+            }`}
             aria-label="Dismiss file tree"
             onClick={() => {
-              if (chromeMode === 'reading') {
+              if (fileTreeFloating) {
                 setHoverFileTree(false)
                 cancelTimer(fileTreeTimerRef)
               } else {
@@ -141,13 +159,17 @@ export function VaultLayout() {
             }}
           />
           <aside
-            className="swilread-vault-layout__sidebar"
+            className={`swilread-vault-layout__sidebar${
+              fileTreeFloating
+                ? ' swilread-vault-layout__sidebar--floating'
+                : ''
+            }`}
             aria-label="File tree"
             onMouseEnter={() => {
               cancelTimer(fileTreeTimerRef)
             }}
             onMouseLeave={() => {
-              if (chromeMode === 'reading') {
+              if (fileTreeFloating) {
                 scheduleHide(fileTreeTimerRef, setHoverFileTree)
               }
             }}
@@ -157,6 +179,7 @@ export function VaultLayout() {
               vaultId={vaultId}
               currentPath={currentPath}
             />
+            {fileTreePersistent && <SidebarResizeHandle />}
           </aside>
         </>
       )}
@@ -165,13 +188,15 @@ export function VaultLayout() {
       </div>
       {showToc && vaultId && (
         <aside
-          className="swilread-vault-layout__toc"
+          className={`swilread-vault-layout__toc${
+            tocFloating ? ' swilread-vault-layout__toc--floating' : ''
+          }`}
           aria-label="Table of contents"
           onMouseEnter={() => {
             cancelTimer(tocTimerRef)
           }}
           onMouseLeave={() => {
-            if (chromeMode === 'reading') {
+            if (tocFloating) {
               scheduleHide(tocTimerRef, setHoverToc)
             }
           }}
@@ -190,14 +215,15 @@ export function VaultLayout() {
         Press <kbd>⌘K</kbd> / <kbd>Ctrl+K</kbd> to jump anywhere · <kbd>F</kbd>{' '}
         for zen mode · <kbd>?</kbd> for the full shortcut list.
       </HintToast>
+      {tabCapHit && (
+        <HintToast
+          id="tab-cap-hit"
+          title={`Tab limit reached (${String(MAX_TABS_PER_VAULT)} tabs)`}
+        >
+          The oldest tab was closed to make room. Double-click a tab to pin it
+          so it is never auto-evicted.
+        </HintToast>
+      )}
     </div>
   )
-}
-
-function safeDecode(segment: string): string {
-  try {
-    return decodeURIComponent(segment)
-  } catch {
-    return segment
-  }
 }

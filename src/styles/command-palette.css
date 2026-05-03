@@ -1,0 +1,291 @@
+/* Command palette (M5.1) ─────────────────────────────────────────────── */
+.swilread-cmdk__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgb(0 0 0 / 0.4);
+  backdrop-filter: blur(2px);
+}
+
+.swilread-cmdk__content {
+  position: fixed;
+  z-index: 110;
+  top: 18vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(620px, calc(100vw - 32px));
+  max-height: 60vh;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow:
+    0 1px 3px var(--color-shadow),
+    0 24px 60px var(--color-shadow);
+  font-family: var(--font-sans);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.swilread-cmdk {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.swilread-cmdk__input {
+  width: 100%;
+  padding: 0.95rem 1.1rem;
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 1rem;
+  outline: none;
+}
+
+.swilread-cmdk__input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.swilread-cmdk__list {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 48vh;
+  overflow-y: auto;
+  padding: 0.4rem 0.4rem 0.6rem;
+}
+
+.swilread-cmdk__empty {
+  padding: 1.4rem 1rem;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.swilread-cmdk__status {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.86rem;
+  font-style: italic;
+}
+
+.swilread-cmdk__group {
+  padding-top: 0.3rem;
+}
+
+.swilread-cmdk__group [cmdk-group-heading] {
+  padding: 0.3rem 0.7rem 0.45rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.swilread-cmdk__item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.94rem;
+}
+
+.swilread-cmdk__item[data-selected='true'] {
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+}
+
+.swilread-cmdk__item-icon {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.swilread-cmdk__item[data-selected='true'] .swilread-cmdk__item-icon {
+  color: var(--color-accent);
+}
+
+.swilread-cmdk__item-primary {
+  font-weight: 500;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.swilread-cmdk__item-secondary {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 55%;
+}
+
+.swilread-cmdk__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  padding: 0.5rem 0.85rem;
+  border-top: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface) 70%, var(--color-bg));
+  font-size: 0.74rem;
+  color: var(--color-text-muted);
+}
+
+.swilread-cmdk__hint {
+  margin-right: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.swilread-cmdk__kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  padding: 0.05rem 0.35rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  margin-right: 0.15rem;
+}
+
+.swilread-cmdk__kbd + .swilread-cmdk__kbd {
+  margin-left: 0.4rem;
+}
+
+@media (max-width: 640px) {
+  .swilread-cmdk__content {
+    top: 8vh;
+    width: calc(100vw - 16px);
+  }
+}
+
+/* Vault switcher (M6.1) ──────────────────────────────────────────────── */
+.swilread-vault-switcher {
+  position: relative;
+  display: inline-flex;
+}
+
+.swilread-vault-switcher__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+  cursor: pointer;
+  max-width: 220px;
+}
+
+.swilread-vault-switcher__trigger:hover {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
+.swilread-vault-switcher__trigger[aria-expanded='true'] {
+  border-color: var(--color-border);
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+}
+
+.swilread-vault-switcher__name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+.swilread-vault-switcher__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 70;
+  min-width: 240px;
+  max-width: 320px;
+  padding: 0.35rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  box-shadow:
+    0 1px 3px var(--color-shadow),
+    0 12px 32px var(--color-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+
+.swilread-vault-switcher__empty {
+  margin: 0;
+  padding: 0.6rem 0.65rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+  font-size: 0.86rem;
+}
+
+.swilread-vault-switcher__item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.swilread-vault-switcher__item:hover,
+.swilread-vault-switcher__item:focus-visible {
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  outline: none;
+}
+
+.swilread-vault-switcher__item.is-active {
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+.swilread-vault-switcher__item-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.swilread-vault-switcher__separator {
+  height: 1px;
+  background: var(--color-border);
+  margin: 0.3rem 0.2rem;
+}
+
+.swilread-vault-switcher__item--cta {
+  color: var(--color-text-muted);
+  font-size: 0.86rem;
+}
+
+.swilread-vault-switcher__item--cta:hover {
+  color: var(--color-text);
+}

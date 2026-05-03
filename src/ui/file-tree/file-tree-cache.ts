@@ -43,3 +43,10 @@ export function invalidateFileTreeListings(vaultId: string): void {
 export function __resetFileTreeCacheForTests(): void {
   listingCache.clear()
 }
+
+export function sortEntries(entries: VaultEntry[]): VaultEntry[] {
+  return [...entries].sort((a, b) => {
+    if (a.isDirectory !== b.isDirectory) return a.isDirectory ? -1 : 1
+    return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+  })
+}

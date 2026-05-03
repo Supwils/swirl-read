@@ -1,0 +1,118 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Scrollbars — theme-aware, calm, optional-overlay style.
+
+   Three-tier strategy so scrollbars feel native to each surface:
+     1. `html` / `body` get the canonical scrollbar (track = bg, thumb tinted
+        with text-muted). This is the page's own scroll.
+     2. Every overflow container inherits a softer "subtle" scrollbar through
+        the universal `*` rule below — the thumb is a low-alpha tint of the
+        text colour, so it disappears on the surface it sits on but reveals
+        itself on hover.
+     3. `.swilread-scroll-thin` opt-in class for inline / popover surfaces
+        (command palette, TOC, sidebar) where the thinner rail reads better.
+
+   Firefox uses `scrollbar-color` / `scrollbar-width` (no pseudo-elements);
+   WebKit / Blink get the `::-webkit-scrollbar*` rules.
+   ───────────────────────────────────────────────────────────────────────── */
+html {
+  scrollbar-color: color-mix(in srgb, var(--color-text-muted) 55%, transparent)
+    transparent;
+  scrollbar-width: thin;
+}
+
+* {
+  scrollbar-color: color-mix(in srgb, var(--color-text-muted) 35%, transparent)
+    transparent;
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: color-mix(
+    in srgb,
+    var(--color-text-muted) 30%,
+    transparent
+  );
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 150ms ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(
+    in srgb,
+    var(--color-text-muted) 60%,
+    transparent
+  );
+}
+
+::-webkit-scrollbar-thumb:active {
+  background-color: color-mix(in srgb, var(--color-accent) 70%, transparent);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Thin variant — TOC, sidebar, command palette, other floating chrome.
+   Same tokens, slimmer rail; opt in by adding the class on the scroll
+   container. Keeps bulky 12px scrollbars off narrow popovers. The known
+   chrome surfaces are pre-enrolled below so individual components don't
+   each need to remember to add the class. */
+.swilread-scroll-thin,
+.swilread-vault-layout__sidebar,
+.swilread-vault-layout__toc,
+.swilread-cmdk__list,
+.swilread-settings__body,
+.swilread-shortcuts__body,
+.swilread-tags-panel__body {
+  scrollbar-width: thin;
+}
+.swilread-scroll-thin::-webkit-scrollbar,
+.swilread-vault-layout__sidebar::-webkit-scrollbar,
+.swilread-vault-layout__toc::-webkit-scrollbar,
+.swilread-cmdk__list::-webkit-scrollbar,
+.swilread-settings__body::-webkit-scrollbar,
+.swilread-shortcuts__body::-webkit-scrollbar,
+.swilread-tags-panel__body::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.swilread-scroll-thin::-webkit-scrollbar-thumb,
+.swilread-vault-layout__sidebar::-webkit-scrollbar-thumb,
+.swilread-vault-layout__toc::-webkit-scrollbar-thumb,
+.swilread-cmdk__list::-webkit-scrollbar-thumb,
+.swilread-settings__body::-webkit-scrollbar-thumb,
+.swilread-shortcuts__body::-webkit-scrollbar-thumb,
+.swilread-tags-panel__body::-webkit-scrollbar-thumb {
+  border-width: 2px;
+}
+
+/* OLED / true-black themes need a touch more contrast on the thumb so
+   the rail doesn't vanish into the void. */
+.theme-oled ::-webkit-scrollbar-thumb,
+.theme-dark ::-webkit-scrollbar-thumb {
+  background-color: color-mix(
+    in srgb,
+    var(--color-text-muted) 45%,
+    transparent
+  );
+}
+.theme-oled ::-webkit-scrollbar-thumb:hover,
+.theme-dark ::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(
+    in srgb,
+    var(--color-text-muted) 75%,
+    transparent
+  );
+}

@@ -1,0 +1,487 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Prose styles — rendered markdown content.
+   Scoped to `.swilread-prose` so they don't leak to UI chrome.
+   Tuned for reading: 65–72 ch line length, generous vertical rhythm,
+   theme-aware colors via semantic tokens.
+   ───────────────────────────────────────────────────────────────────────── */
+.swilread-prose {
+  font-family: var(--reader-font-family, var(--font-serif));
+  font-size: var(--reader-font-size, 18px);
+  line-height: var(--reader-line-height, 1.7);
+  color: var(--color-text);
+}
+
+.swilread-prose > * + * {
+  margin-top: 1.4em;
+}
+
+.swilread-prose h1,
+.swilread-prose h2,
+.swilread-prose h3,
+.swilread-prose h4,
+.swilread-prose h5,
+.swilread-prose h6 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--color-text);
+  margin-top: 2em;
+  margin-bottom: 0.6em;
+}
+
+.swilread-prose h1 {
+  font-size: 2.2em;
+  margin-top: 0;
+}
+.swilread-prose h2 {
+  font-size: 1.7em;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 0.3em;
+}
+.swilread-prose h3 {
+  font-size: 1.35em;
+}
+.swilread-prose h4 {
+  font-size: 1.15em;
+}
+.swilread-prose h5,
+.swilread-prose h6 {
+  font-size: 1em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.swilread-prose a {
+  color: var(--color-link);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--color-link) 40%, transparent);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 150ms ease;
+}
+.swilread-prose a:hover {
+  text-decoration-color: var(--color-link);
+}
+
+.swilread-prose strong {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.swilread-prose em {
+  font-style: italic;
+}
+
+.swilread-prose code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  background: var(--color-code-bg);
+  color: var(--color-code-text);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+}
+
+.swilread-prose pre {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--color-code-bg);
+  color: var(--color-code-text);
+  padding: 1em 1.2em;
+  border-radius: 8px;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+.swilread-prose pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
+/* Shiki dual-theme: pre carries inline CSS vars `--shiki-light` and
+   `--shiki-dark`. We pick which to display via the active SwilRead theme.
+   Selector: `pre[style*="--shiki-light"]` matches any Shiki-rendered block.
+   Sepia + Light themes use the light Shiki theme; Dark + OLED use dark. */
+
+.swilread-prose blockquote {
+  border-left: 3px solid var(--color-accent);
+  padding-left: 1.2em;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.swilread-prose ul,
+.swilread-prose ol {
+  padding-left: 1.4em;
+}
+.swilread-prose ul {
+  list-style: disc;
+}
+.swilread-prose ol {
+  list-style: decimal;
+}
+.swilread-prose li + li {
+  margin-top: 0.3em;
+}
+.swilread-prose li > ul,
+.swilread-prose li > ol {
+  margin-top: 0.3em;
+}
+
+.swilread-prose hr {
+  border: 0;
+  height: 1px;
+  background: var(--color-border);
+  margin: 2.4em 0;
+}
+
+.swilread-prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+/* GFM tables (M3.1) — display:block lets long tables scroll horizontally
+   on narrow viewports without breaking the prose column measure.
+   border-collapse still works inside display:block. */
+.swilread-prose table {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95em;
+  /* Restore alignment & dimensions on the implicit table layout once
+     the block container scrolls. */
+  border-spacing: 0;
+}
+.swilread-prose thead {
+  border-bottom: 2px solid var(--color-border);
+}
+.swilread-prose th,
+.swilread-prose td {
+  padding: 0.55em 0.8em;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+.swilread-prose th {
+  font-weight: 600;
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+}
+.swilread-prose th[align='right'],
+.swilread-prose td[align='right'] {
+  text-align: right;
+}
+.swilread-prose th[align='center'],
+.swilread-prose td[align='center'] {
+  text-align: center;
+}
+.swilread-prose tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--color-surface) 25%, transparent);
+}
+.swilread-prose tr:hover td {
+  background: color-mix(in srgb, var(--color-surface) 50%, transparent);
+}
+
+/* Strikethrough — distinct enough that scanning catches it, but the
+   muted color prevents it from competing with live content. */
+.swilread-prose del {
+  color: var(--color-text-muted);
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(
+    in srgb,
+    var(--color-text-muted) 70%,
+    transparent
+  );
+}
+
+/* GFM task lists — remark-gfm emits `<input type=checkbox>` inside an
+   `<li>` whose `<ul>` parent gets `class="contains-task-list"`. Drop
+   the bullet on the list and tighten the row so the checkbox aligns
+   with the body text. */
+.swilread-prose .contains-task-list {
+  list-style: none;
+  padding-left: 0.4em;
+}
+.swilread-prose .task-list-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
+}
+.swilread-prose .task-list-item > input[type='checkbox'] {
+  margin: 0;
+  flex-shrink: 0;
+  width: 1em;
+  height: 1em;
+  position: relative;
+  top: 0.1em;
+}
+.swilread-prose input[type='checkbox'] {
+  margin-right: 0.5em;
+  accent-color: var(--color-accent);
+}
+
+/* Footnotes (M3.1) — remark-gfm emits a `<section class="footnotes">`
+   block at end-of-doc with an `<ol>` whose items contain backref `<a>`
+   tags. Make them feel like footnotes (smaller type, clear separation)
+   without making them invisible. */
+.swilread-prose .footnotes {
+  margin-top: 3em;
+  padding-top: 1.2em;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.88em;
+  color: var(--color-text-muted);
+}
+.swilread-prose .footnotes h2 {
+  /* GFM marks the heading sr-only; respect that screen-reader-only convention */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.swilread-prose .footnotes ol {
+  padding-left: 1.6em;
+}
+.swilread-prose .footnotes li {
+  margin-top: 0.4em;
+}
+.swilread-prose .footnotes li:target {
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  border-radius: 4px;
+  padding: 0.2em 0.4em;
+}
+.swilread-prose .footnotes p {
+  display: inline;
+  margin: 0;
+}
+.swilread-prose .data-footnote-backref {
+  margin-left: 0.3em;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  border-bottom: 1px dashed
+    color-mix(in srgb, var(--color-text-muted) 50%, transparent);
+}
+.swilread-prose .data-footnote-backref:hover {
+  color: var(--color-link);
+  border-bottom-color: var(--color-link);
+}
+/* The reference superscript inside body text */
+.swilread-prose sup > a[id^='user-content-fnref'] {
+  font-family: var(--font-mono);
+  font-size: 0.78em;
+  text-decoration: none;
+  padding: 0 0.15em;
+  border-radius: 3px;
+}
+.swilread-prose sup > a[id^='user-content-fnref']:hover {
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+}
+
+/* Callouts ─────────────────────────────────────────────────────────── */
+.swilread-prose .swilread-callout {
+  --callout-color: var(--color-accent);
+  --callout-bg: color-mix(in srgb, var(--callout-color) 8%, transparent);
+  border-left: 4px solid var(--callout-color);
+  background: var(--callout-bg);
+  border-radius: 6px;
+  padding: 0.9em 1.1em 1em;
+  margin: 1.4em 0;
+}
+
+.swilread-prose .swilread-callout__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-weight: 600;
+  color: var(--callout-color);
+  font-size: 0.95em;
+  margin-bottom: 0.5em;
+}
+
+.swilread-prose .swilread-callout__icon {
+  flex-shrink: 0;
+}
+
+.swilread-prose .swilread-callout__title {
+  letter-spacing: 0.01em;
+}
+
+.swilread-prose .swilread-callout__body > *:first-child {
+  margin-top: 0;
+}
+.swilread-prose .swilread-callout__body > *:last-child {
+  margin-bottom: 0;
+}
+.swilread-prose .swilread-callout__body > * + * {
+  margin-top: 0.7em;
+}
+
+/* Type-specific accent colors. Tuned per theme via --color-accent layering;
+   for now we use distinct hues so types are differentiable across themes. */
+.swilread-prose .callout--note,
+.swilread-prose .callout--info {
+  --callout-color: #4a8bd1;
+}
+.swilread-prose .callout--tip {
+  --callout-color: #2e9b6b;
+}
+.swilread-prose .callout--important {
+  --callout-color: #b659c9;
+}
+.swilread-prose .callout--success {
+  --callout-color: #2e9b6b;
+}
+.swilread-prose .callout--question {
+  --callout-color: #9c6ad1;
+}
+.swilread-prose .callout--warning {
+  --callout-color: #d9923a;
+}
+.swilread-prose .callout--failure {
+  --callout-color: #c95757;
+}
+.swilread-prose .callout--danger {
+  --callout-color: #d14545;
+}
+.swilread-prose .callout--bug {
+  --callout-color: #d14545;
+}
+.swilread-prose .callout--example {
+  --callout-color: #9c6ad1;
+}
+.swilread-prose .callout--quote {
+  --callout-color: var(--color-text-muted);
+}
+.swilread-prose .callout--abstract {
+  --callout-color: #4ba6a3;
+}
+.swilread-prose .callout--todo {
+  --callout-color: #4a8bd1;
+}
+
+/* Wikilink hover preview (M3.4) ───────────────────────────────────────── */
+.swilread-wikilink-preview {
+  z-index: 60;
+  width: min(380px, calc(100vw - 32px));
+  max-width: 380px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow:
+    0 1px 2px var(--color-shadow),
+    0 8px 24px var(--color-shadow);
+  font-family: var(--font-serif);
+  font-size: 0.92em;
+  line-height: 1.55;
+  /* Floating UI sets position via inline styles; we keep padding here. */
+  padding: 0.7em 0.95em 0.85em;
+  pointer-events: auto;
+}
+
+.swilread-wikilink-preview__header {
+  font-family: var(--font-mono);
+  font-size: 0.74em;
+  letter-spacing: 0.02em;
+  color: var(--color-text-muted);
+  margin-bottom: 0.45em;
+  padding-bottom: 0.4em;
+  border-bottom: 1px dashed var(--color-border);
+  word-break: break-all;
+}
+
+.swilread-wikilink-preview__body {
+  color: var(--color-text);
+}
+
+.swilread-wikilink-preview__pending,
+.swilread-wikilink-preview__error {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* Tags (M3.14) ───────────────────────────────────────────────────────── */
+.swilread-prose .swilread-tag {
+  display: inline-flex;
+  align-items: baseline;
+  margin: 0 0.05em;
+  padding: 0 0.35em;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  color: var(--color-accent);
+  font: inherit;
+  font-family: var(--font-sans);
+  font-size: 0.85em;
+  line-height: 1.4;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+.swilread-prose .swilread-tag:hover,
+.swilread-prose .swilread-tag:focus-visible {
+  background: color-mix(in srgb, var(--color-accent) 20%, transparent);
+  border-color: var(--color-accent);
+  outline: none;
+}
+
+/* Highlights ─────────────────────────────────────────────────────────── */
+.swilread-prose mark {
+  /* Tinted highlight — yellow accent that picks up enough of the theme's
+     accent so it never looks alien. Padding gives it the felt-pen vibe. */
+  background: color-mix(in srgb, #ffd76a 38%, transparent);
+  color: var(--color-text);
+  padding: 0.05em 0.2em;
+  border-radius: 3px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.theme-dark .swilread-prose mark,
+.theme-oled .swilread-prose mark {
+  background: color-mix(in srgb, #d6a93f 28%, transparent);
+}
+
+/* Wikilinks ─────────────────────────────────────────────────────────── */
+.swilread-prose .swilread-wikilink {
+  text-decoration: none;
+  border-bottom: 1px dashed
+    color-mix(in srgb, var(--color-link) 50%, transparent);
+  padding: 0 0.05em;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease,
+    background-color 150ms ease;
+}
+.swilread-prose .swilread-wikilink--resolved {
+  color: var(--color-link);
+}
+.swilread-prose .swilread-wikilink--resolved:hover {
+  border-bottom-color: var(--color-link);
+  background: color-mix(in srgb, var(--color-link) 10%, transparent);
+}
+.swilread-prose .swilread-wikilink--pending {
+  color: var(--color-text-muted);
+  cursor: progress;
+}
+.swilread-prose .swilread-wikilink--broken {
+  color: var(--color-text-muted);
+  border-bottom-style: dotted;
+  cursor: help;
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(
+    in srgb,
+    var(--color-text-muted) 50%,
+    transparent
+  );
+}

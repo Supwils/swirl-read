@@ -8,6 +8,7 @@
  *   - `backlinks`        — per-vault resolved wikilink edges
  *   - `scrollPositions`  — per-file scroll memory (M2.7)
  *   - `hintsSeen`        — per-hint id "you've seen this" flag (M9.4)
+ *   - `openTabs`         — per-vault open document tabs (multi-tab UI)
  *
  * Handle persistence (binary `FileSystemDirectoryHandle` blobs) lives in a
  * separate idb-keyval store; see `core/vault/handle-storage.ts`. Splitting
@@ -68,6 +69,18 @@ export interface HintSeenRow {
   seenAtMs: number
 }
 
+/** One open-tab row. `id` is `vaultId::path` so re-opening a tab is an
+ *  upsert. `order` carries the display index within the vault; lower
+ *  numbers come first. */
+export interface OpenTabRow {
+  id: string
+  vaultId: string
+  path: string
+  pinned: boolean
+  order: number
+  openedAtMs: number
+}
+
 interface SwilReadDB extends Dexie {
   vaults: EntityTable<StoredVault, 'id'>
   preferences: EntityTable<PreferenceRow, 'key'>
@@ -75,6 +88,7 @@ interface SwilReadDB extends Dexie {
   backlinks: EntityTable<BacklinkRow, 'id'>
   scrollPositions: EntityTable<ScrollPositionRow, 'id'>
   hintsSeen: EntityTable<HintSeenRow, 'id'>
+  openTabs: EntityTable<OpenTabRow, 'id'>
 }
 
 function buildDb(): SwilReadDB {
@@ -109,6 +123,15 @@ function buildDb(): SwilReadDB {
     backlinks: 'id, vaultId, targetPath, sourcePath, updatedAtMs',
     scrollPositions: 'id, vaultId, updatedAtMs',
     hintsSeen: 'id, seenAtMs',
+  })
+  db.version(6).stores({
+    vaults: 'id, name, lastOpenedAtMs',
+    preferences: 'key',
+    recentFiles: 'id, vaultId, openedAtMs',
+    backlinks: 'id, vaultId, targetPath, sourcePath, updatedAtMs',
+    scrollPositions: 'id, vaultId, updatedAtMs',
+    hintsSeen: 'id, seenAtMs',
+    openTabs: 'id, vaultId, [vaultId+order], openedAtMs',
   })
   return db
 }
@@ -151,6 +174,7 @@ export async function __resetDbForTests(): Promise<void> {
       db.backlinks,
       db.scrollPositions,
       db.hintsSeen,
+      db.openTabs,
     ],
     async () => {
       await db.vaults.clear()
@@ -159,6 +183,7 @@ export async function __resetDbForTests(): Promise<void> {
       await db.backlinks.clear()
       await db.scrollPositions.clear()
       await db.hintsSeen.clear()
+      await db.openTabs.clear()
     },
   )
 }

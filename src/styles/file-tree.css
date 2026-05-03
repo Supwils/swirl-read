@@ -1,0 +1,476 @@
+@media (max-width: 1100px) {
+  .swilread-vault-layout__toc {
+    display: none;
+  }
+}
+/* Table of contents (M4.6) + context rail (RX4) ──────────────────────── */
+.swilread-toc {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+
+.swilread-toc__group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+/* Context rail — page tags + counts ───────────────────────────────── */
+.swilread-toc__context {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55em;
+  padding: 0 0.3em 0.7em;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.swilread-toc__context-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4em;
+  color: var(--color-text-muted);
+}
+
+.swilread-toc__context-icon {
+  margin-top: 0.3em;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.swilread-toc__tag-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.25em;
+  flex: 1;
+  min-width: 0;
+}
+
+.swilread-toc__tag {
+  display: inline-block;
+  padding: 0.05em 0.45em;
+  border: 0;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 0.74em;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.swilread-toc__tag:hover,
+.swilread-toc__tag:focus-visible {
+  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+  outline: none;
+}
+
+.swilread-toc__tag-more {
+  font-family: var(--font-mono);
+  font-size: 0.74em;
+  color: var(--color-text-muted);
+  padding: 0.05em 0.2em;
+}
+
+.swilread-toc__context-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em 0.9em;
+  font-size: 0.78em;
+  color: var(--color-text-muted);
+}
+
+.swilread-toc__count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  white-space: nowrap;
+}
+
+.swilread-toc__title {
+  margin: 0 0 0.4em;
+  padding: 0 0.3em;
+  font-family: var(--font-sans);
+  font-size: 0.72em;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.swilread-toc__empty {
+  margin: 0;
+  padding: 0 0.3em;
+  color: var(--color-text-muted);
+  font-style: italic;
+  font-size: 0.92em;
+}
+
+.swilread-toc__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.05em;
+}
+
+.swilread-toc__item {
+  margin: 0;
+  padding: 0;
+  /* paddingLeft is set inline per-item from the heading depth. */
+}
+
+.swilread-toc__link {
+  display: block;
+  width: 100%;
+  padding: 0.28em 0.55em 0.28em 0.7em;
+  border-left: 2px solid transparent;
+  margin-left: -2px;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-family: var(--font-sans);
+  line-height: 1.35;
+  border-radius: 0 4px 4px 0;
+  transition:
+    color 120ms ease,
+    background-color 120ms ease,
+    border-color 120ms ease;
+  word-break: break-word;
+}
+
+.swilread-toc__link:hover {
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+}
+
+.swilread-toc__link.is-active {
+  color: var(--color-text);
+  border-left-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+
+.swilread-toc__item[data-level='1'] .swilread-toc__link {
+  font-weight: 600;
+  color: var(--color-text);
+}
+.swilread-toc__item[data-level='3'] .swilread-toc__link,
+.swilread-toc__item[data-level='4'] .swilread-toc__link {
+  font-size: 0.96em;
+}
+
+/* File tree ──────────────────────────────────────────────────────────── */
+.swilread-file-tree__container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+}
+
+.swilread-file-tree__recent {
+  border-bottom: 1px solid var(--color-border);
+  padding: 0.15em 0 0.45em;
+  margin-bottom: 0.2em;
+}
+
+.swilread-file-tree__recent ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Sections + Files headings (RX3) ─────────────────────────────────── */
+.swilread-file-tree__sections {
+  border-bottom: 1px solid var(--color-border);
+  padding: 0.15em 0 0.45em;
+  margin-bottom: 0.2em;
+}
+
+.swilread-file-tree__sections ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.swilread-file-tree__files {
+  padding-top: 0.15em;
+}
+
+.swilread-file-tree__row--continue {
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+  padding: 0.4em 0.7em;
+  font-weight: 500;
+}
+
+.swilread-file-tree__row--section-link {
+  padding-left: 0.7em;
+  font-weight: 500;
+}
+
+.swilread-file-tree__row--section-link .swilread-file-tree__icon {
+  color: var(--color-accent);
+}
+
+.swilread-file-tree__resume-tag {
+  margin-left: auto;
+  padding: 0.05em 0.45em;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  color: var(--color-accent);
+  font-family: var(--font-sans);
+  font-size: 0.7em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.swilread-file-tree__section-label {
+  margin: 0 0 0.2em;
+  padding: 0 0.7em;
+  font-family: var(--font-sans);
+  font-size: 0.72em;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.swilread-file-tree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.swilread-file-tree ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.swilread-file-tree__row {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  width: 100%;
+  padding: 0.25em 0.6em 0.25em 0;
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--color-text);
+  background: transparent;
+  border: none;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: 0 4px 4px 0;
+  transition: background-color 100ms ease;
+}
+
+.swilread-file-tree__row:hover {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
+.swilread-file-tree__row--recent {
+  padding-left: 0.7em;
+  font-size: 0.95em;
+}
+
+.swilread-file-tree__row.is-active {
+  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.swilread-file-tree__row.is-ancestor {
+  color: var(--color-text);
+}
+
+.swilread-file-tree__chevron {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  transition: transform 120ms ease;
+}
+.swilread-file-tree__chevron.is-expanded {
+  transform: rotate(90deg);
+}
+.swilread-file-tree__chevron-spacer {
+  display: inline-block;
+  width: 12px;
+  flex-shrink: 0;
+}
+
+.swilread-file-tree__icon {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+.swilread-file-tree__row:hover .swilread-file-tree__icon,
+.swilread-file-tree__row.is-active .swilread-file-tree__icon {
+  color: var(--color-accent);
+}
+
+.swilread-file-tree__name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Section rows (M4.2) — top-level dirs with a `*-map.md` / index home.
+   The chevron and the name-link are rendered as separate controls so a
+   click on the name navigates to the section home, while the chevron
+   stays in charge of expansion. */
+.swilread-file-tree__row--section {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.4em 0.6em 0.4em 0;
+  border-radius: 0 4px 4px 0;
+  margin-top: 0.25em;
+}
+
+.swilread-file-tree__row--section.is-active {
+  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+}
+
+.swilread-file-tree__chevron-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.swilread-file-tree__chevron-btn:hover {
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+
+.swilread-file-tree__section-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  flex: 1;
+  min-width: 0;
+  padding: 0.05em 0.3em;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.95em;
+  letter-spacing: 0.01em;
+  color: var(--color-text);
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background-color 100ms ease;
+}
+
+.swilread-file-tree__section-link:hover {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
+.swilread-file-tree__row--section .swilread-file-tree__icon {
+  color: var(--color-accent);
+}
+
+.swilread-file-tree__status {
+  padding: 0.4em 0.7em;
+  color: var(--color-text-muted);
+  font-style: italic;
+  font-size: 0.92em;
+}
+
+/* Directory listing (vault home + folder view) ───────────────────────── */
+.swilread-directory {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--color-border);
+}
+
+.swilread-directory__row {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.swilread-directory__link {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  padding: 0.6em 0.4em;
+  text-decoration: none;
+  color: var(--color-text);
+  transition: background-color 120ms ease;
+  border-radius: 4px;
+}
+
+.swilread-directory__link:hover {
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+}
+
+.swilread-directory__icon {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.swilread-directory__link:hover .swilread-directory__icon {
+  color: var(--color-accent);
+}
+
+.swilread-directory__name {
+  flex: 1;
+  font-family: var(--font-serif);
+  font-size: 1.05em;
+  word-break: break-word;
+}
+
+.swilread-directory__meta {
+  font-family: var(--font-mono);
+  font-size: 0.78em;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.swilread-directory__breadcrumbs {
+  font-family: var(--font-sans);
+  font-size: 0.85em;
+  color: var(--color-text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0;
+}
+
+.swilread-directory__crumb-wrap {
+  display: inline-flex;
+  align-items: baseline;
+}
+
+.swilread-directory__crumb {
+  color: var(--color-text-muted);
+  text-decoration: none;
+  border-bottom: 1px dashed transparent;
+}
+
+a.swilread-directory__crumb:hover {
+  color: var(--color-link);
+  border-bottom-color: color-mix(in srgb, var(--color-link) 50%, transparent);
+}
+
+.swilread-directory__crumb--current {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.swilread-directory__crumb-sep {
+  margin: 0 0.45em;
+  color: var(--color-text-muted);
+  opacity: 0.6;
+}

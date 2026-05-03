@@ -1,0 +1,224 @@
+/* Settings panel ─────────────────────────────────────────────────────── */
+.swilread-settings__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgb(0 0 0 / 0.22);
+}
+
+.swilread-settings {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  width: min(390px, 100vw);
+  height: 100vh;
+  background: var(--color-bg);
+  color: var(--color-text);
+  border-left: 1px solid var(--color-border);
+  box-shadow: -14px 0 36px var(--color-shadow);
+  font-family: var(--font-sans);
+}
+
+/*
+ * M9.2 — settings panel goes full-width on phones / tight tablets so the
+ * controls inside don't end up cramped against the right edge.
+ */
+@media (max-width: 768px) {
+  .swilread-settings {
+    width: 100vw;
+    border-left: 0;
+  }
+}
+
+.swilread-settings__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.2rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.swilread-settings__title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.swilread-settings__description {
+  margin: 0.25rem 0 0;
+  font-size: 0.86rem;
+  color: var(--color-text-muted);
+}
+
+.swilread-settings__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.swilread-settings__close:hover {
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
+.swilread-settings__close:focus-visible {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.swilread-settings__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 1.1rem;
+  overflow-y: auto;
+  padding: 1.2rem;
+}
+
+.swilread-settings__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.swilread-settings__label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.swilread-settings__label {
+  display: block;
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.swilread-settings__hint {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.swilread-settings__value {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.swilread-settings__select {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: 0.5rem 0.6rem;
+  font: inherit;
+}
+
+.swilread-settings__segmented {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-surface) 50%, transparent);
+}
+
+.swilread-settings__segment {
+  min-height: 32px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 0.84rem;
+  cursor: pointer;
+}
+
+.swilread-settings__segment:hover {
+  color: var(--color-text);
+}
+
+.swilread-settings__segment[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--color-accent) 38%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  color: var(--color-text);
+}
+
+.swilread-settings__range {
+  width: 100%;
+  accent-color: var(--color-accent);
+}
+
+.swilread-settings__toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.swilread-settings__checkbox {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: var(--color-accent);
+}
+
+.swilread-settings__footer {
+  padding: 1rem 1.2rem;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.swilread-settings__reset {
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.swilread-settings__reset:hover {
+  border-color: color-mix(
+    in srgb,
+    var(--color-accent) 45%,
+    var(--color-border)
+  );
+  background: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface));
+}
+
+@media (max-width: 767px) {
+  .swilread-settings {
+    width: 100vw;
+    border-left: 0;
+  }
+}
