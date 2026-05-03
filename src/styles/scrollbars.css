@@ -98,6 +98,43 @@ html {
   border-width: 2px;
 }
 
+/* Inline content scroll surfaces — code blocks, tables, math, diagrams,
+   and universal file renderers. These sit inside prose flow so a 12px
+   rail would be visually jarring; 8px matches the chrome surfaces above.
+   Colors already inherit via the * rule (var(--color-text-muted) tinted),
+   so they are fully theme-aware with no extra colour declarations here. */
+.swilread-prose pre,
+.swilread-prose table,
+.swilread-prose .swilread-math--display,
+.swilread-prose .swilread-mermaid,
+.swilread-prose .swilread-mermaid__source,
+.swilread-plaintext,
+.swilread-json__tree,
+.swilread-csv__scroll {
+  scrollbar-width: thin;
+}
+.swilread-prose pre::-webkit-scrollbar,
+.swilread-prose table::-webkit-scrollbar,
+.swilread-prose .swilread-math--display::-webkit-scrollbar,
+.swilread-prose .swilread-mermaid::-webkit-scrollbar,
+.swilread-prose .swilread-mermaid__source::-webkit-scrollbar,
+.swilread-plaintext::-webkit-scrollbar,
+.swilread-json__tree::-webkit-scrollbar,
+.swilread-csv__scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.swilread-prose pre::-webkit-scrollbar-thumb,
+.swilread-prose table::-webkit-scrollbar-thumb,
+.swilread-prose .swilread-math--display::-webkit-scrollbar-thumb,
+.swilread-prose .swilread-mermaid::-webkit-scrollbar-thumb,
+.swilread-prose .swilread-mermaid__source::-webkit-scrollbar-thumb,
+.swilread-plaintext::-webkit-scrollbar-thumb,
+.swilread-json__tree::-webkit-scrollbar-thumb,
+.swilread-csv__scroll::-webkit-scrollbar-thumb {
+  border-width: 2px;
+}
+
 /* OLED / true-black themes need a touch more contrast on the thumb so
    the rail doesn't vanish into the void. */
 .theme-oled ::-webkit-scrollbar-thumb,
