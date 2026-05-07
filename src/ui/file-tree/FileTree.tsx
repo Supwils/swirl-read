@@ -74,8 +74,13 @@ export function FileTree({ vaultId, currentPath }: FileTreeProps): ReactNode {
   async function handleRefresh(): Promise<void> {
     if (refreshing) return
     setRefreshing(true)
+    // Hold the spin animation for at least 500 ms so the click is
+    // perceptible. `refreshVaultContent` mostly just invalidates caches
+    // and returns within a few ms — without this delay the button looks
+    // dead even though it worked.
+    const minSpin = new Promise<void>((resolve) => setTimeout(resolve, 500))
     try {
-      await refreshVaultContent(vaultId)
+      await Promise.all([refreshVaultContent(vaultId), minSpin])
     } finally {
       setRefreshing(false)
     }
@@ -116,8 +121,8 @@ export function FileTree({ vaultId, currentPath }: FileTreeProps): ReactNode {
       <button
         type="button"
         className="swirlread-file-tree__view-btn swirlread-file-tree__refresh-btn"
-        aria-label="Refresh file tree"
-        title="Refresh file tree"
+        aria-label="Refresh file tree now"
+        title="Refresh now (auto-syncs every 30 s while visible)"
         disabled={refreshing}
         onClick={() => {
           void handleRefresh()

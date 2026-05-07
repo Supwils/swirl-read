@@ -18,7 +18,7 @@
  * current (vaultId, path); DocumentBodyView gates that.
  */
 
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react'
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
 import { markdown } from '@codemirror/lang-markdown'
 import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language'
@@ -313,7 +313,15 @@ export function DocumentEditSurface({
         ref={containerRef}
         className="swirlread-edit__editor"
         data-testid="codemirror-host"
-        style={{ fontSize: `${editorFontSizePx(editorFontSize)}px` }}
+        // Drive font-size through a CSS custom property so the
+        // `.cm-editor` rule in editor.css can pick it up. Setting
+        // `fontSize` on the wrapper alone has no effect because the
+        // `.cm-editor` child has its own explicit `font-size`.
+        style={
+          {
+            '--swirlread-editor-font-size': `${editorFontSizePx(editorFontSize)}px`,
+          } as CSSProperties
+        }
       />
     </section>
   )

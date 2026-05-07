@@ -4,6 +4,31 @@
 
 ---
 
+## 2026-05-07 · UX polish trio — refresh affordance, live editor font size, preview-tab hint
+
+**Status**: ✅ Three small UX magnets shipped together. None of them is functionally new — each closes a perceived-quality gap that surfaced after P3 polling and Phase 2 editing landed.
+
+### What changed
+
+- **`src/ui/file-tree/FileTree.tsx`** — refresh button picks up an imperative tooltip ("Refresh now (auto-syncs every 30 s while visible)") and a 500 ms minimum spin so a click is always perceptible. `refreshVaultContent` returns within a few ms in most cases; without the floor the spinner blinks invisibly. The aria-label tightened to "Refresh file tree now".
+
+- **`src/ui/reading-shell/DocumentEditSurface.tsx` + `src/styles/editor.css`** — editor font size is now reactive. The wrapper's inline `style={{ fontSize }}` was being overridden by the explicit `font-size: 0.95rem` on `.swirlread-edit__editor .cm-editor`, so changing the Settings → Editing → Size pref had no effect on an open EditSurface (and arguably no effect at all). Switch the wrapper to set a `--swirlread-editor-font-size` CSS custom property, and let the `.cm-editor` rule read from it with a 0.95rem fallback. Now Settings changes flow into a live editor immediately.
+
+- **`src/stores/tabs-store.ts` + `src/ui/reading-shell/VaultLayout.tsx`** — proactive preview-tab hint. New `previewReplaced: boolean` flag flips on the first time the `openOrFocus` preview-replace branch fires; `VaultLayout` renders a one-time `<HintToast id="preview-tab-replaced">` explaining "single click opens a preview tab; the next file replaces it. Double-click to pin." The existing `tab-cap-hit` hint stays — it covers the rarer eviction case, but most users will never hit the cap; the new hint catches them earlier on the much-more-common preview-replace surprise.
+
+### Decisions
+
+- **Floor the refresh spin at 500 ms, not 1 s.** 500 ms is long enough to register as visible feedback without feeling laggy. Anything more would suggest the operation is heavy when it isn't.
+- **CSS variable, not removing the `.cm-editor` font-size rule.** Removing the rule would let inheritance work too, but the variable is more explicit about which surface owns the value and survives any future override that lands deeper in the cascade.
+- **New hint instead of expanding the welcome hint.** The welcome hint is dismissed before a user has touched tabs at all; bundling the preview-tab explanation there would either bloat it past skim length or rely on the user remembering it minutes later. A separate hint that fires on first preview-replace is precisely targeted.
+
+### Verification
+
+- `pnpm check`: 0 errors / 0 warnings; 763 / 763 tests passing
+- `pnpm build`: succeeded; main chunk **259.47 KB gz** (Δ +0.17 KB — the new tabs-store flag + the HintToast + the FileTree state)
+
+---
+
 ## 2026-05-07 · Reader-first keyboard shortcuts on the external-change banner
 
 **Status**: ✅ Shipped. The P2 external-change banner gains `R` to reload and `Esc` to dismiss in read mode, so a returning reader can act on a stale-document notice without leaving the keyboard.
@@ -42,7 +67,7 @@
 - `pnpm check`: 0 errors / 0 warnings; 761 / 761 tests passing
 - `pnpm test src/core/render/plugins/remark-embed.test.ts`: 21 / 21 passing
 
-### Notes on what was *not* touched
+### Notes on what was _not_ touched
 
 The audit also flagged `frontmatter.ts` (414 LOC) and `ui-store.ts` (377 LOC). Both files survived a "duplicate or stale branches" pass without producing actionable changes:
 

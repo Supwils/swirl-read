@@ -68,6 +68,11 @@ interface TabsStoreState {
   /** True after the first eviction within this page session. Used to
    *  trigger the one-time `tab-cap-hit` HintToast. Resets on removeVault. */
   tabCapHit: boolean
+  /** True after the first time a preview tab gets replaced by a
+   *  different document within this page session. Used to trigger the
+   *  one-time `preview-tab-replaced` HintToast so users learn about
+   *  preview semantics before the cap fires. */
+  previewReplaced: boolean
 }
 
 interface TabsStoreActions {
@@ -178,6 +183,7 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
   recentlyClosedByVault: {},
   ready: false,
   tabCapHit: false,
+  previewReplaced: false,
 
   async init() {
     if (get().ready) return
@@ -219,6 +225,7 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
       if (!wantPin && previewIdx >= 0) {
         // Replace the existing preview tab in place.
         next = current.map((tab, idx) => (idx === previewIdx ? newTab : tab))
+        if (!get().previewReplaced) set({ previewReplaced: true })
       } else {
         next = [...current, newTab]
         if (next.length > MAX_TABS_PER_VAULT) {

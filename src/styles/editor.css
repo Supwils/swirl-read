@@ -134,7 +134,11 @@
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-mono);
-  font-size: 0.95rem;
+  /* Driven by the wrapper's --swirlread-editor-font-size custom prop
+   * (set inline by DocumentEditSurface). Falls back to 0.95rem so any
+   * other CodeMirror surface that mounts under .swirlread-edit__editor
+   * without setting the var still renders sensibly. */
+  font-size: var(--swirlread-editor-font-size, 0.95rem);
   line-height: 1.55;
 }
 

@@ -50,6 +50,7 @@ export function VaultLayout() {
   const tocOpen = useUIStore((s) => s.tocOpen)
   const chromeMode = useUIStore((s) => s.chromeMode)
   const tabCapHit = useTabsStore((s) => s.tabCapHit)
+  const previewReplaced = useTabsStore((s) => s.previewReplaced)
   const { pathname } = useLocation()
 
   // Transient hover-summoned visibility — works in both chrome modes.
@@ -215,6 +216,13 @@ export function VaultLayout() {
         Press <kbd>⌘K</kbd> / <kbd>Ctrl+K</kbd> to jump anywhere · <kbd>F</kbd>{' '}
         for zen mode · <kbd>?</kbd> for the full shortcut list.
       </HintToast>
+      {previewReplaced && (
+        <HintToast id="preview-tab-replaced" title="Tabs replace each other">
+          A single click opens a <strong>preview</strong> tab. The next file you
+          open replaces it in place. Double-click a tab (or use Cmd-click on a
+          link) to pin it so it stays.
+        </HintToast>
+      )}
       {tabCapHit && (
         <HintToast
           id="tab-cap-hit"
