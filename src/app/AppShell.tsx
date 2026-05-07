@@ -24,6 +24,7 @@ import { useDirtyNavigationGuard } from './use-dirty-navigation-guard'
 import { useRouterDirtyBlocker } from './use-router-dirty-blocker'
 import { useShortcutsHelpHotkey } from './use-shortcuts-help-hotkey'
 import { useVaultFocusSync } from './use-vault-focus-sync'
+import { useVaultPollSync } from './use-vault-poll-sync'
 import { useZenModeHotkey } from './use-zen-mode-hotkey'
 
 const SettingsPanel = lazy(() =>
@@ -84,6 +85,7 @@ export function AppShell() {
   useDirtyNavigationGuard()
   useRouterDirtyBlocker()
   useVaultFocusSync()
+  useVaultPollSync()
 
   // The header's tab strip needs to know which vault we're inside and
   // the active document path; both come from the URL. Matching here

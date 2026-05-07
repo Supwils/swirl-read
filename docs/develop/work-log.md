@@ -4,6 +4,35 @@
 
 ---
 
+## 2026-05-07 · Vault content sync P3 — slow visibility-bound polling
+
+**Status**: ✅ P3 shipped. The active vault is now refreshed on a slow 30 s cadence while the SwirlRead tab is visible, so files added or removed from disk surface in the file tree without requiring an explicit alt-tab.
+
+### What changed
+
+- **`src/app/use-vault-poll-sync.ts`** (new) — `useVaultPollSync()` mounts a single `setInterval` while `document.visibilityState === 'visible'`. Each tick calls `refreshVaultContent(activeVaultId)` — the same invalidation-and-revision path used by P0 manual refresh and P1 focus refresh. The interval pauses when the tab goes hidden and restarts when visible again.
+
+- **`src/app/AppShell.tsx`** — mounts `useVaultPollSync()` next to `useVaultFocusSync()` and the other global app hooks.
+
+- **`docs/develop/architecture-overview.md`** — P3 section rewritten to describe the implemented behaviour (single 30 s timer; visibility-gated; only expanded `FileTreeNode` instances re-list on revision bump; expensive indexes stay lazy).
+
+- **`src/app/use-vault-poll-sync.test.ts`** (new) — covers visible 30 s tick, hidden tab pause, hidden→visible restart, no active vault, missing adapter, and unmount cleanup.
+
+### Decisions
+
+- **Reuse the existing revision path instead of building a surgical "expanded directories only" poller.** Only expanded `FileTreeNode`s have a `useEffect` keyed on `contentRevision`; collapsed directories pay nothing. The walked-files cache, tag index, and full-text index are all rebuilt lazily on first use (palette open / tag click), so a 30 s revision bump is cheap unless the user is actively touching those surfaces.
+- **30 s, not 5–15 s.** The original architecture sketch suggested 5–15 s but the focus-sync hook already covers the common "user came back from another window" case. Polling exists for the split-screen edit case where SwirlRead never loses visibility; 30 s is generous for that.
+- **Visibility, not focus.** A SwirlRead window can lose focus while still visible (split-screen, side-by-side editor); polling should keep running there. We pause only on `visibilitychange → hidden`.
+- **No shared cooldown with `useVaultFocusSync`.** Both hooks invoke `refreshVaultContent`; if focus and a poll tick coincide they may double-fire within ~1 s. Effect is harmless (one extra cache invalidation; no UX change), so keeping the hooks independently testable wins.
+
+### Verification
+
+- `pnpm test src/app/use-vault-poll-sync.test.ts`: 6 / 6 passing
+- `pnpm check`: 0 errors / 0 warnings; 761 / 761 tests passing
+- `pnpm build`: succeeded; main chunk unchanged
+
+---
+
 ## 2026-05-04 · Vault content sync P2 — current-document external change prompt
 
 **Status**: ✅ P2 shipped. SwirlRead now detects when the currently open file changes after a vault content refresh and prompts the user instead of silently replacing the document.

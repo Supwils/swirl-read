@@ -307,12 +307,15 @@ millisecond-level disk events.
    - In edit mode, never overwrite the draft; route through the existing
      stale-on-disk conflict model.
 
-4. **P3 — optional polling for expanded directories**
-   - Poll only while the app is visible.
-   - Prefer already-expanded directories and the current file over full-vault
-     walks.
-   - Use conservative intervals, roughly 5-15 seconds, and rebuild expensive
-     indexes lazily when opened.
+4. **P3 — slow visibility-bound polling**
+   - `useVaultPollSync` ticks every 30 s while `visibilityState === 'visible'`.
+   - Each tick calls `refreshVaultContent(activeVaultId)`, sharing the same
+     invalidation-and-revision path as P0 manual refresh and P1 focus refresh.
+   - Hidden tabs pause the timer entirely; coming back visible restarts it.
+   - Only currently-expanded `FileTreeNode` instances re-list on revision bump
+     (lazy-load effect is gated on `expanded`); collapsed directories pay
+     nothing. Expensive derived indexes (full-text, walked-files cache) stay
+     lazy and rebuild only when the palette opens.
 
 ### Revision model
 
