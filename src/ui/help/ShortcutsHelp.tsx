@@ -46,6 +46,15 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
     ],
   },
   {
+    heading: 'Tabs',
+    shortcuts: [
+      {
+        keys: ['⌘', '⇧', 'T'],
+        description: 'Reopen the last closed tab (or Ctrl+Shift+T)',
+      },
+    ],
+  },
+  {
     heading: 'Sidebar resize',
     shortcuts: [
       { keys: ['←', '→'], description: 'Narrow / widen sidebar by 16 px' },

@@ -4,6 +4,29 @@
 
 ---
 
+## 2026-05-07 · Cmd+Shift+T reopens last closed tab + Tabs section in shortcuts help
+
+**Status**: ✅ Shipped. The recently-closed stack maintained by `useTabsStore.closeTab` finally has a keyboard binding that exercises it.
+
+### What changed
+
+- **`src/app/use-tab-reopen-hotkey.ts`** (new) — `Cmd+Shift+T` (mac) / `Ctrl+Shift+T` (windows / linux) pulls the last closed entry off the active vault's recently-closed stack and routes the URL to it. Standard editable-target guard. When the stack is empty we deliberately do **not** call `preventDefault`, so the browser's native "reopen closed tab" still works for users who have nothing in our SPA stack.
+- **`src/app/AppShell.tsx`** — mounts `useTabReopenHotkey()` next to the other global app hooks.
+- **`src/ui/help/ShortcutsHelp.tsx`** — new "Tabs" group with the binding documented.
+- **`src/app/use-tab-reopen-hotkey.test.ts`** (new, 9 tests) — covers mac / win chord, uppercase T, empty stack pass-through, missing-Shift / missing-Cmd / missing-vault no-op, editable-target guard, unmount cleanup.
+
+### Decisions
+
+- **Hijack the browser-native binding only when we have something to do.** Calling `preventDefault` unconditionally would consume the chord for users on the landing page or with an empty close-stack, breaking their browser-level expectation. The hook short-circuits before `preventDefault` when `reopenLastClosed` returns null.
+- **Drive navigation through the URL, not by mutating the tab strip in place.** `reopenLastClosed` already restores the tab to `tabsByVault`; calling `navigate(/app/:vaultId/:path)` triggers `DocumentPage` to focus or recreate the tab via the same path every other open uses. One code path, no special-case rendering.
+
+### Verification
+
+- `pnpm check`: 0 errors / 0 warnings; 772 / 772 tests passing (+9 from the new hook test)
+- `pnpm build`: succeeded; main chunk **259.62 KB gz** (Δ +0.15 KB — the new hook + dependency on `useNavigate`)
+
+---
+
 ## 2026-05-07 · UX polish trio — refresh affordance, live editor font size, preview-tab hint
 
 **Status**: ✅ Three small UX magnets shipped together. None of them is functionally new — each closes a perceived-quality gap that surfaced after P3 polling and Phase 2 editing landed.

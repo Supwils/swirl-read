@@ -23,6 +23,7 @@ import { useCommandPaletteHotkey } from './use-command-palette-hotkey'
 import { useDirtyNavigationGuard } from './use-dirty-navigation-guard'
 import { useRouterDirtyBlocker } from './use-router-dirty-blocker'
 import { useShortcutsHelpHotkey } from './use-shortcuts-help-hotkey'
+import { useTabReopenHotkey } from './use-tab-reopen-hotkey'
 import { useVaultFocusSync } from './use-vault-focus-sync'
 import { useVaultPollSync } from './use-vault-poll-sync'
 import { useZenModeHotkey } from './use-zen-mode-hotkey'
@@ -82,6 +83,7 @@ export function AppShell() {
   useCommandPaletteHotkey()
   useZenModeHotkey()
   useShortcutsHelpHotkey()
+  useTabReopenHotkey()
   useDirtyNavigationGuard()
   useRouterDirtyBlocker()
   useVaultFocusSync()
