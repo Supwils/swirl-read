@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useTocStore } from '@/stores/toc-store'
+import { DEFAULT_TOC_MAX_LEVEL, useUIStore } from '@/stores/ui-store'
 import { TableOfContents } from './TableOfContents'
 
 class MockIntersectionObserver {
@@ -42,6 +43,7 @@ beforeEach(() => {
     activeId: null,
     context: EMPTY_CONTEXT,
   })
+  useUIStore.setState({ tocMaxLevel: DEFAULT_TOC_MAX_LEVEL })
   document.body.innerHTML = ''
 })
 
@@ -52,6 +54,7 @@ afterEach(() => {
     activeId: null,
     context: EMPTY_CONTEXT,
   })
+  useUIStore.setState({ tocMaxLevel: DEFAULT_TOC_MAX_LEVEL })
 })
 
 describe('TableOfContents', () => {
@@ -228,6 +231,20 @@ describe('TableOfContents — context rail (RX4)', () => {
     useTagStore.setState({ selectedTag: null })
   })
 
+  it('does not render the density control when the doc has no H3+ headings', () => {
+    useTocStore.setState({
+      headings: [
+        { id: 'a', text: 'Alpha', level: 1 },
+        { id: 'b', text: 'Bravo', level: 2 },
+      ],
+      activeId: null,
+    })
+
+    render(<TableOfContents />)
+
+    expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument()
+  })
+
   it('renders both the context rail and the TOC when both exist', () => {
     useTocStore.setState({
       headings: [
@@ -250,5 +267,69 @@ describe('TableOfContents — context rail (RX4)', () => {
     // Both heading links rendered.
     expect(screen.getByRole('link', { name: 'Alpha' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Bravo' })).toBeInTheDocument()
+  })
+})
+
+describe('TableOfContents — density control', () => {
+  it('renders the density control when at least one H3+ heading exists', () => {
+    useTocStore.setState({
+      headings: [
+        { id: 'a', text: 'Alpha', level: 2 },
+        { id: 'b', text: 'Sub', level: 3 },
+      ],
+      activeId: null,
+    })
+
+    render(<TableOfContents />)
+
+    expect(screen.getByRole('radiogroup')).toBeInTheDocument()
+    expect(
+      screen.getByRole('radio', { name: /show only.*H1.*H2/i }),
+    ).toHaveAttribute('aria-checked', 'false')
+    expect(
+      screen.getByRole('radio', { name: /show every heading/i }),
+    ).toHaveAttribute('aria-checked', 'true')
+  })
+
+  it('hides H3+ headings when the user picks the H2 density', async () => {
+    const user = userEvent.setup()
+    useTocStore.setState({
+      headings: [
+        { id: 'a', text: 'Alpha', level: 2 },
+        { id: 'b', text: 'Sub-Alpha', level: 3 },
+        { id: 'c', text: 'Bravo', level: 2 },
+      ],
+      activeId: null,
+    })
+
+    render(<TableOfContents />)
+
+    expect(screen.getByRole('link', { name: 'Sub-Alpha' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('radio', { name: /show only.*H1.*H2/i }))
+
+    expect(
+      screen.queryByRole('link', { name: 'Sub-Alpha' }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Alpha' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Bravo' })).toBeInTheDocument()
+    expect(useUIStore.getState().tocMaxLevel).toBe(2)
+  })
+
+  it('shows the empty-density notice when every visible heading is filtered out', () => {
+    useUIStore.setState({ tocMaxLevel: 2 })
+    useTocStore.setState({
+      headings: [
+        { id: 'a', text: 'Sub-A', level: 3 },
+        { id: 'b', text: 'Sub-B', level: 4 },
+      ],
+      activeId: null,
+    })
+
+    render(<TableOfContents />)
+
+    expect(
+      screen.getByText(/all headings are hidden at this density/i),
+    ).toBeInTheDocument()
   })
 })

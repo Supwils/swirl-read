@@ -24,6 +24,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Hash, Link as LinkIcon, MessageSquare } from 'lucide-react'
 import { useTocStore } from '@/stores/toc-store'
 import { useTagStore } from '@/stores/tag-store'
+import { useUIStore, type TocMaxLevel } from '@/stores/ui-store'
 import { getBacklinksForFile } from '@/core/navigation/backlinks'
 import type { DocumentHeading } from '@/core/navigation/headings'
 import type { VaultId, VaultPath } from '@/core/vault'
@@ -43,6 +44,22 @@ export function TableOfContents(): ReactNode {
   const backlinkCount = useBacklinkCount(context.vaultId, context.path)
   const hasContext =
     context.tags.length > 0 || context.outgoingLinks > 0 || backlinkCount > 0
+  const tocMaxLevel = useUIStore((s) => s.tocMaxLevel)
+  const setTocMaxLevel = useUIStore((s) => s.setTocMaxLevel)
+
+  // Filter for the rail only — the IntersectionObserver below still
+  // watches every heading so the underlying activeId stays accurate as
+  // the reader scrolls past hidden subsections. The rail just doesn't
+  // surface them. This is intentional: hiding levels is for visual
+  // density, not for changing what counts as "the active section."
+  const visibleHeadings = useMemo(
+    () => headings.filter((h) => h.level <= tocMaxLevel),
+    [headings, tocMaxLevel],
+  )
+
+  // Whether to show the H2/H3/All control. Cheap to compute; keeps the
+  // affordance hidden on documents where it would have no effect.
+  const hasDeepHeadings = headings.some((h) => h.level >= 3)
 
   // Watch heading positions whenever the heading list changes. We re-observe
   // each list afresh because element identity changes when the document
@@ -102,11 +119,11 @@ export function TableOfContents(): ReactNode {
   }, [headings, setActiveId])
 
   // Pre-compute indent classes once. Levels begin at the smallest level
-  // present so a doc whose deepest heading is H3 doesn't waste indent on a
-  // missing H1/H2 column.
+  // present (in the visible subset) so a filtered list doesn't waste
+  // indent on a level that was hidden away by the density control.
   const minLevel = useMemo(
-    () => headings.reduce((min, h) => Math.min(min, h.level), 6),
-    [headings],
+    () => visibleHeadings.reduce((min, h) => Math.min(min, h.level), 6),
+    [visibleHeadings],
   )
 
   // RX4: rail collapses entirely when there's nothing meaningful to
@@ -125,20 +142,82 @@ export function TableOfContents(): ReactNode {
       )}
       {headings.length > 0 && (
         <div className="swirlread-toc__group">
-          <p className="swirlread-toc__title">On this page</p>
-          <ul className="swirlread-toc__list">
-            {headings.map((heading) => (
-              <TocItem
-                key={heading.id}
-                heading={heading}
-                active={heading.id === activeId}
-                indent={Math.max(0, heading.level - minLevel)}
+          <div className="swirlread-toc__group-header">
+            <p className="swirlread-toc__title">On this page</p>
+            {hasDeepHeadings && (
+              <DensityControl
+                value={tocMaxLevel}
+                onChange={(v) => {
+                  void setTocMaxLevel(v)
+                }}
               />
-            ))}
-          </ul>
+            )}
+          </div>
+          {visibleHeadings.length > 0 ? (
+            <ul className="swirlread-toc__list">
+              {visibleHeadings.map((heading) => (
+                <TocItem
+                  key={heading.id}
+                  heading={heading}
+                  active={heading.id === activeId}
+                  indent={Math.max(0, heading.level - minLevel)}
+                />
+              ))}
+            </ul>
+          ) : (
+            <p className="swirlread-toc__empty">
+              All headings are hidden at this density.
+            </p>
+          )}
         </div>
       )}
     </nav>
+  )
+}
+
+/* ─── Density control ────────────────────────────────────────────── */
+
+const DENSITY_OPTIONS: { value: TocMaxLevel; label: string; title: string }[] =
+  [
+    { value: 2, label: 'H2', title: 'Show only H1 + H2 headings' },
+    { value: 3, label: 'H3', title: 'Show H1 + H2 + H3 headings' },
+    { value: 6, label: 'All', title: 'Show every heading' },
+  ]
+
+function DensityControl({
+  value,
+  onChange,
+}: {
+  value: TocMaxLevel
+  onChange: (v: TocMaxLevel) => void
+}): ReactNode {
+  return (
+    <div
+      className="swirlread-toc__density"
+      role="radiogroup"
+      aria-label="Heading depth"
+    >
+      {DENSITY_OPTIONS.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          role="radio"
+          aria-checked={value === option.value}
+          aria-label={option.title}
+          title={option.title}
+          className={
+            value === option.value
+              ? 'swirlread-toc__density-btn is-active'
+              : 'swirlread-toc__density-btn'
+          }
+          onClick={() => {
+            onChange(option.value)
+          }}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
   )
 }
 

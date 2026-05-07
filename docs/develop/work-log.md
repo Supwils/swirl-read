@@ -4,6 +4,31 @@
 
 ---
 
+## 2026-05-07 · TOC density control — H2 / H3 / All
+
+**Status**: ✅ Shipped. Long `*-map.md` indexes (which often pile dozens of H3 sub-rows under each H2 section) no longer turn the right rail into an unreadable wall. A new inline H2/H3/All control above the heading list lets the reader pick the depth they want.
+
+### What changed
+
+- **`src/stores/ui-store.ts`** — new persisted preference `tocMaxLevel: 2 | 3 | 6` (default `6` = current behaviour). Validator + setter follow the same shape as the other prefs; included in `init()`, `setX`, and `resetToDefaults`.
+- **`src/ui/reading-shell/TableOfContents.tsx`** — filters the heading list before rendering. The IntersectionObserver still watches every heading element so `activeId` stays accurate as the reader scrolls past hidden subsections; the rail simply doesn't surface them. New small inline `DensityControl` (radiogroup; H2 / H3 / All) renders above the list, but only when at least one heading deeper than H2 exists, so docs that wouldn't benefit don't get the chrome. Empty-density notice ("All headings are hidden at this density.") catches the edge case where every heading is H3+ and the user picks H2.
+- **`src/styles/file-tree.css`** — `.swirlread-toc__group-header`, `.swirlread-toc__density`, `.swirlread-toc__density-btn` styles. Pill-style segmented control, mono-spacing-friendly labels, theme-aware accent.
+- **`src/ui/reading-shell/TableOfContents.test.tsx`** — three new tests cover hide-when-no-deep-headings, click-to-filter behaviour, and the empty-density notice.
+
+### Decisions
+
+- **Default to `All` (6), not a curated middle.** Existing reader behaviour stays untouched on every doc; the control is purely opt-in. Anyone happy with the current rail never has to engage with it.
+- **Filter only the rail, keep the observer wide.** Active state should reflect what the user is *reading*, not what the rail is *showing*. If the active heading is an H4 and the user picked H2, no rail item is highlighted — that's honest. Mapping back up to the nearest visible ancestor would be more visual but would also lie about which section the reader is in.
+- **Inline control, not a Settings panel toggle.** The decision is per-document by nature (some docs want H2 only, others want full depth). Burying it in Settings would force a round-trip every time. The inline pill auto-hides on docs that have no H3+, so it doesn't add noise to simple pages.
+- **`2 | 3 | 6` instead of `1..6`.** The interesting cuts are "top sections only" (≤ 2), "section + subsection" (≤ 3), and "everything" (≤ 6). H4–H5 are too granular to be useful as their own filter level for the audience this product serves.
+
+### Verification
+
+- `pnpm check`: 0 errors / 0 warnings; 776 / 776 tests passing (+4 from the new density tests)
+- `pnpm build`: succeeded; main chunk **259.68 KB gz** (Δ +0.06 KB), CSS **25.31 KB gz** (Δ +0.11 KB)
+
+---
+
 ## 2026-05-07 · Cmd+Shift+T reopens last closed tab + Tabs section in shortcuts help
 
 **Status**: ✅ Shipped. The recently-closed stack maintained by `useTabsStore.closeTab` finally has a keyboard binding that exercises it.

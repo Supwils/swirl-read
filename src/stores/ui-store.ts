@@ -48,6 +48,17 @@ export type ChromeMode = 'reading' | 'working'
 /** Editor font-size keyword (Phase 2D). Maps to actual px in EDITOR_FONT_SIZE_PX. */
 export type EditorFontSize = 'sm' | 'md' | 'lg'
 
+/**
+ * TOC depth filter. The right-rail "On this page" list shows headings
+ * whose level is `<= tocMaxLevel`. Default is 6 (show everything).
+ *
+ *   - `2` — H1 + H2 only. For long `*-map.md` indexes where the H3
+ *           sub-rows turn the rail into a wall.
+ *   - `3` — H1–H3. The natural middle ground for most prose docs.
+ *   - `6` — show every heading (current behaviour).
+ */
+export type TocMaxLevel = 2 | 3 | 6
+
 export const FONT_SIZE_MIN = 14
 export const FONT_SIZE_MAX = 22
 export const LINE_HEIGHT_MIN = 1.4
@@ -68,6 +79,7 @@ export const DEFAULT_CHROME_MODE: ChromeMode = 'reading'
 export const DEFAULT_EDITOR_LINE_NUMBERS = false
 export const DEFAULT_EDITOR_LINE_WRAP = true
 export const DEFAULT_EDITOR_FONT_SIZE: EditorFontSize = 'md'
+export const DEFAULT_TOC_MAX_LEVEL: TocMaxLevel = 6
 
 const PREF_PREFIX = 'ui:'
 
@@ -88,6 +100,7 @@ interface UIStoreState {
   editorLineNumbers: boolean
   editorLineWrap: boolean
   editorFontSize: EditorFontSize
+  tocMaxLevel: TocMaxLevel
   /** True after `init()` has finished loading from Dexie. */
   ready: boolean
 }
@@ -116,6 +129,7 @@ interface UIStoreActions {
   setEditorLineNumbers: (on: boolean) => Promise<void>
   setEditorLineWrap: (on: boolean) => Promise<void>
   setEditorFontSize: (size: EditorFontSize) => Promise<void>
+  setTocMaxLevel: (level: TocMaxLevel) => Promise<void>
   resetToDefaults: () => Promise<void>
 }
 
@@ -171,6 +185,10 @@ const VALID_EDITOR_FONT_SIZES = new Set<EditorFontSize>(['sm', 'md', 'lg'])
 const isEditorFontSize = (v: unknown): v is EditorFontSize =>
   typeof v === 'string' && VALID_EDITOR_FONT_SIZES.has(v as EditorFontSize)
 
+const VALID_TOC_MAX_LEVELS = new Set<TocMaxLevel>([2, 3, 6])
+const isTocMaxLevel = (v: unknown): v is TocMaxLevel =>
+  typeof v === 'number' && VALID_TOC_MAX_LEVELS.has(v as TocMaxLevel)
+
 const isFiniteNumber = (v: unknown): v is number =>
   typeof v === 'number' && Number.isFinite(v)
 
@@ -195,6 +213,7 @@ export const useUIStore = create<UIStore>((set, get) => ({
   editorLineNumbers: DEFAULT_EDITOR_LINE_NUMBERS,
   editorLineWrap: DEFAULT_EDITOR_LINE_WRAP,
   editorFontSize: DEFAULT_EDITOR_FONT_SIZE,
+  tocMaxLevel: DEFAULT_TOC_MAX_LEVEL,
   ready: false,
 
   async init() {
@@ -213,6 +232,7 @@ export const useUIStore = create<UIStore>((set, get) => ({
       editorLineNumbers,
       editorLineWrap,
       editorFontSize,
+      tocMaxLevel,
     ] = await Promise.all([
       readPref('theme', isTheme, DEFAULT_THEME),
       readPref('fontFamily', isFontFamily, DEFAULT_FONT_FAMILY),
@@ -231,6 +251,7 @@ export const useUIStore = create<UIStore>((set, get) => ({
       readPref('editorLineNumbers', isBoolean, DEFAULT_EDITOR_LINE_NUMBERS),
       readPref('editorLineWrap', isBoolean, DEFAULT_EDITOR_LINE_WRAP),
       readPref('editorFontSize', isEditorFontSize, DEFAULT_EDITOR_FONT_SIZE),
+      readPref('tocMaxLevel', isTocMaxLevel, DEFAULT_TOC_MAX_LEVEL),
     ])
     set({
       theme,
@@ -250,6 +271,7 @@ export const useUIStore = create<UIStore>((set, get) => ({
       editorLineNumbers,
       editorLineWrap,
       editorFontSize,
+      tocMaxLevel,
       ready: true,
     })
   },
@@ -365,6 +387,11 @@ export const useUIStore = create<UIStore>((set, get) => ({
     await writePref('editorFontSize', size)
   },
 
+  async setTocMaxLevel(level) {
+    set({ tocMaxLevel: level })
+    await writePref('tocMaxLevel', level)
+  },
+
   async resetToDefaults() {
     set({
       theme: DEFAULT_THEME,
@@ -380,6 +407,7 @@ export const useUIStore = create<UIStore>((set, get) => ({
       editorLineNumbers: DEFAULT_EDITOR_LINE_NUMBERS,
       editorLineWrap: DEFAULT_EDITOR_LINE_WRAP,
       editorFontSize: DEFAULT_EDITOR_FONT_SIZE,
+      tocMaxLevel: DEFAULT_TOC_MAX_LEVEL,
     })
     await Promise.all([
       writePref('theme', DEFAULT_THEME),
@@ -395,6 +423,7 @@ export const useUIStore = create<UIStore>((set, get) => ({
       writePref('editorLineNumbers', DEFAULT_EDITOR_LINE_NUMBERS),
       writePref('editorLineWrap', DEFAULT_EDITOR_LINE_WRAP),
       writePref('editorFontSize', DEFAULT_EDITOR_FONT_SIZE),
+      writePref('tocMaxLevel', DEFAULT_TOC_MAX_LEVEL),
     ])
   },
 }))
