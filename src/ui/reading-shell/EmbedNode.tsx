@@ -155,6 +155,27 @@ function parseImageDimensions(display: string | undefined): {
   return { alt: display }
 }
 
+function MediaFallback({
+  resolved,
+  error,
+}: {
+  resolved: VaultPath
+  error: string | null
+}): ReactNode {
+  if (error) {
+    return (
+      <span className="swirlread-embed swirlread-embed--broken">
+        Couldn&apos;t load <code>{resolved}</code>: {error}
+      </span>
+    )
+  }
+  return (
+    <span className="swirlread-embed swirlread-embed--pending">
+      Loading <code>{resolved}</code>…
+    </span>
+  )
+}
+
 function ImageEmbed({
   vault,
   resolved,
@@ -167,21 +188,8 @@ function ImageEmbed({
   fallbackAlt: string
 }): ReactNode {
   const { url, error } = useBlobURL(vault, resolved)
+  if (!url) return <MediaFallback resolved={resolved} error={error} />
   const dims = parseImageDimensions(display)
-  if (error) {
-    return (
-      <span className="swirlread-embed swirlread-embed--broken">
-        Couldn&apos;t load <code>{resolved}</code>: {error}
-      </span>
-    )
-  }
-  if (!url) {
-    return (
-      <span className="swirlread-embed swirlread-embed--pending">
-        Loading <code>{resolved}</code>…
-      </span>
-    )
-  }
   return (
     <img
       className="swirlread-embed swirlread-embed--image"
@@ -203,20 +211,7 @@ function VideoEmbed({
   resolved: VaultPath
 }): ReactNode {
   const { url, error } = useBlobURL(vault, resolved)
-  if (error) {
-    return (
-      <span className="swirlread-embed swirlread-embed--broken">
-        Couldn&apos;t load <code>{resolved}</code>: {error}
-      </span>
-    )
-  }
-  if (!url) {
-    return (
-      <span className="swirlread-embed swirlread-embed--pending">
-        Loading <code>{resolved}</code>…
-      </span>
-    )
-  }
+  if (!url) return <MediaFallback resolved={resolved} error={error} />
   return (
     <video
       className="swirlread-embed swirlread-embed--video"
@@ -236,20 +231,7 @@ function AudioEmbed({
   resolved: VaultPath
 }): ReactNode {
   const { url, error } = useBlobURL(vault, resolved)
-  if (error) {
-    return (
-      <span className="swirlread-embed swirlread-embed--broken">
-        Couldn&apos;t load <code>{resolved}</code>: {error}
-      </span>
-    )
-  }
-  if (!url) {
-    return (
-      <span className="swirlread-embed swirlread-embed--pending">
-        Loading <code>{resolved}</code>…
-      </span>
-    )
-  }
+  if (!url) return <MediaFallback resolved={resolved} error={error} />
   return (
     <audio
       className="swirlread-embed swirlread-embed--audio"
@@ -268,6 +250,11 @@ function MarkdownEmbed({
   vault: VaultFileSystem
   resolved: VaultPath
 }): ReactNode {
+  // Parent EmbedNode already gates on `wikiCtx` before rendering this
+  // component, so wikiCtx is guaranteed non-null here. We re-read it via
+  // useContext() rather than threading it as a prop because we need to
+  // re-provide it with `currentPath = resolved` so nested wikilinks
+  // resolve relative to the embedded file, not the host document.
   const wikiCtx = useContext(WikilinkContext)
   const embedCtx = useContext(EmbedContext)
   const [content, setContent] = useState<ReactNode>(null)
@@ -305,12 +292,13 @@ function MarkdownEmbed({
     )
   }
 
+  if (!wikiCtx) return null
+
   const childContext: typeof embedCtx = {
     components: embedCtx.components,
     stack: [...embedCtx.stack, resolved],
   }
-
-  const innerWikiCtx = wikiCtx ? { ...wikiCtx, currentPath: resolved } : null
+  const innerWikiCtx = { ...wikiCtx, currentPath: resolved }
 
   return (
     <aside
@@ -321,21 +309,13 @@ function MarkdownEmbed({
         <span className="swirlread-embed__filename">{resolved}</span>
       </header>
       <div className="swirlread-embed__body swirlread-prose">
-        {innerWikiCtx ? (
-          <WikilinkContext.Provider value={innerWikiCtx}>
-            <EmbedContext.Provider value={childContext}>
-              {content ?? (
-                <span className="swirlread-embed--pending">Reading…</span>
-              )}
-            </EmbedContext.Provider>
-          </WikilinkContext.Provider>
-        ) : (
+        <WikilinkContext.Provider value={innerWikiCtx}>
           <EmbedContext.Provider value={childContext}>
             {content ?? (
               <span className="swirlread-embed--pending">Reading…</span>
             )}
           </EmbedContext.Provider>
-        )}
+        </WikilinkContext.Provider>
       </div>
     </aside>
   )
