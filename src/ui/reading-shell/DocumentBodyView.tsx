@@ -63,6 +63,9 @@ interface DocumentBodyViewProps {
   proseRef: RefObject<HTMLDivElement | null>
   headerTitle: string
   setRetryToken: (fn: (n: number) => number) => void
+  externalChange: 'clean' | 'changed'
+  onReloadExternalChange: () => void
+  onDismissExternalChange: () => void
 }
 
 /**
@@ -87,6 +90,9 @@ export function DocumentBodyView({
   proseRef,
   headerTitle,
   setRetryToken,
+  externalChange,
+  onReloadExternalChange,
+  onDismissExternalChange,
 }: DocumentBodyViewProps): ReactNode {
   const frontmatterDisplay = useUIStore((s) => s.frontmatterDisplay)
   const adjacent = useAdjacentFiles(vaultId, filePath)
@@ -163,6 +169,23 @@ export function DocumentBodyView({
           </button>
         )}
       </header>
+
+      {externalChange === 'changed' && vaultId && filePath && (
+        <ExternalChangeBanner
+          isEditing={isEditing}
+          onReload={() => {
+            if (isEditing) {
+              void useEditorStore
+                .getState()
+                .reloadFromDisk()
+                .then(onReloadExternalChange)
+              return
+            }
+            onReloadExternalChange()
+          }}
+          onDismiss={onDismissExternalChange}
+        />
+      )}
 
       {state.kind === 'loading' && <DocumentSkeleton />}
 
@@ -292,5 +315,47 @@ export function DocumentBodyView({
           <DocNav vaultId={vaultId} prev={adjacent.prev} next={adjacent.next} />
         )}
     </article>
+  )
+}
+
+function ExternalChangeBanner({
+  isEditing,
+  onReload,
+  onDismiss,
+}: {
+  isEditing: boolean
+  onReload: () => void
+  onDismiss: () => void
+}): ReactNode {
+  return (
+    <div
+      className="swirlread-edit__banner swirlread-edit__banner--conflict"
+      role="status"
+    >
+      <span className="swirlread-edit__banner-title">
+        This file changed outside SwirlRead
+      </span>
+      <span>
+        {isEditing
+          ? 'Your draft is preserved. Reload only if you want to replace it with the on-disk version.'
+          : 'The open document may be stale. Reload when you are ready to read the latest version.'}
+      </span>
+      <div className="swirlread-edit__banner-actions">
+        <button
+          type="button"
+          className="swirlread-edit__btn"
+          onClick={onReload}
+        >
+          {isEditing ? 'Reload from disk (discard my draft)' : 'Reload'}
+        </button>
+        <button
+          type="button"
+          className="swirlread-edit__btn"
+          onClick={onDismiss}
+        >
+          {isEditing ? 'Keep editing' : 'Dismiss'}
+        </button>
+      </div>
+    </div>
   )
 }

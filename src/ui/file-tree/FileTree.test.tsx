@@ -20,6 +20,8 @@ beforeEach(async () => {
     registeredVaults: [],
     activeVaultId: null,
     ready: true,
+    adapterRevision: 0,
+    contentRevisionByVault: {},
   })
   // RX2: pin to working chrome so fileTreeOpen actually drives sidebar
   // visibility — reading chrome would hide it behind a hover gesture.
@@ -105,6 +107,31 @@ describe('FileTree (M4.3) — mount + lazy expand', () => {
     expect(
       within(sidebar).getByRole('button', { name: /collapse career/i }),
     ).toBeInTheDocument()
+  })
+
+  it('refreshes cached root listings after external file creation', async () => {
+    const user = userEvent.setup()
+    const tree: MockTreeNode = {
+      'notes.md': '# notes',
+    }
+    await registerVault('refresh-root', tree)
+    renderAt('/app/refresh-root')
+
+    const sidebar = await waitFor(() => getSidebar())
+    await waitFor(() => {
+      expect(within(sidebar).getByText('notes.md')).toBeInTheDocument()
+    })
+
+    tree['new.md'] = '# new'
+    expect(within(sidebar).queryByText('new.md')).not.toBeInTheDocument()
+
+    await user.click(
+      within(sidebar).getByRole('button', { name: /refresh file tree/i }),
+    )
+
+    await waitFor(() => {
+      expect(within(sidebar).getByText('new.md')).toBeInTheDocument()
+    })
   })
 })
 

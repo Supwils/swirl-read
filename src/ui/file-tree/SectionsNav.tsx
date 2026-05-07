@@ -11,11 +11,13 @@ import { getAdapter } from '@/stores/vault-store'
 interface SectionsNavProps {
   vaultId: VaultId
   currentPath: VaultPath
+  contentRevision: number
 }
 
 export function SectionsNav({
   vaultId,
   currentPath,
+  contentRevision,
 }: SectionsNavProps): ReactNode {
   const [sections, setSections] = useState<VaultSection[] | null>(null)
 
@@ -23,6 +25,7 @@ export function SectionsNav({
     const vault = getAdapter(vaultId)
     if (!vault) return
     let cancelled = false
+    setSections(null)
     detectSections(vault)
       .then((found) => {
         if (cancelled) return
@@ -34,7 +37,7 @@ export function SectionsNav({
     return () => {
       cancelled = true
     }
-  }, [vaultId])
+  }, [vaultId, contentRevision])
 
   if (!sections || sections.length === 0) return null
 

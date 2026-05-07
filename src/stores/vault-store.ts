@@ -86,6 +86,11 @@ interface VaultStoreState {
   /** Incremented each time an adapter is attached so components that
    *  called getAdapter() too early can re-run their effects. */
   adapterRevision: number
+  /**
+   * Per-vault content revision. Bumped after explicit cache invalidation so
+   * subscribers re-read directory listings / derived indexes from the adapter.
+   */
+  contentRevisionByVault: Record<VaultId, number>
 }
 
 interface VaultStoreActions {
@@ -101,6 +106,13 @@ interface VaultStoreActions {
   /** Remove a vault from the registry. Does NOT delete vault content. */
   removeVault: (id: VaultId) => Promise<void>
 
+  /**
+   * Drop derived content caches for a vault and bump its revision. Used by the
+   * file-tree manual refresh today; future focus / polling sync should share
+   * this path.
+   */
+  refreshVaultContent: (id: VaultId) => Promise<void>
+
   /** Bind a live adapter to an existing meta entry (e.g. after permission
    *  re-grant on a returning user). M6.3 calls this. */
   attachAdapter: (adapter: VaultFileSystem) => void
@@ -113,6 +125,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   activeVaultId: null,
   ready: false,
   adapterRevision: 0,
+  contentRevisionByVault: {},
 
   async init() {
     if (get().ready) return
@@ -232,6 +245,22 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     set((state) => ({
       registeredVaults: state.registeredVaults.filter((v) => v.id !== id),
       activeVaultId: state.activeVaultId === id ? null : state.activeVaultId,
+      contentRevisionByVault: Object.fromEntries(
+        Object.entries(state.contentRevisionByVault).filter(
+          ([vaultId]) => vaultId !== id,
+        ),
+      ),
+    }))
+  },
+
+  async refreshVaultContent(id) {
+    invalidateBacklinks(id)
+    await invalidateVaultCachesLazy(id)
+    set((state) => ({
+      contentRevisionByVault: {
+        ...state.contentRevisionByVault,
+        [id]: (state.contentRevisionByVault[id] ?? 0) + 1,
+      },
     }))
   },
 

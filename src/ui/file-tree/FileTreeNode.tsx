@@ -19,6 +19,7 @@ export interface FileTreeNodeProps {
   entry: VaultEntry
   currentPath: VaultPath
   depth: number
+  contentRevision: number
 }
 
 export function FileTreeNode({
@@ -26,6 +27,7 @@ export function FileTreeNode({
   entry,
   currentPath,
   depth,
+  contentRevision,
 }: FileTreeNodeProps): ReactNode {
   const isAncestor =
     entry.isDirectory && isWithin(currentPath, entry.path) && currentPath !== ''
@@ -70,7 +72,14 @@ export function FileTreeNode({
     return () => {
       cancelled = true
     }
-  }, [vaultId, entry.path, entry.isDirectory, expanded, children])
+  }, [
+    vaultId,
+    entry.path,
+    entry.isDirectory,
+    expanded,
+    children,
+    contentRevision,
+  ])
 
   // Section-home detection — top-level directories only. Listings are
   // cached so an immediate expansion reuses the same promise.
@@ -91,7 +100,14 @@ export function FileTreeNode({
     return () => {
       cancelled = true
     }
-  }, [vaultId, entry.isDirectory, entry.path, entry.name, depth])
+  }, [
+    vaultId,
+    entry.isDirectory,
+    entry.path,
+    entry.name,
+    depth,
+    contentRevision,
+  ])
 
   const indent: React.CSSProperties = { paddingLeft: `${depth * 12}px` }
   const isActive = !entry.isDirectory && currentPath === entry.path
@@ -131,11 +147,12 @@ export function FileTreeNode({
           children !== null &&
           sortEntries(children).map((child) => (
             <FileTreeNode
-              key={child.path}
+              key={`${child.path}:${String(contentRevision)}`}
               vaultId={vaultId}
               entry={child}
               currentPath={currentPath}
               depth={depth + 1}
+              contentRevision={contentRevision}
             />
           ))}
       </ul>

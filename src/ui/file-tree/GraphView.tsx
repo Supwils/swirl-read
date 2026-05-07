@@ -109,9 +109,14 @@ interface Transform {
 interface GraphViewProps {
   vaultId: VaultId
   currentPath: VaultPath
+  contentRevision: number
 }
 
-export function GraphView({ vaultId, currentPath }: GraphViewProps): ReactNode {
+export function GraphView({
+  vaultId,
+  currentPath,
+  contentRevision,
+}: GraphViewProps): ReactNode {
   const navigate = useNavigate()
   const containerRef = useRef<HTMLDivElement>(null)
   const [simNodes, setSimNodes] = useState<SimNode[] | null>(null)
@@ -189,7 +194,7 @@ export function GraphView({ vaultId, currentPath }: GraphViewProps): ReactNode {
     return () => {
       cancelled = true
     }
-  }, [vaultId])
+  }, [vaultId, contentRevision])
 
   const onWheel = (e: React.WheelEvent<SVGSVGElement>) => {
     e.preventDefault()

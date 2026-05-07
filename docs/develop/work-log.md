@@ -4,6 +4,107 @@
 
 ---
 
+## 2026-05-04 · Vault content sync P2 — current-document external change prompt
+
+**Status**: ✅ P2 shipped. SwirlRead now detects when the currently open file changes after a vault content refresh and prompts the user instead of silently replacing the document.
+
+### What changed
+
+- **`src/ui/reading-shell/use-document-loader.ts`** — file-backed load states now carry the `VaultFile` metadata captured at load time (`size`, `modifiedAt`). This gives the page a concrete baseline for external-change checks.
+
+- **`src/ui/reading-shell/DocumentPage.tsx`** — subscribes to the per-vault `contentRevision`. When revision changes, it `stat()`s the current file and compares metadata against the loaded baseline. A mismatch sets `externalChange='changed'`; normal reloads reset the baseline and clear the notice.
+
+- **`src/ui/reading-shell/DocumentBodyView.tsx`** — renders a calm external-change banner:
+  - read mode: `Reload` re-runs the document loader; `Dismiss` keeps the current view
+  - edit mode: `Reload from disk (discard my draft)` routes through `editor-store.reloadFromDisk()` before refreshing the read baseline; `Keep editing` dismisses the notice
+
+- **`src/ui/reading-shell/DocumentPage.test.tsx`** — added coverage for the read-mode flow: external file mutation + content refresh shows the warning, preserves the old rendered body, and reloads only after the user clicks `Reload`.
+
+### Decisions
+
+- **Metadata comparison only.** P2 compares `size` and `modifiedAt`; it does not hash file contents or re-read every focused document. This keeps focus refresh cheap and consistent with the app's reader-first posture.
+- **No automatic document replacement.** Even in read mode, the user chooses when to reload so the page does not jump while they are reading.
+- **Editing remains draft-safe.** The external-change prompt can reload from disk explicitly, but normal save still relies on the existing stale-on-disk conflict check.
+
+### Verification
+
+- `pnpm typecheck`: 0 errors
+- `pnpm lint --max-warnings 0`: 0 warnings
+- `pnpm format:check`: clean
+- `pnpm test src/ui/reading-shell/DocumentPage.test.tsx`: 23 / 23 passing
+- `pnpm test`: 755 / 755 passing
+- `pnpm build`: succeeded; main chunk 258.92 KB gzip
+
+---
+
+## 2026-05-04 · Vault content sync P1 — focus-triggered light refresh
+
+**Status**: ✅ P1 shipped. Returning to SwirlRead after editing a vault elsewhere now goes through the same cache invalidation + content revision path as the manual file-tree refresh, without adding a fake realtime watcher or background full-vault polling.
+
+### What changed
+
+- **`src/app/use-vault-focus-sync.ts`** (new) — App-level hook that listens for `window.focus` and `document.visibilitychange`. It refreshes only when:
+  - an active vault id exists
+  - the document is visible
+  - the active vault has a live adapter
+  - no refresh is already in flight
+  - the 2-second cooldown has elapsed
+
+- **`src/app/AppShell.tsx`** — mounts `useVaultFocusSync()` next to the other global app hooks.
+
+- **`src/app/use-vault-focus-sync.test.ts`** (new) — covers focus refresh, hidden→visible refresh, no active vault, missing adapter, cooldown coalescing, and listener cleanup.
+
+### Decisions
+
+- **Reuse `refreshVaultContent(id)` instead of creating a separate stale path.** Manual refresh, focus refresh, future adapter writes, and future polling should all invalidate caches the same way.
+- **Do not reload the current document yet.** P1 is for navigation / derived surfaces. Current-document external-change detection remains P2 because it must respect edit-mode dirty drafts and the existing stale-on-disk conflict flow.
+- **Throttle at 2 seconds.** Browsers often fire focus and visibility events together; the cooldown avoids duplicate cache clears while keeping the return-to-app behavior responsive.
+
+### Verification
+
+- `pnpm typecheck`: 0 errors
+- `pnpm lint --max-warnings 0`: 0 warnings
+- `pnpm format:check`: clean
+- `pnpm test src/app/use-vault-focus-sync.test.ts`: 6 / 6 passing
+- `pnpm test`: 754 / 754 passing
+- `pnpm build`: succeeded; main chunk 258.28 KB gzip
+
+---
+
+## 2026-05-04 · Vault content sync P0 — manual file-tree refresh
+
+**Status**: ✅ P0 shipped. SwirlRead still does not pretend browser FSAPI has a native watcher, but the reader now has an explicit refresh path for the common "I changed the folder outside the app" case.
+
+### What changed
+
+- **`docs/develop/architecture-overview.md`** — added the vault content sync design:
+  - P0 manual sidebar refresh
+  - P1 focus-triggered stale marking
+  - P2 current-document external-change detection
+  - P3 optional visible-only polling for expanded directories
+  - shared per-vault content revision model
+
+- **`src/stores/vault-store.ts`** — added `contentRevisionByVault` plus `refreshVaultContent(id)`. The action clears derived content caches for the vault and then bumps the revision so subscribers re-read from the adapter.
+
+- **`src/ui/file-tree/FileTree.tsx`** — added a Lucide refresh button to the file-tree toolbar. The tree subscribes to the vault content revision and reloads the root listing after refresh.
+
+- **`src/ui/file-tree/FileTreeNode.tsx`**, **`SectionsNav.tsx`**, **`TagFilterBar.tsx`**, and **`GraphView.tsx`** — threaded the content revision through lazy directory rows, section detection, tag chips/results, and graph loading so refreshed caches are actually re-read.
+
+- **`src/styles/file-tree.css`** — added disabled / spinner styling for the refresh control.
+
+- **`src/ui/file-tree/FileTree.test.tsx`** — added regression coverage proving a file created outside the app appears after pressing Refresh even when the old root listing was cached.
+
+### Verification
+
+- `pnpm typecheck`: 0 errors
+- `pnpm lint --max-warnings 0`: 0 warnings
+- `pnpm format:check`: clean
+- `pnpm test src/ui/file-tree/FileTree.test.tsx`: 19 / 19 passing
+- `pnpm test`: 748 / 748 passing
+- `pnpm build`: succeeded; main chunk 258.14 KB gzip
+
+---
+
 ## 2026-05-03 · Phase 2D — Editor polish (isReadOnly + Radix confirm + useBlocker + editor prefs)
 
 **Status**: ✅ Phase 2D closes the lightweight-editing arc. Three concrete UX upgrades on top of 2C: (1) sync `isReadOnly` capability flag pre-flights the Edit affordance so SampleVault never even shows the button; (2) app-wide Radix-styled confirm dialog replaces every `window.confirm` and is wired into a React Router 7 `useBlocker` so in-app navigation is gated; (3) three persisted editor preferences (line numbers, line wrap, font size) are reactive via CodeMirror Compartments — toggles apply live without rebuilding the EditorState. The lightweight-editing scope (Phase 2A → 2D) is now feature-complete.

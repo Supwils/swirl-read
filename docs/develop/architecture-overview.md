@@ -271,6 +271,63 @@ Persistence: `useUIStore` and `useVaultStore` persist relevant fields to Indexed
 
 ---
 
+## Vault Content Sync
+
+SwirlRead reads user vaults through `VaultFileSystem`, but browser FSAPI does
+not provide a portable native file watcher. The app therefore treats vault
+content as cache-backed and refreshes deliberately instead of pretending it has
+millisecond-level disk events.
+
+### Sync phases
+
+1. **P0 — manual sidebar refresh**
+   - Add a refresh control to the file-tree toolbar.
+   - Clear the active vault's in-memory derived caches:
+     - file-tree directory listings
+     - walked file list used by command palette
+     - tag index
+     - full-text index
+     - graph cache
+     - backlinks in-memory cache
+   - Bump a per-vault content revision so subscribed UI re-lists the vault.
+   - Do not delete persisted user state such as recents, scroll memory, tabs,
+     or vault registration.
+
+2. **P1 — focus-triggered stale marking**
+   - Listen for `window.focus` / `visibilitychange`.
+   - Mark the active vault as possibly stale when the user returns from another
+     app.
+   - Refresh only cheap visible surfaces first, such as the root or currently
+     open directory listing.
+
+3. **P2 — current document external-change detection**
+   - On stale focus, `stat()` the currently open file and compare cheap metadata
+     (`modifiedAt`, `size`) before re-reading.
+   - In read mode, reload or show a calm "file changed" action.
+   - In edit mode, never overwrite the draft; route through the existing
+     stale-on-disk conflict model.
+
+4. **P3 — optional polling for expanded directories**
+   - Poll only while the app is visible.
+   - Prefer already-expanded directories and the current file over full-vault
+     walks.
+   - Use conservative intervals, roughly 5-15 seconds, and rebuild expensive
+     indexes lazily when opened.
+
+### Revision model
+
+Vault content refresh should flow through a small per-vault revision counter.
+Components that cache derived data subscribe to `revision[vaultId]` and include
+it in their load effects. Cache invalidation happens before the revision bump,
+so the next read goes back through `VaultFileSystem.list()` / `walk()` instead
+of returning stale promises.
+
+Adapter writes, manual refresh, future focus detection, and future polling
+should all use the same invalidation-and-revision path so internal and external
+changes do not become separate systems.
+
+---
+
 ## Web Workers
 
 Two workers (`src/workers/`):

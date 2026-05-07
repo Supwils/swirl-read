@@ -103,6 +103,45 @@ describe('DocumentPage — markdown rendering', () => {
     })
   })
 
+  it('warns when the current document changed externally and reloads on request', async () => {
+    const user = userEvent.setup()
+    const tree = {
+      'index.md': '# Original\n\nOld body.',
+    }
+    const root = mockRoot('supwil', tree)
+    const adapter = FSAPIVaultAdapter.fromHandle(root, {
+      id: 'supwil-doc',
+      name: 'supwil',
+    })
+    await useVaultStore.getState().registerVault(adapter)
+
+    renderAt('/app/supwil-doc/index.md')
+
+    await waitFor(() => {
+      expect(screen.getByText('Old body.')).toBeInTheDocument()
+    })
+
+    tree['index.md'] = '# Original\n\nNew body with more text.'
+    await useVaultStore.getState().refreshVaultContent('supwil-doc')
+
+    expect(
+      await screen.findByText(/this file changed outside swirlread/i),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Old body.')).toBeInTheDocument()
+    expect(
+      screen.queryByText(/new body with more text/i),
+    ).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Reload' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('New body with more text.')).toBeInTheDocument()
+    })
+    expect(
+      screen.queryByText(/this file changed outside swirlread/i),
+    ).not.toBeInTheDocument()
+  })
+
   it('indexes backlinks after successfully rendering markdown', async () => {
     const root = mockRoot('supwil', {
       'host.md': '# Host\n\nSee [[target]].',

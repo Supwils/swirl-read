@@ -10,10 +10,19 @@ import {
 } from '@/core/navigation/backlinks'
 import { derivePageTitle } from '@/core/render/page-title'
 import { useTocStore } from '@/stores/toc-store'
-import { getAdapter } from '@/stores/vault-store'
+import { getAdapter, useVaultStore } from '@/stores/vault-store'
+import type { VaultFile } from '@/core/vault'
 import { useScrollMemory } from './use-scroll-memory'
 import { useDocumentLoader } from './use-document-loader'
+import type { LoadState } from './use-document-loader'
 import { DocumentBodyView } from './DocumentBodyView'
+
+interface FileVersion {
+  size: number
+  modifiedAtMs: number
+}
+
+type ExternalChangeState = 'clean' | 'changed'
 
 export function DocumentPage() {
   const params = useParams<{ vaultId: string; '*': string }>()
@@ -21,6 +30,12 @@ export function DocumentPage() {
   const filePath = params['*'] ?? ''
   const [retryToken, setRetryToken] = useState(0)
   const [wikilinkIndex, setWikilinkIndex] = useState<WikilinkIndex | null>(null)
+  const [externalChange, setExternalChange] =
+    useState<ExternalChangeState>('clean')
+  const loadedVersionRef = useRef<FileVersion | null>(null)
+  const contentRevision = useVaultStore((s) =>
+    vaultId ? (s.contentRevisionByVault[vaultId] ?? 0) : 0,
+  )
 
   // Build the wikilink index once per vault. Cheap walk; re-runs only on vaultId change.
   useEffect(() => {
@@ -44,6 +59,37 @@ export function DocumentPage() {
   }, [vaultId])
 
   const state = useDocumentLoader({ vaultId, filePath, retryToken })
+
+  useEffect(() => {
+    const file = fileFromLoadState(state)
+    loadedVersionRef.current = file ? versionFromFile(file) : null
+    setExternalChange('clean')
+  }, [state, vaultId, filePath])
+
+  useEffect(() => {
+    if (!vaultId || !filePath || state.kind === 'loading') return
+    const loadedVersion = loadedVersionRef.current
+    if (!loadedVersion) return
+    const vault = getAdapter(vaultId)
+    if (!vault) return
+
+    let cancelled = false
+    void vault
+      .stat(filePath)
+      .then((entry) => {
+        if (cancelled || entry.isDirectory) return
+        if (!sameVersion(loadedVersion, versionFromFile(entry))) {
+          setExternalChange('changed')
+        }
+      })
+      .catch(() => {
+        // Missing / unreadable files already surface through normal reload paths.
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [vaultId, filePath, contentRevision, state.kind])
 
   useEffect(() => {
     if (!vaultId || !filePath || !wikilinkIndex) return
@@ -146,6 +192,41 @@ export function DocumentPage() {
       proseRef={proseRef}
       headerTitle={headerTitle}
       setRetryToken={setRetryToken}
+      externalChange={externalChange}
+      onReloadExternalChange={() => {
+        setExternalChange('clean')
+        setRetryToken((n) => n + 1)
+      }}
+      onDismissExternalChange={() => {
+        setExternalChange('clean')
+      }}
     />
   )
+}
+
+function fileFromLoadState(state: LoadState): VaultFile | null {
+  switch (state.kind) {
+    case 'rendered':
+    case 'text':
+    case 'code':
+    case 'table':
+    case 'html':
+    case 'json':
+    case 'media':
+    case 'binary':
+      return state.file
+    default:
+      return null
+  }
+}
+
+function versionFromFile(file: VaultFile): FileVersion {
+  return {
+    size: file.size,
+    modifiedAtMs: file.modifiedAt.getTime(),
+  }
+}
+
+function sameVersion(a: FileVersion, b: FileVersion): boolean {
+  return a.size === b.size && a.modifiedAtMs === b.modifiedAtMs
 }

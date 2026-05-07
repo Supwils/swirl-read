@@ -1,10 +1,10 @@
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
-import { List, Network } from 'lucide-react'
+import { List, Network, RefreshCw } from 'lucide-react'
 import type { VaultEntry, VaultId, VaultPath } from '@/core/vault'
 import type { RecentFile, ScrollPosition } from '@/stores/reader-store'
 import { useReaderStore } from '@/stores/reader-store'
-import { getAdapter } from '@/stores/vault-store'
+import { getAdapter, useVaultStore } from '@/stores/vault-store'
 import { filesForTag } from '@/core/navigation/tag-index'
 import type { TagIndex } from '@/core/navigation/tag-index'
 import { getTagIndex } from '@/ui/reading-shell/tag-index-cache'
@@ -34,6 +34,13 @@ export function FileTree({ vaultId, currentPath }: FileTreeProps): ReactNode {
   const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('tree')
   const [activeTag, setActiveTag] = useState<string | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
+  const contentRevision = useVaultStore(
+    (state) => state.contentRevisionByVault[vaultId] ?? 0,
+  )
+  const refreshVaultContent = useVaultStore(
+    (state) => state.refreshVaultContent,
+  )
   const recentFiles = useReaderStore(
     (state) => state.recentByVault[vaultId] ?? EMPTY_RECENT_FILES,
   )
@@ -49,6 +56,7 @@ export function FileTree({ vaultId, currentPath }: FileTreeProps): ReactNode {
     }
     let cancelled = false
     setError(null)
+    setRootEntries(null)
     getListing(vault, '')
       .then((entries) => {
         if (!cancelled) setRootEntries(entries)
@@ -61,13 +69,23 @@ export function FileTree({ vaultId, currentPath }: FileTreeProps): ReactNode {
     return () => {
       cancelled = true
     }
-  }, [vaultId])
+  }, [vaultId, contentRevision])
+
+  async function handleRefresh(): Promise<void> {
+    if (refreshing) return
+    setRefreshing(true)
+    try {
+      await refreshVaultContent(vaultId)
+    } finally {
+      setRefreshing(false)
+    }
+  }
 
   const toolbar = (
     <div
       className="swirlread-file-tree__toolbar"
       role="group"
-      aria-label="View mode"
+      aria-label="File tree controls"
     >
       <button
         type="button"
@@ -94,6 +112,22 @@ export function FileTree({ vaultId, currentPath }: FileTreeProps): ReactNode {
         onClick={() => setViewMode('graph')}
       >
         <Network size={14} aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        className="swirlread-file-tree__view-btn swirlread-file-tree__refresh-btn"
+        aria-label="Refresh file tree"
+        title="Refresh file tree"
+        disabled={refreshing}
+        onClick={() => {
+          void handleRefresh()
+        }}
+      >
+        <RefreshCw
+          className={refreshing ? 'is-spinning' : undefined}
+          size={14}
+          aria-hidden="true"
+        />
       </button>
     </div>
   )
@@ -122,7 +156,11 @@ export function FileTree({ vaultId, currentPath }: FileTreeProps): ReactNode {
             <p className="swirlread-graph-view__status">Building graph…</p>
           }
         >
-          <GraphView vaultId={vaultId} currentPath={currentPath} />
+          <GraphView
+            vaultId={vaultId}
+            currentPath={currentPath}
+            contentRevision={contentRevision}
+          />
         </Suspense>
       </div>
     )
@@ -142,6 +180,7 @@ export function FileTree({ vaultId, currentPath }: FileTreeProps): ReactNode {
       {toolbar}
       <TagFilterBar
         vaultId={vaultId}
+        contentRevision={contentRevision}
         activeTag={activeTag}
         onSelect={setActiveTag}
       />
@@ -150,6 +189,7 @@ export function FileTree({ vaultId, currentPath }: FileTreeProps): ReactNode {
           vaultId={vaultId}
           tag={activeTag}
           currentPath={currentPath}
+          contentRevision={contentRevision}
         />
       ) : (
         <>
@@ -159,11 +199,16 @@ export function FileTree({ vaultId, currentPath }: FileTreeProps): ReactNode {
             recents={recentFiles}
             scrollByPath={scrollByPath}
           />
-          <SectionsNav vaultId={vaultId} currentPath={currentPath} />
+          <SectionsNav
+            vaultId={vaultId}
+            currentPath={currentPath}
+            contentRevision={contentRevision}
+          />
           <FilesNav
             vaultId={vaultId}
             currentPath={currentPath}
             rootEntries={sortEntries(rootEntries)}
+            contentRevision={contentRevision}
           />
         </>
       )}
@@ -175,10 +220,12 @@ function FilesNav({
   vaultId,
   currentPath,
   rootEntries,
+  contentRevision,
 }: {
   vaultId: VaultId
   currentPath: VaultPath
   rootEntries: VaultEntry[]
+  contentRevision: number
 }): ReactNode {
   return (
     <div className="swirlread-file-tree__files">
@@ -190,11 +237,12 @@ function FilesNav({
       >
         {rootEntries.map((entry) => (
           <FileTreeNode
-            key={entry.path}
+            key={`${entry.path}:${String(contentRevision)}`}
             vaultId={vaultId}
             entry={entry}
             currentPath={currentPath}
             depth={0}
+            contentRevision={contentRevision}
           />
         ))}
       </ul>
@@ -206,10 +254,12 @@ function TaggedFilesList({
   vaultId,
   tag,
   currentPath,
+  contentRevision,
 }: {
   vaultId: VaultId
   tag: string
   currentPath: VaultPath
+  contentRevision: number
 }): ReactNode {
   const [paths, setPaths] = useState<VaultPath[] | null>(null)
 
@@ -217,6 +267,7 @@ function TaggedFilesList({
     const vault = getAdapter(vaultId)
     if (!vault) return
     let cancelled = false
+    setPaths(null)
 
     void getTagIndex(vault)
       .then((index: TagIndex) => {
@@ -229,7 +280,7 @@ function TaggedFilesList({
     return () => {
       cancelled = true
     }
-  }, [vaultId, tag])
+  }, [vaultId, tag, contentRevision])
 
   if (!paths) {
     return (

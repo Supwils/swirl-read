@@ -11,6 +11,7 @@ interface TagChip {
 
 interface TagFilterBarProps {
   vaultId: VaultId
+  contentRevision: number
   activeTag: string | null
   onSelect: (tag: string | null) => void
 }
@@ -29,6 +30,7 @@ function isMeaningfulTag(name: string): boolean {
 
 export function TagFilterBar({
   vaultId,
+  contentRevision,
   activeTag,
   onSelect,
 }: TagFilterBarProps): ReactNode {
@@ -38,6 +40,7 @@ export function TagFilterBar({
     const vault = getAdapter(vaultId)
     if (!vault) return
     let cancelled = false
+    setChips(null)
 
     void getTagIndex(vault)
       .then((index: TagIndex) => {
@@ -56,7 +59,7 @@ export function TagFilterBar({
     return () => {
       cancelled = true
     }
-  }, [vaultId])
+  }, [vaultId, contentRevision])
 
   if (!chips || chips.length === 0) return null
 

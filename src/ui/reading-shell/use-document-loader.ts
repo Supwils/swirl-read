@@ -26,15 +26,16 @@ export type LoadState =
   | { kind: 'loading' }
   | {
       kind: 'rendered'
+      file: VaultFile
       content: ReactNode
       raw: string
       frontmatter: Frontmatter
     }
-  | { kind: 'text'; raw: string }
-  | { kind: 'code'; raw: string; language: string }
-  | { kind: 'table'; raw: string; delimiter: ',' | '\t' }
-  | { kind: 'html'; raw: string }
-  | { kind: 'json'; raw: string }
+  | { kind: 'text'; file: VaultFile; raw: string }
+  | { kind: 'code'; file: VaultFile; raw: string; language: string }
+  | { kind: 'table'; file: VaultFile; raw: string; delimiter: ',' | '\t' }
+  | { kind: 'html'; file: VaultFile; raw: string }
+  | { kind: 'json'; file: VaultFile; raw: string }
   | { kind: 'media'; file: VaultFile; media: MediaKind; vault: VaultFileSystem }
   | { kind: 'binary'; file: VaultFile }
   | { kind: 'directory'; entries: VaultEntry[] }
@@ -108,17 +109,27 @@ export function useDocumentLoader({
           const frontmatter = extractFrontmatter(raw)
           const content = await renderMarkdown(raw, customComponents)
           if (cancelled) return
-          setState({ kind: 'rendered', content, raw, frontmatter })
+          setState({ kind: 'rendered', file: entry, content, raw, frontmatter })
         } else if (decision.kind === 'code') {
-          setState({ kind: 'code', raw, language: decision.language })
+          setState({
+            kind: 'code',
+            file: entry,
+            raw,
+            language: decision.language,
+          })
         } else if (decision.kind === 'table') {
-          setState({ kind: 'table', raw, delimiter: decision.delimiter })
+          setState({
+            kind: 'table',
+            file: entry,
+            raw,
+            delimiter: decision.delimiter,
+          })
         } else if (decision.kind === 'html') {
-          setState({ kind: 'html', raw })
+          setState({ kind: 'html', file: entry, raw })
         } else if (decision.kind === 'json') {
-          setState({ kind: 'json', raw })
+          setState({ kind: 'json', file: entry, raw })
         } else {
-          setState({ kind: 'text', raw })
+          setState({ kind: 'text', file: entry, raw })
         }
         void useReaderStore.getState().markRecentFile(currentVaultId, filePath)
         // `pin: false` means single-click nav only ever reuses the preview slot.

@@ -511,9 +511,28 @@ a.swirlread-directory__crumb:hover {
   color: var(--color-text);
 }
 
+.swirlread-file-tree__view-btn:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
 .swirlread-file-tree__view-btn--active {
   background: color-mix(in srgb, var(--color-accent) 18%, transparent);
   color: var(--color-accent);
+}
+
+.swirlread-file-tree__refresh-btn {
+  margin-left: auto;
+}
+
+.swirlread-file-tree__refresh-btn .is-spinning {
+  animation: swirlread-spin 0.8s linear infinite;
+}
+
+@keyframes swirlread-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Graph-mode container ─────────────────────────────────────────────── */
