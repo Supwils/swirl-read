@@ -72,6 +72,7 @@ The canonical test vault is the user's own knowledge OS at `/Users/supwils/supwi
 ## Working Conventions Learned On The Job
 
 - **Never commit or push without explicit user instruction.** Do not run `git commit` or `git push` (or any variant) unless the user explicitly asks. Finish all code changes first; wait for the user to say "commit" or "push".
+- **One approval = one operation.** A "commit this" / "push" instruction authorizes that single act on the changes that exist when the instruction is given. It does NOT carry over to subsequent independent changes — every new diff requires its own explicit approval. When in doubt, finish the work, summarize what's pending, and wait.
 - **Never add `Co-Authored-By` to commit messages.** Commits should show only the user as author — no Claude attribution line.
 - **Gate every change** with `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build`. Lint runs at `--max-warnings 0` — even react-refresh advisories fail the build, so split helpers out of component files when needed (see `src/ui/reading-shell/file-renderer-utils.ts` for the pattern).
 - **Renderer chunks must stay lazy.** Mermaid, KaTeX, Shiki extra grammars, the command palette, the tags panel, the TOC, and the ShortcutsHelp overlay all sit in their own dynamic-import chunks. New heavy renderers must follow the same pattern (`MermaidDiagram` → `MermaidRenderer` is the canonical reference).
