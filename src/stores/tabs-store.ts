@@ -100,6 +100,12 @@ interface TabsStoreActions {
   /** Reopen the most recently closed tab in the vault and return its
    *  path. Returns `null` if the recently-closed stack is empty. */
   reopenLastClosed: (vaultId: VaultId) => VaultPath | null
+  /** Drop a specific path from the recently-closed stack. Called when the
+   *  user picks an entry from the palette's "Recently closed" group, so
+   *  the entry doesn't haunt the list after the file has been reopened.
+   *  No-op when the path is not in the stack. Does NOT navigate or open
+   *  the tab — the caller owns that side of the action. */
+  reopenClosed: (vaultId: VaultId, path: VaultPath) => void
   /** Drop in-memory state for a vault. Called by `removeVault` fan-out
    *  after Dexie rows have already been bulk-deleted. */
   forgetVault: (vaultId: VaultId) => void
@@ -203,6 +209,7 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
     const existingIdx = current.findIndex((t) => t.path === normalized)
 
     let next: Tab[]
+    let evictedByCap: Tab | undefined
     if (existingIdx >= 0) {
       // Already open — promote pinned if asked, otherwise leave alone.
       const existing = current[existingIdx]!
@@ -223,7 +230,10 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
         openedAt: new Date(),
       }
       if (!wantPin && previewIdx >= 0) {
-        // Replace the existing preview tab in place.
+        // Replace the existing preview tab in place. The displaced
+        // preview is intentionally NOT pushed onto the closed stack —
+        // preview tabs are ephemeral by design; pushing every casual
+        // wikilink click onto the stack would dilute it past usefulness.
         next = current.map((tab, idx) => (idx === previewIdx ? newTab : tab))
         if (!get().previewReplaced) set({ previewReplaced: true })
       } else {
@@ -233,8 +243,10 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
           // the oldest pinned (rare; pinned tabs are usually intentional).
           const evictIdx = next.findIndex((tab) => !tab.pinned)
           if (evictIdx >= 0 && evictIdx < next.length - 1) {
+            evictedByCap = next[evictIdx]
             next.splice(evictIdx, 1)
           } else {
+            evictedByCap = next[0]
             next.shift()
           }
           // A.L4 — notify when the cap fires; surface a one-time hint.
@@ -246,9 +258,25 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
       }
     }
 
-    set((state) => ({
-      tabsByVault: { ...state.tabsByVault, [vaultId]: next },
-    }))
+    set((state) => {
+      const nextState: Partial<TabsStoreState> = {
+        tabsByVault: { ...state.tabsByVault, [vaultId]: next },
+      }
+      if (evictedByCap) {
+        // The cap-evicted tab is silently lost otherwise. Push it onto
+        // the recently-closed stack so the user can recover it via
+        // Cmd+Shift+T or the palette's "Recently closed" group.
+        const stack = state.recentlyClosedByVault[vaultId] ?? []
+        nextState.recentlyClosedByVault = {
+          ...state.recentlyClosedByVault,
+          [vaultId]: [evictedByCap, ...stack].slice(
+            0,
+            MAX_RECENTLY_CLOSED_PER_VAULT,
+          ),
+        }
+      }
+      return nextState
+    })
     await persistVaultTabs(vaultId, next)
   },
 
@@ -333,6 +361,18 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
     // caller can navigate without waiting on IDB.
     void get().openOrFocus(vaultId, head.path, { pin: head.pinned })
     return head.path
+  },
+
+  reopenClosed(vaultId, path) {
+    const stack = get().recentlyClosedByVault[vaultId] ?? []
+    const next = stack.filter((tab) => tab.path !== path)
+    if (next.length === stack.length) return
+    set((state) => ({
+      recentlyClosedByVault: {
+        ...state.recentlyClosedByVault,
+        [vaultId]: next,
+      },
+    }))
   },
 
   forgetVault(vaultId) {

@@ -228,8 +228,9 @@ export function VaultLayout() {
           id="tab-cap-hit"
           title={`Tab limit reached (${String(MAX_TABS_PER_VAULT)} tabs)`}
         >
-          The oldest tab was closed to make room. Double-click a tab to pin it
-          so it is never auto-evicted.
+          The oldest tab was closed to make room. Press <kbd>⌘+⇧+T</kbd> /{' '}
+          <kbd>Ctrl+Shift+T</kbd> to bring it back, or double-click a tab to pin
+          it so it is never auto-evicted.
         </HintToast>
       )}
     </div>

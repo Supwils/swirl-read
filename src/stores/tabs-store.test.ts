@@ -70,6 +70,22 @@ describe('tabs-store — openOrFocus rules', () => {
     )
   })
 
+  it('pushes cap-evicted tabs onto the recently-closed stack so they are recoverable', async () => {
+    for (let i = 0; i < MAX_TABS_PER_VAULT + 2; i += 1) {
+      await useTabsStore
+        .getState()
+        .openOrFocus('v', `f${String(i)}.md`, { pin: true })
+    }
+    // The first two opens (`f0.md`, `f1.md`) were evicted when the cap
+    // fired. They should now be at the top of the recently-closed
+    // stack, most-recent-eviction first.
+    const closed = useTabsStore.getState().recentlyClosedByVault.v ?? []
+    expect(closed.map((t) => t.path).slice(0, 2)).toEqual(['f1.md', 'f0.md'])
+
+    // And the user can recover one with reopenLastClosed.
+    expect(useTabsStore.getState().reopenLastClosed('v')).toBe('f1.md')
+  })
+
   it('persists open tabs to Dexie', async () => {
     await useTabsStore.getState().openOrFocus('v', 'a.md', { pin: true })
     const rows = await db.openTabs.where('vaultId').equals('v').toArray()
@@ -104,6 +120,35 @@ describe('tabs-store — closeTab', () => {
 
   it('reopenLastClosed returns null on an empty stack', () => {
     expect(useTabsStore.getState().reopenLastClosed('v')).toBeNull()
+  })
+
+  it('reopenClosed removes a specific path from the closed stack', async () => {
+    await useTabsStore.getState().openOrFocus('v', 'a.md', { pin: true })
+    await useTabsStore.getState().openOrFocus('v', 'b.md', { pin: true })
+    await useTabsStore.getState().openOrFocus('v', 'c.md', { pin: true })
+    await useTabsStore.getState().closeTab('v', 'a.md')
+    await useTabsStore.getState().closeTab('v', 'b.md')
+    await useTabsStore.getState().closeTab('v', 'c.md')
+    // Stack is now [c.md, b.md, a.md] (most-recent-first).
+
+    useTabsStore.getState().reopenClosed('v', 'b.md')
+
+    expect(
+      useTabsStore.getState().recentlyClosedByVault.v?.map((t) => t.path),
+    ).toEqual(['c.md', 'a.md'])
+    // reopenClosed does NOT open the tab itself (caller owns navigation).
+    expect(useTabsStore.getState().tabsByVault.v ?? []).toEqual([])
+  })
+
+  it('reopenClosed is a no-op when the path is not in the stack', async () => {
+    await useTabsStore.getState().openOrFocus('v', 'a.md', { pin: true })
+    await useTabsStore.getState().closeTab('v', 'a.md')
+    const before = useTabsStore.getState().recentlyClosedByVault.v
+
+    useTabsStore.getState().reopenClosed('v', 'never-closed.md')
+
+    // Reference equality preserved on a no-op so subscribers don't churn.
+    expect(useTabsStore.getState().recentlyClosedByVault.v).toBe(before)
   })
 })
 

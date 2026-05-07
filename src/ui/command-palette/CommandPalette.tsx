@@ -13,8 +13,9 @@ import { useMemo, useState, type ReactNode } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Command } from 'cmdk'
 import { useNavigate } from 'react-router'
-import { Clock, Library } from 'lucide-react'
+import { Clock, Library, RotateCcw } from 'lucide-react'
 import { basename } from '@/core/vault'
+import { useTabsStore, type Tab } from '@/stores/tabs-store'
 import { useUIStore } from '@/stores/ui-store'
 import { useTocStore } from '@/stores/toc-store'
 import { useVaultStore } from '@/stores/vault-store'
@@ -34,6 +35,11 @@ import {
   PaletteFilesGroup,
   PaletteSearchResults,
 } from './PaletteGroups'
+
+// Stable empty-array reference for the recently-closed selector. Zustand
+// uses identity equality by default; returning a fresh `[]` from the
+// selector on every render would loop the component endlessly.
+const EMPTY_RECENTLY_CLOSED: Tab[] = []
 
 export function CommandPalette(): ReactNode {
   const open = useUIStore((state) => state.commandPaletteOpen)
@@ -77,6 +83,11 @@ function PaletteBody({ onSelect }: { onSelect: () => void }): ReactNode {
   const tocContext = useTocStore((state) => state.context)
   const sections = useVaultSections(currentVaultId)
   const currentFilePath = useCurrentFilePath()
+  const recentlyClosed = useTabsStore((state) =>
+    currentVaultId
+      ? (state.recentlyClosedByVault[currentVaultId] ?? EMPTY_RECENTLY_CLOSED)
+      : EMPTY_RECENTLY_CLOSED,
+  )
   const [input, setInput] = useState('')
 
   const mode = useMemo(() => classifyInput(input), [input])
@@ -149,6 +160,43 @@ function PaletteBody({ onSelect }: { onSelect: () => void }): ReactNode {
             ))}
           </Command.Group>
         )}
+
+        {mode.kind !== 'search' &&
+          currentVaultId &&
+          recentlyClosed.length > 0 && (
+            <Command.Group
+              heading="Recently closed"
+              className="swirlread-cmdk__group"
+            >
+              {recentlyClosed.map((tab) => (
+                <Command.Item
+                  key={`closed::${tab.vaultId}::${tab.path}`}
+                  value={`closed ${tab.path}`}
+                  onSelect={() => {
+                    // Pop the entry from the closed stack so the same
+                    // row doesn't keep showing up after we've already
+                    // brought it back. DocumentPage handles the actual
+                    // tab open via its `openOrFocus` effect.
+                    useTabsStore.getState().reopenClosed(tab.vaultId, tab.path)
+                    handleSelect(`/app/${tab.vaultId}/${tab.path}`)
+                  }}
+                  className="swirlread-cmdk__item"
+                >
+                  <RotateCcw
+                    className="swirlread-cmdk__item-icon"
+                    size={14}
+                    aria-hidden="true"
+                  />
+                  <span className="swirlread-cmdk__item-primary">
+                    {basename(tab.path)}
+                  </span>
+                  <span className="swirlread-cmdk__item-secondary">
+                    Reopen · {tab.path}
+                  </span>
+                </Command.Item>
+              ))}
+            </Command.Group>
+          )}
 
         {mode.kind !== 'search' && headingsActive && (
           <Command.Group

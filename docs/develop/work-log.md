@@ -4,6 +4,80 @@
 
 ---
 
+## 2026-05-07 · Three small papercuts — HintToast stacking + Recently-closed pop-on-select + cap-evicted tabs recoverable
+
+**Status**: ✅ Three real magnets surfaced and fixed in one round.
+
+### What changed
+
+- **`src/styles/zen-mobile.css`** — HintToast siblings now stack vertically. All three hint sources (`first-vault-tour`, `preview-tab-replaced`, `tab-cap-hit`) used `position: fixed; bottom: 24px;` and would pile on top of each other if visible at the same time. The simplest fix: a CSS sibling selector lifts the second toast by ~84 px and the third by ~168 px. No JS coordination needed; up to three concurrent hints stack cleanly. The same selector chain remains hidden in zen mode.
+
+- **`src/stores/tabs-store.ts`** + **`src/ui/command-palette/CommandPalette.tsx`** — palette's "Recently closed" group now drops the selected entry off the stack so a reopened file doesn't keep haunting the list. New `reopenClosed(vaultId, path)` action filters the stack only — caller owns navigation + tab open. Existing `reopenLastClosed` (Cmd+Shift+T head pop) is unchanged.
+
+- **`src/stores/tabs-store.ts`** + **`src/ui/reading-shell/VaultLayout.tsx`** — cap-evicted tabs now land on the recently-closed stack so the user can recover them via `Cmd+Shift+T` or the palette's "Recently closed" group. Previously the cap silently dropped them. Preview-replace stays out of the stack on purpose — preview tabs are designed to be ephemeral, and pushing every wikilink-driven swap onto the stack would dilute it past usefulness. Updated the `tab-cap-hit` HintToast copy to mention the recovery shortcut.
+
+- **Tests**: 2 new unit tests for `reopenClosed` (specific path removal; reference-equality preserved on no-op) + 1 new test for cap-eviction → recently-closed handoff (verifies eviction order + recoverability via `reopenLastClosed`). The existing palette "lists recently-closed and reopens on select" test gained an assertion that the stack shrinks after the click.
+
+### Decisions
+
+- **CSS-only toast stacking, no toast manager.** A toast manager would be the right call if we ever shipped a 4th hint or wanted animations, but for three concurrent hints in a v0.1 product the sibling-selector trick is the right cost.
+- **Caller-owns-navigation, store-owns-stack.** `reopenClosed` deliberately doesn't call `openOrFocus` or navigate — `DocumentPage`'s open-tab effect handles that side via the URL change. Keeps the action pure and testable.
+- **Cap-eviction goes to closed stack; preview-replace does not.** Cap eviction is rare and represents work the user explicitly did (opened the tab) — losing it silently is a real regression. Preview-replace happens many times per reading session by design and pushing every casual wikilink click would crowd out the cap-evicted entries that actually need recovery.
+
+### Verification
+
+- `pnpm check`: 0 errors / 0 warnings; 789 / 789 tests passing (+3 net new tabs-store tests; +1 stronger assertion in the palette test)
+- `pnpm build`: succeeded; main chunk **259.86 KB gz** (Δ +0.14 KB)
+
+---
+
+## 2026-05-07 · Wikilink hover preview LRU cache
+
+**Status**: ✅ Shipped. Repeat hovers on the same wikilink no longer hit the adapter — the rendered preview snippet is memoised for a small working set, with explicit invalidation tied into the existing P0 / P1 / P3 content-sync fan-out so a refreshed file is never served stale.
+
+### What changed
+
+- **`src/ui/reading-shell/wikilink-preview-cache.ts`** (new) — small LRU keyed by `${vaultId}::${path}`. JS `Map` insertion order is access order, so we delete-and-reinsert on every hit (and on every set) and evict the oldest key when over the 10-entry cap. Public surface: `getCachedPreview` / `setCachedPreview` / `invalidateWikilinkPreviewCache(vaultId)` + a test reset.
+- **`src/ui/reading-shell/WikilinkPreview.tsx`** — `PreviewBody` now seeds its initial state from the cache (synchronous paint, no pending flash on a repeat hover), and the load effect short-circuits when the cache hits. On miss, the existing fetch + `previewSnippet` path runs and populates the cache before setting state.
+- **`src/stores/vault-store.ts`** — `invalidateVaultCachesLazy` (the fan-out called by `refreshVaultContent` and `removeVault`) gains a lazy import for `wikilink-preview-cache`. Same pattern every other invalidator already follows; failures are swallowed because invalidation is best-effort.
+- **`src/ui/reading-shell/wikilink-preview-cache.test.ts`** (new, 7 tests) — miss / hit / overwrite / per-vault keying / cap-at-10 / LRU promotion / vault-scoped invalidation.
+
+### Decisions
+
+- **Cache the rendered snippet, not the raw file bytes.** `previewSnippet(raw, 220)` is a pure function, but it's also called on every hover. Caching the post-snippet string saves the recomputation alongside the disk read; the working-set numbers don't change because every entry is a single short string.
+- **10 entries.** Reading flow is "scan a few links, return to one, scan a few more." A working set bigger than ~6–8 is unlikely on a single page; 10 leaves headroom without any concern about memory.
+- **Hooked into the existing fan-out, not a new revision subscription.** The vault-store already has the right boundary — `refreshVaultContent` and `removeVault` are the only legitimate invalidation events. Adding a separate revision listener inside `WikilinkPreview` would have been more code that drifts away from how every other derived cache in the app handles staleness.
+
+### Verification
+
+- `pnpm check`: 0 errors / 0 warnings; 786 / 786 tests passing (+7 from the new cache tests)
+- `pnpm build`: succeeded; main chunk **259.72 KB gz** (Δ +0.03 KB — module is tiny + lazy-imported by the store)
+
+---
+
+## 2026-05-07 · Command palette gains a "Recently closed" group
+
+**Status**: ✅ Shipped. The recently-closed stack maintained by `tabsStore.closeTab` is now reachable from the ⌘K palette, so users have a visual fallback alongside the `Cmd+Shift+T` chord wired in earlier today.
+
+### What changed
+
+- **`src/ui/command-palette/CommandPalette.tsx`** — new `Recently closed` group between `Recent files` and `Headings (this document)`. Reads `recentlyClosedByVault[currentVaultId]` from `useTabsStore`, hidden when empty. Each item shows the basename + a `Reopen · <path>` secondary line; selection routes to the path through the same `handleSelect` used by everything else, so the existing `DocumentPage` open flow rebuilds the tab.
+- **Stable empty array sentinel.** Added `EMPTY_RECENTLY_CLOSED: Tab[] = []` at module scope and used it as the selector fallback. Without it the selector would have returned a fresh `[]` reference every render, causing a Zustand identity-equality miss and an infinite re-render loop. The same pattern is used by the recents/scrolls selectors elsewhere in the codebase (`EMPTY_RECENT_FILES` / `EMPTY_SCROLL_MAP`).
+- **`src/ui/command-palette/CommandPalette.test.tsx`** — three new tests cover the visible-when-non-empty case, the hidden-when-empty case, and the per-vault scoping (entries from another vault never leak into the palette).
+
+### Decisions
+
+- **Group placement: between Recent files and Headings.** "Recently closed" is closer in spirit to "Recent files" than to navigation surfaces; both are about resuming what you were doing. Placing them adjacent gives the user a single mental zone for "where was I."
+- **Reuse `handleSelect`, not a dedicated reopen path.** Calling `useTabsStore.reopenLastClosed` here would only matter if the URL stayed where it was. Since selecting an item navigates to `/app/:vaultId/:path`, the existing `openOrFocus` already restores the tab — the recently-closed entry naturally drops off the next time the stack is mutated. This keeps the palette a pure read of state rather than a state-mutating side surface.
+- **No cap-by-display.** The store already caps at 10; the palette renders all of them. cmdk's filtering takes over once the user types, so the visible length only matters when the input is empty, and 10 short rows is comfortable.
+
+### Verification
+
+- `pnpm check`: 0 errors / 0 warnings; 779 / 779 tests passing (+3 new palette tests)
+- `pnpm build`: succeeded; main chunk **259.69 KB gz** (Δ +0.01 KB — selector + JSX is essentially free)
+
+---
+
 ## 2026-05-07 · TOC density control — H2 / H3 / All
 
 **Status**: ✅ Shipped. Long `*-map.md` indexes (which often pile dozens of H3 sub-rows under each H2 section) no longer turn the right rail into an unreadable wall. A new inline H2/H3/All control above the heading list lets the reader pick the depth they want.
@@ -18,7 +92,7 @@
 ### Decisions
 
 - **Default to `All` (6), not a curated middle.** Existing reader behaviour stays untouched on every doc; the control is purely opt-in. Anyone happy with the current rail never has to engage with it.
-- **Filter only the rail, keep the observer wide.** Active state should reflect what the user is *reading*, not what the rail is *showing*. If the active heading is an H4 and the user picked H2, no rail item is highlighted — that's honest. Mapping back up to the nearest visible ancestor would be more visual but would also lie about which section the reader is in.
+- **Filter only the rail, keep the observer wide.** Active state should reflect what the user is _reading_, not what the rail is _showing_. If the active heading is an H4 and the user picked H2, no rail item is highlighted — that's honest. Mapping back up to the nearest visible ancestor would be more visual but would also lie about which section the reader is in.
 - **Inline control, not a Settings panel toggle.** The decision is per-document by nature (some docs want H2 only, others want full depth). Burying it in Settings would force a round-trip every time. The inline pill auto-hides on docs that have no H3+, so it doesn't add noise to simple pages.
 - **`2 | 3 | 6` instead of `1..6`.** The interesting cuts are "top sections only" (≤ 2), "section + subsection" (≤ 3), and "everything" (≤ 6). H4–H5 are too granular to be useful as their own filter level for the audience this product serves.
 

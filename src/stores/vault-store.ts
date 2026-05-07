@@ -68,6 +68,11 @@ async function invalidateVaultCachesLazy(id: VaultId): Promise<void> {
         m.invalidateVaultGraph(id)
       })
       .catch(() => undefined),
+    import('@/ui/reading-shell/wikilink-preview-cache')
+      .then((m) => {
+        m.invalidateWikilinkPreviewCache(id)
+      })
+      .catch(() => undefined),
   ])
 }
 

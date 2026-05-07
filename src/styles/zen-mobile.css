@@ -158,6 +158,18 @@ body.zen-mode .swirlread-hint {
   display: none;
 }
 
+/* When multiple hints are visible at once (e.g. welcome + preview-replaced),
+ * stack them vertically so they don't pile on top of each other at the same
+ * fixed coords. We support up to three concurrent hints — that covers the
+ * three trigger sources currently mounted in VaultLayout. The offset value
+ * (~84px) matches the typical hint height + 16px gap. */
+.swirlread-hint + .swirlread-hint {
+  bottom: calc(24px + 84px);
+}
+.swirlread-hint + .swirlread-hint + .swirlread-hint {
+  bottom: calc(24px + 168px);
+}
+
 .swirlread-media__video {
   display: block;
   max-width: 100%;

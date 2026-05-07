@@ -8,6 +8,7 @@ import { __resetFullTextCacheForTests } from './full-text-cache'
 import { FSAPIVaultAdapter } from '@/core/vault'
 import { mockRoot } from '@/core/vault/__test-helpers__/mock-fs'
 import { useReaderStore } from '@/stores/reader-store'
+import { useTabsStore } from '@/stores/tabs-store'
 import { useTocStore } from '@/stores/toc-store'
 import { useUIStore } from '@/stores/ui-store'
 import { useVaultStore, __resetAdaptersForTests } from '@/stores/vault-store'
@@ -41,6 +42,13 @@ beforeEach(async () => {
     context: EMPTY_TOC_CONTEXT,
   })
   useUIStore.setState({ commandPaletteOpen: false })
+  useTabsStore.setState({
+    tabsByVault: {},
+    recentlyClosedByVault: {},
+    tabCapHit: false,
+    previewReplaced: false,
+    ready: true,
+  })
 })
 
 afterEach(() => {
@@ -49,6 +57,13 @@ afterEach(() => {
     headings: [],
     activeId: null,
     context: EMPTY_TOC_CONTEXT,
+  })
+  useTabsStore.setState({
+    tabsByVault: {},
+    recentlyClosedByVault: {},
+    tabCapHit: false,
+    previewReplaced: false,
+    ready: true,
   })
 })
 
@@ -540,3 +555,106 @@ describe('CommandPalette (RX6) — Headings + Sections groups', () => {
 function dialogText(dialog: HTMLElement): HTMLElement {
   return dialog
 }
+
+describe('CommandPalette — Recently closed group', () => {
+  it('lists recently-closed tabs for the active vault and reopens on select', async () => {
+    const user = userEvent.setup()
+    await registerVault('rc-vault', {
+      'a.md': '# A',
+      'b.md': '# B',
+    })
+    useTabsStore.setState({
+      recentlyClosedByVault: {
+        'rc-vault': [
+          {
+            vaultId: 'rc-vault',
+            path: 'b.md',
+            pinned: false,
+            openedAt: new Date('2026-05-07T11:00:00Z'),
+          },
+          {
+            vaultId: 'rc-vault',
+            path: 'a.md',
+            pinned: false,
+            openedAt: new Date('2026-05-07T10:00:00Z'),
+          },
+        ],
+      },
+    })
+
+    renderPaletteAt('/app/rc-vault')
+    useUIStore.getState().setCommandPaletteOpen(true)
+
+    const dialog = await screen.findByRole('dialog')
+    await waitFor(() => {
+      expect(
+        within(dialogText(dialog)).getByText(/Recently closed/i),
+      ).toBeInTheDocument()
+    })
+
+    expect(dialog.textContent).toContain('b.md')
+    expect(dialog.textContent).toContain('a.md')
+
+    await user.click(screen.getByText('b.md'))
+
+    await waitFor(() => {
+      expect(useUIStore.getState().commandPaletteOpen).toBe(false)
+    })
+    expect(await screen.findByTestId('doc-stub')).toBeInTheDocument()
+
+    // Selecting from the Recently closed group must also pop the entry
+    // from the stack — otherwise the same row would still show the next
+    // time the palette opens.
+    expect(
+      useTabsStore
+        .getState()
+        .recentlyClosedByVault['rc-vault']?.map((t) => t.path),
+    ).toEqual(['a.md'])
+  })
+
+  it('hides the group when the recently-closed stack is empty', async () => {
+    await registerVault('rc-empty', { 'note.md': '#' })
+
+    renderPaletteAt('/app/rc-empty')
+    useUIStore.getState().setCommandPaletteOpen(true)
+
+    await screen.findByRole('dialog')
+    expect(screen.queryByText(/Recently closed/i)).not.toBeInTheDocument()
+  })
+
+  it('only shows recently-closed entries from the current vault', async () => {
+    await registerVault('rc-this', { 'this.md': '#' })
+    useTabsStore.setState({
+      recentlyClosedByVault: {
+        'rc-this': [
+          {
+            vaultId: 'rc-this',
+            path: 'this.md',
+            pinned: false,
+            openedAt: new Date('2026-05-07T10:00:00Z'),
+          },
+        ],
+        'rc-other': [
+          {
+            vaultId: 'rc-other',
+            path: 'other.md',
+            pinned: false,
+            openedAt: new Date('2026-05-07T10:00:00Z'),
+          },
+        ],
+      },
+    })
+
+    renderPaletteAt('/app/rc-this')
+    useUIStore.getState().setCommandPaletteOpen(true)
+
+    const dialog = await screen.findByRole('dialog')
+    await waitFor(() => {
+      expect(
+        within(dialogText(dialog)).getByText(/Recently closed/i),
+      ).toBeInTheDocument()
+    })
+    expect(dialog.textContent).toContain('this.md')
+    expect(dialog.textContent).not.toContain('other.md')
+  })
+})

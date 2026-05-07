@@ -38,6 +38,7 @@ import {
 import { previewSnippet } from '@/core/render/preview-snippet'
 import { getAdapter } from '@/stores/vault-store'
 import type { VaultId, VaultPath } from '@/core/vault'
+import { getCachedPreview, setCachedPreview } from './wikilink-preview-cache'
 
 interface WikilinkPreviewProps {
   /** Already-built `/app/:vaultId/:path` URL — kept opaque to this component. */
@@ -126,13 +127,20 @@ function PreviewBody({
   vaultId: VaultId
   resolved: VaultPath
 }): ReactNode {
-  const [text, setText] = useState<string | null>(null)
+  // Seed from the LRU cache so a repeat hover paints synchronously
+  // without a pending flash. A miss still falls back to the same fetch
+  // path; on success we populate the cache for the next hover.
+  const [text, setText] = useState<string | null>(() =>
+    getCachedPreview(vaultId, resolved),
+  )
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
-    setText(null)
+    const cached = getCachedPreview(vaultId, resolved)
+    setText(cached)
     setError(null)
+    if (cached !== null) return
     const vault = getAdapter(vaultId)
     if (!vault) {
       setError('Vault unavailable')
@@ -141,7 +149,10 @@ function PreviewBody({
     vault
       .readText(resolved)
       .then((raw) => {
-        if (!cancelled) setText(previewSnippet(raw, SNIPPET_MAX_CHARS))
+        if (cancelled) return
+        const snippet = previewSnippet(raw, SNIPPET_MAX_CHARS)
+        setCachedPreview(vaultId, resolved, snippet)
+        setText(snippet)
       })
       .catch((err: unknown) => {
         if (cancelled) return
