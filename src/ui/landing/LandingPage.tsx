@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { Library, Plus, Sparkles } from 'lucide-react'
+import { FolderOpen, Library, Plus, Sparkles } from 'lucide-react'
 import { saveHandle } from '@/core/vault'
 import type { FSAPIVaultAdapter } from '@/core/vault'
 import { SampleVaultAdapter } from '@/core/vault/sample-adapter'
@@ -122,13 +122,14 @@ function FreshSection({
       <button
         type="button"
         onClick={onPick}
-        className="rounded-md px-5 py-2.5 font-serif text-base"
+        className="inline-flex items-center gap-2 rounded-md px-5 py-2.5 font-serif text-base"
         style={{
           backgroundColor: 'var(--color-accent)',
           color: 'var(--color-bg)',
         }}
       >
-        📁 Open my vault
+        <FolderOpen size={16} aria-hidden="true" />
+        Open my vault
       </button>
     </nav>
   )

@@ -4,6 +4,22 @@
 
 ---
 
+## 2026-05-07 · Final pre-Phase-3 polish — LandingPage emoji, dead export
+
+**Status**: ✅ Last papercut sweep before pivoting to Phase 3 AI work.
+
+### What changed
+
+- **`src/ui/landing/LandingPage.tsx`** — primary "Open my vault" CTA used a `📁` emoji that conflicted with the rest of the app's Lucide-icon language and the project's calm/no-emoji voice. Replaced with `<FolderOpen size={16} />` and `inline-flex items-center gap-2` so it lines up with the sibling "Try with sample vault" button.
+- **`src/stores/tabs-store.ts`** — removed `getTabsForVault` export. Zero callers in src/ (greppable). Tests reach the state directly via `useTabsStore.getState()`.
+
+### Verification
+
+- `pnpm check`: 0 errors / 0 warnings; 789 / 789 tests passing
+- `pnpm build`: succeeded; main chunk **259.88 KB gz**
+
+---
+
 ## 2026-05-07 · Three small papercuts — HintToast stacking + Recently-closed pop-on-select + cap-evicted tabs recoverable
 
 **Status**: ✅ Three real magnets surfaced and fixed in one round.

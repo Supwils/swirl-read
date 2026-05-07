@@ -388,7 +388,3 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
     })
   },
 }))
-
-export function getTabsForVault(vaultId: VaultId): Tab[] {
-  return useTabsStore.getState().tabsByVault[vaultId] ?? []
-}
