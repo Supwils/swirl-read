@@ -4,7 +4,13 @@
  * they stay out of the main DocumentPage chunk.
  */
 
-import { lazy, Suspense, type ReactNode, type RefObject } from 'react'
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  type ReactNode,
+  type RefObject,
+} from 'react'
 import { Pencil } from 'lucide-react'
 import type { WikilinkIndex } from '@/core/navigation/wikilink-resolver'
 import { useEditorStore } from '@/stores/editor-store'
@@ -327,6 +333,34 @@ function ExternalChangeBanner({
   onReload: () => void
   onDismiss: () => void
 }): ReactNode {
+  // Reader-mode keyboard shortcuts: R reloads the latest on-disk
+  // version, Esc dismisses the banner. We deliberately skip these
+  // while editing — DocumentEditSurface owns Esc (cancel) and a single
+  // R keypress would silently destroy the draft. Edit-mode users get
+  // the explicit buttons only.
+  useEffect(() => {
+    if (isEditing) return
+    function handle(event: KeyboardEvent): void {
+      if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
+        return
+      }
+      if (isEditableTarget(event.target)) return
+      if (event.key === 'r' || event.key === 'R') {
+        event.preventDefault()
+        onReload()
+        return
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        onDismiss()
+      }
+    }
+    window.addEventListener('keydown', handle)
+    return () => {
+      window.removeEventListener('keydown', handle)
+    }
+  }, [isEditing, onReload, onDismiss])
+
   return (
     <div
       className="swirlread-edit__banner swirlread-edit__banner--conflict"
@@ -338,7 +372,7 @@ function ExternalChangeBanner({
       <span>
         {isEditing
           ? 'Your draft is preserved. Reload only if you want to replace it with the on-disk version.'
-          : 'The open document may be stale. Reload when you are ready to read the latest version.'}
+          : 'The open document may be stale. Press R to reload, Esc to dismiss.'}
       </span>
       <div className="swirlread-edit__banner-actions">
         <button
@@ -346,16 +380,29 @@ function ExternalChangeBanner({
           className="swirlread-edit__btn"
           onClick={onReload}
         >
-          {isEditing ? 'Reload from disk (discard my draft)' : 'Reload'}
+          {isEditing ? 'Reload from disk (discard my draft)' : 'Reload (R)'}
         </button>
         <button
           type="button"
           className="swirlread-edit__btn"
           onClick={onDismiss}
         >
-          {isEditing ? 'Keep editing' : 'Dismiss'}
+          {isEditing ? 'Keep editing' : 'Dismiss (Esc)'}
         </button>
       </div>
     </div>
   )
+}
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false
+  if (target.isContentEditable) return true
+  const ceProp = target.contentEditable
+  if (ceProp === 'true' || ceProp === 'plaintext-only') return true
+  const ceAttr = target.getAttribute('contenteditable')
+  if (ceAttr === '' || ceAttr === 'true' || ceAttr === 'plaintext-only') {
+    return true
+  }
+  const tag = target.tagName
+  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
 }

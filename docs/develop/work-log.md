@@ -4,6 +4,53 @@
 
 ---
 
+## 2026-05-07 · Reader-first keyboard shortcuts on the external-change banner
+
+**Status**: ✅ Shipped. The P2 external-change banner gains `R` to reload and `Esc` to dismiss in read mode, so a returning reader can act on a stale-document notice without leaving the keyboard.
+
+### What changed
+
+- **`src/ui/reading-shell/DocumentBodyView.tsx`** — `ExternalChangeBanner` mounts a `keydown` listener while visible and not editing. `R` (no modifiers, not in an editable target) calls `onReload`; `Esc` (same guards) calls `onDismiss`. Edit-mode banner still requires explicit button clicks — `R` would silently destroy the draft and `Esc` is owned by `DocumentEditSurface` for cancel. Button labels picked up `(R)` / `(Esc)` hints so the affordance is discoverable from the screen too.
+- **`src/ui/help/ShortcutsHelp.tsx`** — added `R` to the Reading group: "Reload current file when it changed on disk".
+- **`src/ui/reading-shell/DocumentPage.test.tsx`** — existing banner test updated to match the new `Reload (R)` button label; two new tests cover `R` reload and `Esc` dismiss in read mode (Esc must not also reload).
+
+### Decisions
+
+- **No keyboard shortcuts in edit mode.** The banner there has different semantics (Reload _from disk_ destroys the draft) and `Esc` is already the cancel binding for `DocumentEditSurface`. Buttons stay the only path while a draft is live.
+- **Local listener, not a global hook.** The banner is the only consumer; gating its lifecycle on the `isEditing` flag is simpler than threading another store. The same `isEditableTarget` guard pattern from `use-zen-mode-hotkey` is inlined so typing `r` in an input still types a literal `r`.
+- **Esc collides with zen-mode-exit.** Accepted. A "file changed" prompt naturally interrupts zen-reading; both reactions firing on a single Esc is reasonable. If this becomes a complaint we can stop propagation, but for now it is a non-issue.
+
+### Verification
+
+- `pnpm test src/ui/reading-shell/DocumentPage.test.tsx`: 25 / 25 passing (+2 new banner tests)
+- `pnpm check`: 0 errors / 0 warnings; 763 / 763 tests passing
+- `pnpm build`: succeeded; main chunk **259.30 KB gz** (Δ +0.26 KB — the new effect + helpers)
+
+---
+
+## 2026-05-07 · Tighten EmbedNode — remove duplicated fallback JSX and dead branch
+
+**Status**: ✅ Shipped. Watch-tier audit cleanup applied to `EmbedNode.tsx`. No behaviour change.
+
+### What changed
+
+- **`src/ui/reading-shell/EmbedNode.tsx`** — `ImageEmbed` / `VideoEmbed` / `AudioEmbed` each duplicated the same six-line `useBlobURL` error/pending branches. Extracted a small local `MediaFallback` component so each renderer collapses to its actual rendering work. Dropped the dead `innerWikiCtx ? <Provider><Provider>...</></> : <Provider>...</>` branch in `MarkdownEmbed`: the parent `EmbedNode` already returns early when `wikiCtx` is null, so by the time `MarkdownEmbed` renders it is guaranteed non-null. Replaced with a single guard + the single Provider tree, plus a comment explaining why we still re-read the context here (we re-provide it with `currentPath = resolved` so nested wikilinks resolve relative to the embedded file).
+- 359 LOC → 341 LOC.
+
+### Verification
+
+- `pnpm check`: 0 errors / 0 warnings; 761 / 761 tests passing
+- `pnpm test src/core/render/plugins/remark-embed.test.ts`: 21 / 21 passing
+
+### Notes on what was *not* touched
+
+The audit also flagged `frontmatter.ts` (414 LOC) and `ui-store.ts` (377 LOC). Both files survived a "duplicate or stale branches" pass without producing actionable changes:
+
+- `frontmatter.ts` is well-factored — YAML / TOML / metadata-selection blocks are separate, parsers reuse a tiny scalar/inline-array core, and the long `for (const key of TITLE_KEYS)` chain in `selectMetadata` is structurally clearer than a table-driven helper. Splitting it is a structural refactor, not branch dedup.
+- `ui-store.ts` has multi-place lists (init / setX / resetToDefaults each restate the per-pref list) but consolidation requires a table-driven preferences abstraction, which is exactly the "open a new pit" the user asked us not to do for this pass. No real dead branches.
+
+---
+
 ## 2026-05-07 · Vault content sync P3 — slow visibility-bound polling
 
 **Status**: ✅ P3 shipped. The active vault is now refreshed on a slow 30 s cadence while the SwirlRead tab is visible, so files added or removed from disk surface in the file tree without requiring an explicit alt-tab.

@@ -39,6 +39,10 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
     shortcuts: [
       { keys: ['F'], description: 'Toggle zen mode (chrome hidden)' },
       { keys: ['Esc'], description: 'Exit zen mode / dismiss overlay' },
+      {
+        keys: ['R'],
+        description: 'Reload current file when it changed on disk',
+      },
     ],
   },
   {
