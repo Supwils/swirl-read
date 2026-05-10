@@ -4,13 +4,8 @@
  * they stay out of the main DocumentPage chunk.
  */
 
-import {
-  lazy,
-  Suspense,
-  useEffect,
-  type ReactNode,
-  type RefObject,
-} from 'react'
+import { lazy, useEffect, type ReactNode, type RefObject } from 'react'
+import { ChunkBoundary } from '@/ui/components/ChunkBoundary'
 import { MessageCircle, Pencil, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { useReviewStore } from '@/stores/review-store'
@@ -294,55 +289,55 @@ export function DocumentBodyView({
       )}
 
       {state.kind === 'rendered' && isEditing && vaultId && (
-        <Suspense fallback={null}>
+        <ChunkBoundary label="editor">
           <DocumentEditSurface
             vaultId={vaultId}
             path={filePath}
             onExit={exitEditMode}
           />
-        </Suspense>
+        </ChunkBoundary>
       )}
 
       {state.kind === 'text' && <PlainTextRenderer source={state.raw} />}
 
       {state.kind === 'code' && (
-        <Suspense fallback={null}>
+        <ChunkBoundary label="code renderer">
           <CodeFileRenderer source={state.raw} language={state.language} />
-        </Suspense>
+        </ChunkBoundary>
       )}
 
       {state.kind === 'table' && (
-        <Suspense fallback={null}>
+        <ChunkBoundary label="CSV renderer">
           <CsvRenderer source={state.raw} delimiter={state.delimiter} />
-        </Suspense>
+        </ChunkBoundary>
       )}
 
       {state.kind === 'html' && (
-        <Suspense fallback={null}>
+        <ChunkBoundary label="HTML renderer">
           <HtmlRenderer source={state.raw} />
-        </Suspense>
+        </ChunkBoundary>
       )}
 
       {state.kind === 'json' && (
-        <Suspense fallback={null}>
+        <ChunkBoundary label="JSON renderer">
           <JsonRenderer source={state.raw} />
-        </Suspense>
+        </ChunkBoundary>
       )}
 
       {state.kind === 'media' && (
-        <Suspense fallback={null}>
+        <ChunkBoundary label="media renderer">
           <MediaRenderer
             vault={state.vault}
             file={state.file}
             media={state.media}
           />
-        </Suspense>
+        </ChunkBoundary>
       )}
 
       {state.kind === 'binary' && (
-        <Suspense fallback={null}>
+        <ChunkBoundary label="unsupported-file message">
           <UnsupportedRenderer file={state.file} />
-        </Suspense>
+        </ChunkBoundary>
       )}
 
       {vaultId &&

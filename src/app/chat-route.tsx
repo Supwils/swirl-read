@@ -3,7 +3,8 @@
  * reading bundle until the user explicitly opens chat.
  */
 
-import { lazy, Suspense, type ReactNode } from 'react'
+import { lazy, type ReactNode } from 'react'
+import { ChunkBoundary } from '@/ui/components/ChunkBoundary'
 
 const ChatPage = lazy(() =>
   import('@/ui/chat/ChatPage').then((m) => ({ default: m.ChatPage })),
@@ -11,8 +12,8 @@ const ChatPage = lazy(() =>
 
 export function LazyChatPage(): ReactNode {
   return (
-    <Suspense fallback={null}>
+    <ChunkBoundary label="chat surface">
       <ChatPage />
-    </Suspense>
+    </ChunkBoundary>
   )
 }

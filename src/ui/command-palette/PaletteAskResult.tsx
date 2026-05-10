@@ -26,16 +26,10 @@
  * as the reading shell.
  */
 
-import {
-  Suspense,
-  lazy,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react'
+import { lazy, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 import { Check, Copy, FileText, Loader2, Sparkles } from 'lucide-react'
+import { ChunkBoundary } from '@/ui/components/ChunkBoundary'
 import { resolveActiveProvider } from '@/core/ai/resolve-active-provider'
 import { AIError, type ContextChunk } from '@/core/ai/types'
 import { extractWikilinkTargets } from '@/core/navigation/wikilink-extractor'
@@ -264,7 +258,10 @@ function AskBody({
           />
         )}
         <div className="swirlread-ask__body">
-          <Suspense fallback={<StreamingFallback text={status.text} />}>
+          <ChunkBoundary
+            label="AI answer renderer"
+            loadingFallback={<StreamingFallback text={status.text} />}
+          >
             <PaletteAskAnswer
               text={status.text}
               isStreaming={isStreaming}
@@ -272,7 +269,7 @@ function AskBody({
               currentPath={currentPath}
               wikilinkIndex={wikilinkIndex}
             />
-          </Suspense>
+          </ChunkBoundary>
           {isStreaming && (
             <span aria-hidden="true" className="swirlread-ask__cursor">
               ▋

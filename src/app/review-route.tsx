@@ -4,7 +4,8 @@
  * fails when a single file mixes component and non-component exports.
  */
 
-import { lazy, Suspense, type ReactNode } from 'react'
+import { lazy, type ReactNode } from 'react'
+import { ChunkBoundary } from '@/ui/components/ChunkBoundary'
 
 const ReviewPage = lazy(() =>
   import('@/ui/review/ReviewPage').then((m) => ({ default: m.ReviewPage })),
@@ -12,8 +13,8 @@ const ReviewPage = lazy(() =>
 
 export function LazyReviewPage(): ReactNode {
   return (
-    <Suspense fallback={null}>
+    <ChunkBoundary label="review surface">
       <ReviewPage />
-    </Suspense>
+    </ChunkBoundary>
   )
 }

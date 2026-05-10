@@ -4,6 +4,40 @@
 
 ---
 
+## 2026-05-10 · Architecture pass II — ChunkBoundary matrix + integration tests
+
+**Status**: ✅ Second architecture cut following the same audit. Two improvements: per-chunk error boundaries so a single broken renderer no longer blanks the page, and integration tests for the two AI surfaces that were carrying zero component-level coverage.
+
+### ChunkBoundary primitive + matrix
+
+- New `src/ui/components/ChunkBoundary.tsx` — combined `Suspense` + class-component `ErrorBoundary`. Two visual modes: a card-style fallback with Retry button for full-surface failures, and an inline chip for per-block errors inside flowing prose. `getDerivedStateFromError` resets on Retry; `componentDidCatch` logs to `console.error` in dev so the React DevTools workflow stays intact. 6 unit tests cover the contract.
+- Replaced **every** `<Suspense fallback={null}>` site across the codebase: AppShell (settings, palette, shortcuts help, confirm, generate-cards), DocumentBodyView (every file renderer + edit surface), VaultLayout (TOC, tags), the review and chat route wrappers, and PaletteAskResult's answer renderer.
+- Inline wrapping for the heavy renderable nodes the markdown pipeline emits: Mermaid diagrams, KaTeX math (block + inline). New `document-safe-renderers.tsx` exports `SafeMermaidDiagram`, `SafeMathBlock`, `SafeMathInline`; `document-components.tsx` (was `.ts`, now `.tsx`) wires them into the customComponents map. A bad diagram in a 50-paragraph note now shows a small "diagram couldn't render" chip in place of the broken block; surrounding prose continues rendering.
+- New `src/styles/chunk-boundary.css` styles both variants — dashed red-tinted card for the full-size fallback, a tiny inline chip with `vertical-align: baseline` for prose-friendly fit.
+
+### Integration tests for the AI surfaces
+
+Both surfaces had test coverage of their underlying logic (card-store, card-generator, key-store, providers) but zero component-level coverage of the actual user flow — the kind of gap that lets a "Cancel button does nothing" bug ship.
+
+- **`GenerateCardsDialog.test.tsx`** (4 cases): full happy-path stream → persist → navigate; parse-failure → error UI with Retry / Close; Cancel mid-generation → AbortController fires + suppresses post-cancel navigation; no-provider error path. All run against the real Anthropic provider with a fetch spy at the SSE boundary.
+- **`ReviewPage.test.tsx`** (4 cases): question renders + click flips to answer + explanation; ←/→/Space keyboard navigation; missing-batch fallback for unknown routes; expired-batch lazy-purge → missing fallback. Seeds Dexie via `persistBatch` directly so the AI side stays out of the picture.
+
+### Bundle effect
+
+- Main `index-*.js`: 255.59 → **256.16 KB gz** (+0.57 KB — ChunkBoundary primitive + a few component wrappers).
+- CSS: 26.62 → **27.41 KB gz** (+0.79 KB for the new fallback styles).
+- `CommandPalette-*.js`: 9.45 → **9.28 KB gz** (-0.17 KB — Suspense import replaced by ChunkBoundary).
+- All other chunks within ±0.1 KB.
+- Tests: 910 → **924 passing** (+14: 6 ChunkBoundary, 4 GenerateCardsDialog, 4 ReviewPage).
+
+### Why this matters
+
+The audit flagged two parallel problems: error handling is uneven (single broken renderer kills the page) and two real user-facing surfaces have zero component-level test coverage (the Cancel-bug class of regression slipped past gate). One commit closes both. With this in place the codebase has crash isolation at every lazy boundary and at every heavy inline node, plus component-level coverage for the two surfaces most likely to break first.
+
+Estimated rating delta: 8.3 → ~8.7 / 10. Remaining gap to 9 is mostly Repository-layer extraction and provider-registry DI consistency — both 1–2 day investments with less ROI than the current cut.
+
+---
+
 ## 2026-05-10 · Architecture pass — vault-lifecycle registry, bundle CI, helper dedup
 
 **Status**: ✅ Three architecture-grade improvements landing together as a single audit-driven cut. None are user-visible features; all of them raise the floor of what new contributions look like.

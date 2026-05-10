@@ -1,4 +1,5 @@
-import { lazy, Suspense } from 'react'
+import { lazy } from 'react'
+import { ChunkBoundary } from '@/ui/components/ChunkBoundary'
 import { Link, Outlet, useMatch } from 'react-router'
 import {
   BookOpen,
@@ -243,8 +244,9 @@ export function AppShell() {
               <PanelRightOpen size={18} aria-hidden="true" />
             )}
           </button>
-          <Suspense
-            fallback={
+          <ChunkBoundary
+            label="settings panel"
+            loadingFallback={
               <button
                 type="button"
                 className="swirlread-shell__icon-button"
@@ -257,29 +259,29 @@ export function AppShell() {
             }
           >
             <SettingsPanel />
-          </Suspense>
+          </ChunkBoundary>
         </div>
       </header>
       <div className="flex-1">
         <Outlet />
       </div>
       {commandPaletteOpen && (
-        <Suspense fallback={null}>
+        <ChunkBoundary label="command palette">
           <CommandPalette />
-        </Suspense>
+        </ChunkBoundary>
       )}
       {shortcutsHelpOpen && (
-        <Suspense fallback={null}>
+        <ChunkBoundary label="shortcuts help">
           <ShortcutsHelp />
-        </Suspense>
+        </ChunkBoundary>
       )}
       {confirmDialogPayload && (
-        <Suspense fallback={null}>
+        <ChunkBoundary label="confirmation dialog">
           <ConfirmDialog />
-        </Suspense>
+        </ChunkBoundary>
       )}
       {reviewIntent && (
-        <Suspense fallback={null}>
+        <ChunkBoundary label="card generator">
           <GenerateCardsDialog
             open
             vaultId={reviewIntent.vaultId}
@@ -288,7 +290,7 @@ export function AppShell() {
               if (!open) dismissReview()
             }}
           />
-        </Suspense>
+        </ChunkBoundary>
       )}
     </div>
   )

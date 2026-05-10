@@ -1,0 +1,105 @@
+/* ChunkBoundary fallback ─────────────────────────────────────────── */
+
+.swirlread-chunk-fallback {
+  margin: 0.6rem 0;
+  padding: 0.85rem 1rem;
+  border: 1px dashed color-mix(in srgb, #c0392b 35%, var(--color-border));
+  border-radius: 8px;
+  background: color-mix(in srgb, #c0392b 6%, var(--color-bg));
+  color: var(--color-text);
+  font-family: var(--font-sans);
+}
+
+.swirlread-chunk-fallback__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  margin: 0 0 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.swirlread-chunk-fallback__title svg {
+  color: #c0392b;
+}
+
+.swirlread-chunk-fallback__body {
+  margin: 0 0 0.6rem;
+  font-size: 0.84rem;
+  color: var(--color-text-muted);
+}
+
+.swirlread-chunk-fallback__retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.swirlread-chunk-fallback__retry:hover,
+.swirlread-chunk-fallback__retry:focus-visible {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  border-color: color-mix(
+    in srgb,
+    var(--color-accent) 35%,
+    var(--color-border)
+  );
+  outline: none;
+}
+
+.swirlread-chunk-fallback__details {
+  margin-top: 0.55rem;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.swirlread-chunk-fallback__details summary {
+  cursor: pointer;
+  user-select: none;
+}
+
+.swirlread-chunk-fallback__details pre {
+  margin: 0.35rem 0 0;
+  padding: 0.45rem 0.55rem;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--color-bg) 60%, var(--color-surface));
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Inline variant — a small chip that sits in flowing prose where a
+ * Mermaid diagram or math block would have rendered. Keeps line height
+ * predictable so the surrounding paragraph doesn't get jolted. */
+.swirlread-chunk-fallback--inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.05em 0.4em;
+  margin: 0;
+  border: 1px dashed color-mix(in srgb, #c0392b 35%, var(--color-border));
+  border-radius: 4px;
+  background: color-mix(in srgb, #c0392b 6%, transparent);
+  color: var(--color-text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.84em;
+  font-weight: 400;
+  vertical-align: baseline;
+  line-height: 1.4;
+}
+
+.swirlread-chunk-fallback--inline svg {
+  color: #c0392b;
+  flex-shrink: 0;
+}

@@ -20,7 +20,8 @@
  * users who want a constantly-visible tree opt into that explicitly.
  */
 
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { lazy, useEffect, useRef, useState } from 'react'
+import { ChunkBoundary } from '@/ui/components/ChunkBoundary'
 import { Outlet, useLocation, useParams } from 'react-router'
 import { deriveCurrentPathFromPathname } from '@/app/derive-current-path'
 import { useUIStore } from '@/stores/ui-store'
@@ -202,15 +203,15 @@ export function VaultLayout() {
             }
           }}
         >
-          <Suspense fallback={null}>
+          <ChunkBoundary label="table of contents">
             <TableOfContents />
-          </Suspense>
+          </ChunkBoundary>
         </aside>
       )}
       {vaultId && (
-        <Suspense fallback={null}>
+        <ChunkBoundary label="tags panel">
           <TagsPanel vaultId={vaultId} />
-        </Suspense>
+        </ChunkBoundary>
       )}
       <HintToast id="first-vault-tour" title="Welcome to your reading shell">
         Press <kbd>⌘K</kbd> / <kbd>Ctrl+K</kbd> to jump anywhere · <kbd>F</kbd>{' '}
