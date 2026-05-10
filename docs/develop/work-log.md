@@ -4,6 +4,243 @@
 
 ---
 
+## 2026-05-10 · Audit follow-ups + sidebar visibility + Continue/Recent removal
+
+**Status**: ✅ Three follow-up cuts shipped together — sidebar Continue/Recent removed, sidebar right-click "Hide from sidebar" + Show-all reset added, and a batch of audit-driven fixes against the Phase 3 review surface and the AI palette flow.
+
+### Sidebar simplification
+
+- **Continue / Recent removed** from `FileTree.tsx`. The sidebar now shows just the toolbar, tag filter, Sections, and the file tree itself — closer to what users actually want when triaging files. Recent files remain available through the ⌘K palette and ⌘+Shift+T tab-reopen, so no functional access was lost. `ContinueAndRecent.tsx` was deleted; the four obsolete tests in `FileTree.test.tsx` were removed (M4.7 recent files + RX3 three Continue/Recent tests).
+
+### Sidebar right-click visibility
+
+- New `src/stores/sidebar-visibility-store.ts` (Zustand + Dexie-backed via `preferences['sidebar:hiddenByVault']`). Per-vault hidden-paths sets with ancestor-aware `isHidden(path)` so hiding `archive` masks every descendant in one entry, hide/unhide/reset/forgetVault/init lifecycle wired through `main.tsx` startup and `vault-store.removeVault` fan-out. 9 unit tests cover the contract.
+- New `src/ui/file-tree/SidebarContextMenu.tsx` — portal-mounted, viewport-bounds-aware, closes on outside pointerdown / Escape, single "Hide from sidebar" item with the entry path as the header for confirmation.
+- `FileTreeNode.tsx` and `SectionsNav.tsx` both filter against the hidden set and forward an `onContextMenu` prop up to `FileTree.tsx`, which manages the context-menu state and renders the menu. `FileTree.tsx` also gains an `<Eye + count>` reset button in the toolbar that's only visible when the current vault has at least one hidden entry.
+
+### Audit follow-ups (six issues)
+
+1. **Cancel button in `GenerateCardsDialog` actually cancels.** Prior `cancelRef` was declared but never assigned — clicking Cancel just closed the dialog while the model kept burning tokens, and a successful response after dismissal would still navigate the user to a review page they didn't ask for. Now: a fresh `AbortController` per `handleGenerate`, signal threaded through `generateBatch(input.signal)` → `provider.ask(options.signal)` all the way down to fetch. `CardGenerationError` gains an `'aborted'` kind so the dialog can swallow user-cancelled runs silently. Two new unit tests: pre-flight aborted, and signal forwarded into the provider.
+2. **`ReviewPage` keyboard hook now guards editable targets.** The previous hook captured Space/Arrows globally and would flip the card behind the ⌘K palette when the user pressed space inside the palette input. Added an inline `isEditableTarget` helper mirroring the reading-shell version.
+3. **Delete batch now confirms.** Routes through `useDialogStore.requestConfirmation` with `destructive: true` — same pattern as the dirty-editor leaving prompt — so a stray click can't wipe ten cards and their generation cost.
+4. **`PaletteAskResult` no longer re-runs on `wikilinkIndex` landing.** Mirrored the index into a ref so the answer effect can read the latest value without listing it as a dep. Was double-firing the AI fetch every time the index finished building (~couple hundred ms after typing).
+5. **Review-page `ExportMenu` closes on outside click + Escape.** Mirrors the SidebarContextMenu pattern; only mounts the listeners while the menu is open.
+6. **Export filename keeps CJK characters.** Was `[^\w.-]+` which collapses Chinese/Japanese/Korean to underscores ("event-loop事件循环.md" → "event-loop\_\_\_\_md"). Now `[^\p{L}\p{N}.-]+/gu` — Unicode letter / number aware.
+
+### Bundle footprint
+
+- Main `index-*.js`: **261.79 KB gz** (–0.02 KB net across the audit fixes; AbortController plumbing offset by removed dead code).
+- CSS: **27.60 KB gz**.
+- `GenerateCardsDialog-*.js`: 3.84 → **3.94 KB gz** (+0.10 KB for AbortController wiring).
+- `ReviewPage-*.js`: 2.71 → **3.04 KB gz** (+0.33 KB for confirmation + ExportMenu close + isEditableTarget).
+- Tests: 890 → **892 passing** (+2 cancel-signal generator tests; 4 obsolete Continue/Recent tests removed earlier; +9 sidebar-visibility-store tests).
+
+### Why these mattered together
+
+The audit turned up half a dozen "promised but didn't deliver" issues — Cancel that didn't cancel, Delete that didn't confirm, Export menu that wouldn't close. None of them broke anything outright, but each one is the kind of paper-cut that erodes trust in the surface. Bundling them with the sidebar simplification work keeps the next commit a single coherent "polish" pass rather than threading them through future feature work.
+
+---
+
+## 2026-05-09 · Phase 3 — AI review cards (Phase A)
+
+**Status**: ✅ Phase A shipped. SwirlRead can now generate spaced-repetition flashcards from any open `.md` via the configured AI provider, store them in Dexie with a 24h TTL, and step through them on a focused full-page review surface. Phases B (3D flip animation polish), C (multi-file batches), D (manual TTL settings + per-card actions) are deferred.
+
+### What landed
+
+- **Dexie schema v8**: two new tables, `reviewBatches` and `reviewCards`. Range-indexed by `expiresAtMs` so the TTL purge runs in one query; secondary index on `vaultId` so vault deletion fans out cleanly. The schema bump is purely additive — no migration step, existing v7 stores upgrade silently.
+- **`src/core/review/`** (new module):
+  - `types.ts` — `ReviewBatch`, `ReviewCard`, `GenerationOptions`, `DEFAULT_REVIEW_TTL_MS = 24h`, `DEFAULT_CARD_COUNT = 10`, `MAX_CARD_COUNT = 25`.
+  - `card-store.ts` — CRUD (`persistBatch`, `getBatch`, `listBatches`, `getCardsForBatch`, `deleteBatch`, `forgetVault`, `purgeExpired`). Lazy purge on `getBatch` so a stale batch never makes it onto the screen even if startup didn't catch it.
+  - `card-generator.ts` — `generateBatch(input, deps)` collects the AI stream, runs `parseCardsJson` over the result, persists batch + cards in one transaction. `parseCardsJson` is the durability layer: tries strict JSON, then ` ```json ` fenced block extraction, then `[ … ]` slice extraction, then a leniency pass (drops trailing commas), only after all four fail does it return `[]`. Discriminated `CardGenerationError` (`no-provider`, `parse-failed`, `empty`, `underlying`) so the dialog can render a useful message.
+  - 22 new unit tests covering store CRUD, TTL purge cascading, generation persistence, prompt-tolerant parsing, and provider-failure wrapping.
+- **`src/stores/review-store.ts`** (new): tiny Zustand store with `pending: GenerateIntent | null`, `requestGenerate(intent)`, `dismissGenerate()`. Single-pending semantics — clicking "Generate" twice replaces the target rather than queueing.
+- **`src/ui/review/GenerateCardsDialog.tsx`** (new): Radix-backed modal with three phases (idle → generating → error). Idle has a 5–25 card-count slider and a "Generate" CTA. Generating shows a spinner with Cancel. Error surfaces a Retry / Close pair. Provider resolution mirrors `PaletteAskResult.resolveProvider` (active-provider preference first, then chain). On success: `dismissGenerate` + `navigate('/app/:vault/__review__/:batchId')`.
+- **`src/ui/review/ReviewPage.tsx`** (new, lazy): the focused review surface at `/app/:vaultId/__review__/:batchId`. One card at a time, click-to-flip (front: question; back: answer + "why" + source link), `←/→` next/prev, Space/Enter flip, Esc exit. Header carries the batch label, live-ticking expiry countdown (`expires in 23h 14m`), provider name, Export menu (Markdown + JSON), Delete-batch button. Progress dots at the bottom let the user jump directly to a card.
+- **Entry points (both wired per the design):**
+  - Document header — new `Sparkles + Review cards` button next to Edit, fires `requestGenerate({vaultId, path})`.
+  - Command palette — new "Document actions" group with a "Generate review cards" item that fuzzy-matches on "review / cards / generate / flashcards / quiz / study" plus the file basename. Closes the palette and dispatches the same store action so both paths converge on a single GenerateCardsDialog instance.
+  - The dialog itself is mounted once at `AppShell` level, keyed off `useReviewStore.pending` — call sites don't own state.
+- **Startup TTL purge**: `main.tsx` fires `purgeExpired()` next to `autoRestoreVaults()`. Cheap range query; never blocks render.
+- **Vault deletion fan-out**: `useVaultStore.removeVault` now drops `reviewBatches` and `reviewCards` rows for the deleted vault alongside the existing recents / scroll / backlinks / tabs cleanup. Re-registering the same vault id later starts from a clean slate.
+- **Lazy chunks**: `ReviewPage` and `GenerateCardsDialog` both lazy-loaded so users who never review pay nothing for the Radix Dialog instance + flashcard machinery.
+- **Styling**: new `src/styles/review.css` covering the review surface, generate modal, and export menu. Dense typography on the dialog (sans-serif), serif body on the cards (consistent with the reading shell), subtle tint flip when the answer is showing.
+
+### Decisions
+
+- **JSON via prompt, not "structured output API".** Three providers, three different structured-output ABIs (Anthropic tool-use, OpenAI response-format, Xiaomi/OpenAI-compat varies). Strict prompt + tolerant parser stays fully cross-provider with one code path. The four-strategy parser absorbs the LLM tics we actually see in the wild (code fences, prose preamble, trailing commas).
+- **One-shot, not incremental, generation.** The streaming text protocol is what we have, but flashcards are structured — yielding card-by-card UI from a partially-formed JSON array is more friction than it's worth. Collect the whole stream, parse, persist atomically.
+- **Lazy purge + startup purge, no `setInterval`.** Tab-closed timers don't fire and timers across tab suspend/resume drift. `getBatch` self-heals on each access; `main.tsx` wipes the bulk of stale rows once at startup.
+- **Card flip = simple state swap, not 3D transform.** Phase A keeps the flip a content swap with a tinted background. Phase B can layer a `transform: rotateY(180deg)` and `backface-visibility: hidden` for the polish without touching the data layer.
+- **No SRS / spaced-repetition algorithm.** The user's brief was "review what I just read, then it disappears" — not Anki long-term retention. Cards expire 24h after creation; no `lastReviewed`, no quality rating, no schedule. If that demand surfaces later, a `reviewProgress` table is the additive way to layer SM-2 on top.
+- **Source-path attribution = first source.** Single-file batches have a trivial source. Multi-file batches (Phase C) will need cross-card attribution heuristics; the schema already carries a per-card `sourcePath` for that.
+
+### Bundle footprint
+
+- Main `index-*.js`: 259.98 → **260.81 KB gz** (+0.83 KB — review-store + main.tsx wiring).
+- CSS: 26.34 → **27.35 KB gz** (+1.01 KB for the review surface).
+- `CommandPalette-*.js`: 9.74 → **9.88 KB gz** (+0.14 for the new action group).
+- `ReviewPage-*.js`: **new** 2.71 KB gz.
+- `GenerateCardsDialog-*.js`: **new** 3.07 KB gz.
+- Tests: 851 → **873 passing** (+22: 8 store + 14 generator).
+
+### How to use it
+
+1. Open any `.md` in a vault.
+2. Click **Sparkles → Review cards** in the document header (or `⌘K → "Generate review cards"`).
+3. Pick a card count (5–25, default 10). Click **Generate**.
+4. The model returns ~10s later; the app routes you to `/app/:vault/__review__/:batchId`.
+5. Click the card (or press Space) to reveal the answer + explanation. `←/→` walks the deck. Esc returns to the document.
+6. Cards expire automatically after 24h. Click **Export** (Markdown / JSON) to save them before they go.
+
+---
+
+## 2026-05-09 · Phase 3 — Xiaomi MiMo provider + multi-provider default
+
+**Status**: ✅ Shipped. SwirlRead now ships three first-class AI providers (Anthropic / Xiaomi MiMo / OpenAI-compatible). All three can be configured side by side; a "Default for ⌘K" picker in Settings lets the user choose which one drives the palette. Verified against the wire contract from `/Users/supwils/supwilsoft/AI/xiaomi` sample scripts.
+
+### What changed
+
+- **`src/core/ai/types.ts`**: extended `AIProviderId` to `'anthropic' | 'openai-compat' | 'xiaomi'`. No db migration needed — `aiKeys.provider` is a free-form string column.
+- **`src/core/ai/xiaomi-provider.ts`** (new): thin factory that delegates to `createOpenAICompatibleProvider` with the Xiaomi defaults (`https://token-plan-sgp.xiaomimimo.com/v1`, `mimo-v2.5-pro`) and re-keys the resulting provider's `id` to `'xiaomi'` so the rest of the app can distinguish a Xiaomi-backed provider from a hand-configured OpenAI-compatible one. `XIAOMI_DEFAULT_BASE_URL` and `XIAOMI_DEFAULT_MODEL` are exported for the settings UI to use as placeholders. Both base URL and model are user-overridable for regional failover / model switching.
+- **`src/core/ai/key-store.ts`**: added `getActiveProvider()` / `setActiveProvider(id | null)` backed by a new `'ai:activeProvider'` preferences row. The getter self-heals: a stale id that no longer matches a known provider gets dropped and the preference falls back to `null`. `clearAllAIKeys()` drops the active selection too. 5 new unit tests on top of the existing 8.
+- **`src/ui/settings-panel/AIControl.tsx`** (refactor):
+  - Three-tab segmented control: Anthropic / Xiaomi MiMo / OpenAI-compatible.
+  - New `XiaomiForm` component — API key (required) plus optional baseURL / model overrides whose placeholders show the defaults so the user knows what they'll fall back to. Empty meta is intentionally NOT persisted to Dexie, so we can upgrade defaults later without rewriting saved rows.
+  - Re-saving the Xiaomi form with a blank key preserves the prior secret (route through `getAIKey('xiaomi')` instead of clobbering with empty string) — needed because the user often only wants to change baseURL / model on an existing config.
+  - New `DefaultProviderPicker` shows below the active form when 2+ providers are configured. Radio group with "Auto" first (preserving the deterministic chain Anthropic → Xiaomi → OpenAI-compatible) and one option per configured provider.
+  - 5 new integration tests on top of the existing 6: Xiaomi save without overrides, Xiaomi save with overrides, picker hidden when only one provider is configured, picking Xiaomi as default, falling back to Auto.
+- **`src/ui/command-palette/PaletteAskResult.tsx`**: `resolveProvider` now reads `getActiveProvider()` first and uses that explicit pick when it has a saved key. If no explicit pick (or the picked provider has no key), it falls back to the deterministic chain Anthropic → Xiaomi → OpenAI-compatible. Provider construction was extracted to a `tryProvider(id)` helper so the chain stays readable. New integration test verifies that `setActiveProvider('xiaomi')` actually routes fetches to the Xiaomi base URL even when an Anthropic key is also configured.
+- **`src/styles/settings.css`**: added `.swirlread-settings__radio-group` / `.swirlread-settings__radio` rules — vertical radio list using the accent color.
+- **Verified contract**: Xiaomi MiMo's `POST /v1/chat/completions` accepts `{ model, messages, stream: true }` with a `Bearer tp-...` header and emits the same OpenAI-shape SSE deltas (`choices[0].delta.content`) terminated by `data: [DONE]`. Sample scripts in `/Users/supwils/supwilsoft/AI/xiaomi/{javascript,python,bash}/` exercise this — they all use the OpenAI client directly, which is the same wire format our `OpenAICompatibleProvider` already speaks.
+
+### Decisions
+
+- **Xiaomi as a first-class provider, not just a preset.** Technically the existing OpenAI-compatible form could already drive Xiaomi if the user typed in the base URL + model. Promoting it has two real wins: (a) one-click setup with the right defaults, and (b) Xiaomi gets its own encrypted row so the user can configure both Xiaomi and a separate OpenAI-compatible target (e.g. local Ollama) at the same time, which the single-row OpenAI-compat slot can't model.
+- **Defaults persisted via absence, not presence.** The Xiaomi form does not write `baseURL` / `model` into Dexie when the user leaves them blank. This means we can ship a new default model in a future release and existing users immediately benefit without us having to migrate their saved rows.
+- **"Auto" is an explicit radio option, not "no selection".** Showing `(•) Auto` in the picker makes the fallback chain visible and discoverable, instead of leaving users guessing why Anthropic is winning when they'd configured Xiaomi too.
+- **Default picker hidden when 1 or 0 providers configured.** Picking a default with only one configured provider is meaningless busywork; the chain already does the right thing.
+
+### Bundle footprint
+
+- Main `index-*.js`: **259.98 KB gz** (unchanged).
+- CSS: 26.29 → **26.34 KB gz** (+0.05 KB for radio rules).
+- `CommandPalette-*.js`: 9.65 → **9.74 KB gz** (+0.09 KB for Xiaomi import).
+- `SettingsPanel-*.js`: 3.26 → **3.92 KB gz** (+0.66 KB for Xiaomi form + default picker).
+- Tests: 835 → **851 passing** (+16: 5 Xiaomi provider unit + 5 key-store active-provider unit + 5 AIControl integration + 1 palette routing integration).
+
+### How to use it
+
+1. Open Settings → AI assistant → click the "Xiaomi MiMo" tab.
+2. Paste your `tp-...` key, leave base URL and model blank to use the defaults, click Save.
+3. (Optional) Click "Test connection" to verify the key + endpoint without burning real tokens.
+4. If you have other providers configured, scroll down to "Default for ⌘K" and pick Xiaomi MiMo (or leave on "Auto" for the chain default).
+5. Open ⌘K, type `? what does this document explain?`, watch the answer stream in.
+
+---
+
+## 2026-05-09 · Phase 3 polish — rich AI answer card
+
+**Status**: ✅ Shipped. The ⌘K `?` answer surface no longer dumps raw text — streamed answers now render through the same Markdown pipeline as the reading shell, wikilinks the model emits resolve and become clickable, source neighbours are clickable chips that route + close the palette, and the answer has a copy-to-clipboard affordance once streaming completes.
+
+### What changed
+
+- **`src/ui/command-palette/PaletteAskAnswer.tsx`** (new, lazy-loaded): wraps `renderMarkdown` from `core/render/pipeline` with the standard `customComponents` map (Wikilink / Callout / Mermaid / Math / Tag / Embed). Holds a token-versioned reparse so stale Shiki promises don't clobber a newer chunk. Streaming reparse is debounced ~120 ms; the final reparse runs immediately when streaming flips off so the user sees fully-highlighted code blocks the moment the model is done.
+- **`src/ui/command-palette/PaletteAskResult.tsx`** (refactor):
+  - Builds the vault wikilink index once per vault and threads it through both AI context expansion (avoiding the second walk that `loadContext` used to do) and `WikilinkContext.Provider` so `<Wikilink>` inside the rendered answer can resolve `[[target]]` and emit React Router `<Link>`s + hover-preview affordance.
+  - Sources are now buttons with file icons (`<FileText>` + basename), not bare `<code>` tags. Click closes the palette and routes to the linked note via the parent `onSelect` callback wired in `CommandPalette.tsx`.
+  - Header gets a "Copy" button (Lucide `<Copy>` / `<Check>` swap) post-stream — writes the full plaintext to `navigator.clipboard.writeText`. 1.6s flash to "Copied" via a state timer; cleanup on unmount.
+  - The streamed body lives in a Suspense boundary; the lazy-loading fallback renders the raw streamed text in a `<pre>` so the user sees progress instantly even before the answer chunk lands.
+- **`src/styles/command-palette.css`**: new `.swirlread-ask__header`, `.swirlread-ask__source-chip`, `.swirlread-ask__copy`, `.swirlread-ask__prose` rule set. The prose surface reuses `.swirlread-prose` (so KaTeX / Mermaid / Shiki styling carries over) but tightens the typography for the palette context — denser headings, smaller code blocks, narrower margins.
+- **`src/ui/command-palette/PaletteAskResult.test.tsx`** (new): 4 integration tests covering the markdown pipeline render (`**bold**` → `<strong>`, `- list` → `<li>`), wikilink resolution to a real `<Link>` with the right `href`, source-chip click navigating + closing the palette, and the copy-answer button writing the full text via a `vi.spyOn(navigator.clipboard, 'writeText')`.
+
+### Decisions
+
+- **Reuse, don't reinvent the renderer.** The reading shell's `renderMarkdown` already supports wikilinks, callouts, embeds, math, mermaid, and Shiki — pulling that into the palette gives the AI answer the same polish for free. Anthropic's "AI-native HTML" framing is real for _generated artifacts_, but for SwirlRead the answer is still Markdown; rendering it well is the win.
+- **Lazy chunk for `PaletteAskAnswer`.** `renderMarkdown` is heavy (Shiki async grammars, hast-util-to-jsx-runtime, sanitize). The split is more about isolation than bytes — most of the pipeline is shared with `DocumentBodyView` and gets deduped by Vite — but the lazy boundary means a user who never asks AI questions never pays for the wrapper, and the streaming Suspense fallback keeps the perceived latency near-zero.
+- **One `wikilinkIndex`, two consumers.** Building the basename → paths index is O(N) over the vault. The previous implementation built it once for context expansion; now both consumers (context expansion + answer-side resolution) share a single async build keyed off `vaultId`. Saves a redundant walk on every keystroke.
+- **Token-versioned reparse over `useDeferredValue`.** Shiki's grammar load is async, so a slow first reparse can race against a faster later one. A monotonic `tokenRef` + cancellation flag drops stale results without leaning on React's deferred-value heuristics.
+- **No per-codeblock copy button (yet).** The header-level "Copy answer" is enough for v1 and ships in a single button. A future cut can add per-`<pre>` copy if user demand surfaces.
+
+### Bundle footprint
+
+- Main `index-*.js`: 259.95 KB gz → 259.98 KB gz (essentially unchanged — pipeline already loaded).
+- `CommandPalette-*.js`: 9.05 KB gz → 9.65 KB gz (+0.6 KB for source chips, copy button, suspense glue).
+- `PaletteAskAnswer-*.js`: **new** at 0.46 KB gz.
+- CSS bundle: 25.89 KB gz → 26.29 KB gz (+0.4 KB).
+- Tests: 831 → 835 passing.
+
+### Why this matters
+
+The user raised the framing that "AI-native HTML/CSS is becoming the better format for AI-generated content." For a vault-of-Markdown product like SwirlRead, the right interpretation isn't to abandon Markdown — it's to render the AI's Markdown output with the same fidelity the reading shell gives human-authored notes. Wikilinks the model emits become clickable bridges back into the vault; cited sources become navigable chips; code samples are syntax-highlighted; the answer feels like a first-class part of the reading surface, not a chat bubble grafted on. This is suggestion (1) from the discussion on 2026-05-09 — `.html` as a first-class vault format remains a Phase 3+ exploration.
+
+---
+
+## 2026-05-07 · Phase 3 first cut — ⌘K `?` AI mode, end-to-end
+
+**Status**: ✅ Phase 3 v0.1 surface is feature-complete in code. Open ⌘K, type `?` followed by a question, and the configured provider streams an answer that uses the current document plus 1-hop wikilink neighbours as context. Real-key smoke test against a live Anthropic / DeepSeek / Ollama backend is the only remaining manual step.
+
+### What landed (5 sub-slices)
+
+**3A — Provider interface + two implementations** (`src/core/ai/`)
+
+- `types.ts`: `AIProvider` (`ask(prompt, context, options) → AsyncIterable<string>`), `ContextChunk`, `AskOptions`, `AIError` (discriminated by `kind`: `auth` / `rate-limited` / `network` / `aborted` / `malformed-response` / `unknown`).
+- `sse.ts`: shared SSE line-event reader. Handles cross-chunk record splitting, blank-line separators, comment heartbeats, abort-mid-stream. 6 unit tests.
+- `anthropic-provider.ts`: Claude Messages API direct from the browser via `anthropic-dangerous-direct-browser-access: true`. Default model `claude-sonnet-4-6`; system prompt scoped to "reading assistant inside SwirlRead, answer using only the provided context." 5 unit tests covering streaming + the four error kinds.
+- `openai-compatible-provider.ts`: one shape covers OpenAI / DeepSeek / Together / Ollama / LM Studio. Empty Bearer for local LMs. Trailing-slash baseURL normalised. `[DONE]` sentinel respected. 6 unit tests including empty-delta skipping and trailing-slash handling.
+
+**3B — AES-GCM-encrypted key store** (`src/core/ai/key-store.ts`)
+
+- Master AES-GCM-256 `CryptoKey` generated lazily on first `setAIKey`, stored in `preferences['ai:masterKey']` as a non-extractable `CryptoKey` — never round-trips as raw bytes.
+- Per-provider rows in a new `aiKeys` Dexie table (schema v7), `{ provider, ciphertext, iv, meta }`, fresh 12-byte IV per encrypt.
+- Self-heals orphan rows when the master key has been cleared out from under them. 8 unit tests covering round-trip, meta persistence, encrypt-at-rest, IV rotation, hard reset, orphan recovery.
+- Threat model documented in the source: defends against passive IDB inspection / extension snapshots / casual devtools dumps; explicitly does not defend against an actively malicious script in our origin (Tauri keychain is the future answer).
+
+**3C — Settings panel "AI assistant" group** (`src/ui/settings-panel/AIControl.tsx`)
+
+- Provider segmented control (Anthropic / OpenAI-compatible) above per-provider forms.
+- Save / Test connection / Clear key actions; "Saved" badge hydrated from IDB on mount.
+- "Test connection" sends `'Reply with just the word ok.'` and reads only the first chunk, then aborts — verifies auth + reachability without burning real tokens.
+- Plaintext keys never round-trip through React state after a successful save: the form input clears immediately. 6 integration tests cover save-and-clear, hydrate-saved, OpenAI-compat meta hydrate (without leaking key), provider switch.
+
+**3D — Command palette `?` mode + streaming surface** (`src/ui/command-palette/PaletteAskResult.tsx`)
+
+- New `'ask'` variant on `PaletteMode`; `classifyInput` consumes the `?` prefix; placeholder + empty messages for the new mode.
+- `PaletteAskResult` runs through `idle` / `loading` / `streaming` / `done` / `error` / `no-provider` states with explicit copy for each. AbortController wired through to fetch + SSE reader so closing the palette / typing a new question cancels in-flight requests.
+- Static groups (recents / recently-closed / headings / sections) hidden in ask mode via a single `showStaticGroups` gate so the answer owns the surface.
+- Streaming render shows a blinking cursor; done state labels the answering model (`Answered by claude-sonnet-4-6`). 3 integration tests cover the empty `?` hint, the no-provider CTA, and the static-group suppression.
+
+**3E — 1-hop wikilink context expansion** (`src/core/navigation/wikilink-extractor.ts`)
+
+- Pure `extractWikilinkTargets(source)` strips fenced/inline code + HTML comments, then pulls each unique `[[target]]` (de-decorated of alias / heading / block-ref) in document order. Embeds (`![[file]]`) ride along intentionally — they're the strongest "I want this content next to the host" signal. 8 unit tests.
+- `loadContext` in `PaletteAskResult` now reads the current doc, builds a wikilink index via `buildWikilinkIndex`, resolves each extracted target, and pulls in up to 4 Markdown neighbours under hard caps (8k chars per file, 30k chars total across neighbours). Non-Markdown skipped; self-references skipped; per-file truncation labels with "…[truncated]…".
+- `Status` carries a `sources: string[]` so the UI can list every neighbour path next to the answer header (`With 3 linked notes: hooks.md, react.md, perf.md`). Sources show during streaming, not just at done — the user sees what's being sent before the answer fills in.
+
+### Decisions
+
+- **Pure `fetch` providers, no SDK.** Keeps the provider modules trivially testable (inject `fetch`), avoids dragging Anthropic / OpenAI SDK trees into the bundle, and side-steps the SDK version drift problem that comes with browser-direct calls.
+- **Encryption is real but documented.** Threat model is explicit in the source: this defends against IDB snapshots, not an actively-malicious script in our origin. Tauri keychain is the future stronger answer; for the web build, AES-GCM-at-rest is the right cost.
+- **Context cap, not token-counting.** A character cap is an honest under-approximation of token budget that doesn't require shipping a tokenizer. 30k chars ≈ 7.5k tokens leaves headroom for system prompt + question + answer in any current frontier model context window.
+- **Sources surfaced in UI.** Shipping AI without surfacing what's being sent is a privacy anti-pattern. The header line is one short sentence and disappears on docs without wikilinks, so the disclosure has zero cost on simple pages.
+- **Provider preference is implicit, not configurable yet.** Anthropic wins when both keys exist; that's the recommended default per this roadmap. A real picker is a backlog item once anyone reports they want both configured for different documents.
+
+### Verification
+
+- `pnpm check`: 0 errors / 0 warnings; **831 / 831 tests passing** (+38 vs Phase 2D)
+- `pnpm build`: succeeded; main chunk **259.95 KB gz** (Δ +0.07 KB vs Phase 2D — core/ai is consumed only via the lazy SettingsPanel + CommandPalette chunks). CommandPalette lazy chunk **9.05 KB gz**, SettingsPanel lazy chunk **5.40 KB gz**, CSS **25.89 KB gz**.
+
+### Manual verification still pending (3F real-key smoke)
+
+The whole stack runs in unit tests with mocked fetch. The real-network signal that's deferred to a manual run:
+
+1. Configure an Anthropic key in Settings → AI assistant → Save → Test connection should turn green.
+2. Open a document with at least one wikilink → ⌘K → `? what is this about?` → answer streams, sources line shows the linked file.
+3. Configure a DeepSeek key (OpenAI-compat) with `https://api.deepseek.com/v1` + `deepseek-chat` → Test connection green → ask the same question → answer streams from DeepSeek.
+4. Try an Ollama setup (`http://localhost:11434/v1`, blank API key, model `llama3`) → expect either a green Test (if Ollama is running) or a clear "Network error reaching the provider" status.
+
+These four manual steps are the v0.1 acceptance for Phase 3. Anything that surfaces during the smoke run becomes follow-up work.
+
+---
+
 ## 2026-05-07 · Final pre-Phase-3 polish — LandingPage emoji, dead export
 
 **Status**: ✅ Last papercut sweep before pivoting to Phase 3 AI work.

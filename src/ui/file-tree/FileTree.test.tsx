@@ -7,6 +7,7 @@ import { FSAPIVaultAdapter } from '@/core/vault'
 import { mockRoot } from '@/core/vault/__test-helpers__/mock-fs'
 import type { MockTreeNode } from '@/core/vault/__test-helpers__/mock-fs'
 import { useReaderStore } from '@/stores/reader-store'
+import { useSidebarVisibilityStore } from '@/stores/sidebar-visibility-store'
 import { useVaultStore, __resetAdaptersForTests } from '@/stores/vault-store'
 import { useUIStore, DEFAULT_FILE_TREE_OPEN } from '@/stores/ui-store'
 import { __resetDbForTests } from '@/core/persistence/db'
@@ -34,6 +35,11 @@ beforeEach(async () => {
     recentByVault: {},
     ready: true,
   })
+  // FileTree gates rendering on this store being ready; init pulls
+  // from the (now-empty) Dexie preferences row so we start from a
+  // clean slate for every test.
+  useSidebarVisibilityStore.setState({ hiddenByVault: {}, ready: false })
+  await useSidebarVisibilityStore.getState().init()
 })
 
 async function registerVault(
@@ -242,113 +248,13 @@ describe('FileTree (M4.3) — visibility toggle', () => {
   })
 })
 
-describe('FileTree (M4.7) — recent files', () => {
-  it('renders recent files above the vault tree', async () => {
-    await registerVault('recent-tree', {
-      'index.md': '# Home',
-      notes: { 'today.md': '# Today' },
-    })
-    await useReaderStore
-      .getState()
-      .markRecentFile('recent-tree', 'notes/today.md')
-
-    renderAt('/app/recent-tree')
-
-    const sidebar = await waitFor(() => getSidebar())
-    const recentNav = await waitFor(() =>
-      within(sidebar).getByRole('navigation', { name: /recent files/i }),
-    )
-
-    const link = within(recentNav).getByRole('link', {
-      name: /recent file notes\/today\.md/i,
-    })
-    expect(link).toHaveTextContent('today.md')
-    expect(link).toHaveAttribute('href', '/app/recent-tree/notes/today.md')
-  })
-})
-
 describe('FileTree (M4.3) — defaults', () => {
   it('matches DEFAULT_FILE_TREE_OPEN', () => {
     expect(DEFAULT_FILE_TREE_OPEN).toBe(true)
   })
 })
 
-describe('FileTree (RX3) — Continue / Recent / Sections layout', () => {
-  it('hides the Continue block when the latest recent has no saved scroll position', async () => {
-    await registerVault('rx3-no-scroll', {
-      'index.md': '#',
-      'a.md': '#a',
-    })
-    await useReaderStore.getState().markRecentFile('rx3-no-scroll', 'a.md')
-
-    renderAt('/app/rx3-no-scroll')
-
-    const sidebar = await waitFor(() => getSidebar())
-    // Wait for the sidebar to actually finish loading rootEntries
-    // before asserting on absence; otherwise the "Reading vault…"
-    // placeholder also has no Continue/Recent regions and the test
-    // would pass for the wrong reason.
-    await waitFor(() => {
-      expect(
-        within(sidebar).getByRole('navigation', { name: /recent files/i }),
-      ).toBeInTheDocument()
-    })
-    expect(
-      within(sidebar).queryByLabelText(/continue reading/i),
-    ).not.toBeInTheDocument()
-  })
-
-  it('promotes the latest recent file into Continue when scroll memory exists', async () => {
-    await registerVault('rx3-scroll', {
-      'index.md': '#',
-      'a.md': '#a',
-    })
-    await useReaderStore.getState().markRecentFile('rx3-scroll', 'a.md')
-    await useReaderStore
-      .getState()
-      .recordScrollPosition('rx3-scroll', 'a.md', 480)
-
-    renderAt('/app/rx3-scroll')
-
-    const sidebar = await waitFor(() => getSidebar())
-    const continueNav = await waitFor(() =>
-      within(sidebar).getByRole('navigation', { name: /continue reading/i }),
-    )
-    const link = within(continueNav).getByRole('link', {
-      name: /resume reading a\.md/i,
-    })
-    expect(link).toHaveAttribute('href', '/app/rx3-scroll/a.md')
-    // Resume tag is decorative; visible alongside the basename.
-    expect(continueNav.textContent).toMatch(/Resume/i)
-  })
-
-  it('does NOT duplicate the Continue file inside the Recent list', async () => {
-    await registerVault('rx3-dedupe', {
-      'index.md': '#',
-      'a.md': '#a',
-      'b.md': '#b',
-    })
-    await useReaderStore.getState().markRecentFile('rx3-dedupe', 'b.md')
-    await useReaderStore.getState().markRecentFile('rx3-dedupe', 'a.md')
-    await useReaderStore
-      .getState()
-      .recordScrollPosition('rx3-dedupe', 'a.md', 240)
-
-    renderAt('/app/rx3-dedupe')
-
-    const sidebar = await waitFor(() => getSidebar())
-    const recentNav = await waitFor(() =>
-      within(sidebar).getByRole('navigation', { name: /recent files/i }),
-    )
-    // Recent contains b.md; a.md was promoted to Continue.
-    expect(
-      within(recentNav).getByRole('link', { name: /recent file b\.md/i }),
-    ).toBeInTheDocument()
-    expect(
-      within(recentNav).queryByRole('link', { name: /recent file a\.md/i }),
-    ).not.toBeInTheDocument()
-  })
-
+describe('FileTree (RX3) — Sections layout', () => {
   it('lists detected sections in the Sections block above the file tree', async () => {
     await registerVault('rx3-sections', {
       career: { 'career-map.md': '# Career map' },
@@ -493,5 +399,62 @@ describe('FileTree (M4.2) — section homes', () => {
     links.forEach((link) => {
       expect(link).toHaveAttribute('aria-current', 'page')
     })
+  })
+})
+
+describe('FileTree — sidebar right-click hide', () => {
+  it('hides a folder when "Hide from sidebar" is selected, then reset brings it back', async () => {
+    const user = userEvent.setup()
+    await registerVault('hide-flow', {
+      career: { 'me.md': '# me' },
+      'index.md': '# Home',
+    })
+
+    renderAt('/app/hide-flow')
+
+    const sidebar = await waitFor(() => getSidebar())
+    // Both sidebar entries should land before we right-click.
+    await waitFor(() => {
+      expect(within(sidebar).getByText('career')).toBeInTheDocument()
+    })
+    expect(within(sidebar).getByText('index.md')).toBeInTheDocument()
+
+    // Right-click the career folder row. The expand button is the
+    // closest stable handle (the row itself is a <button> rendered
+    // through that). React Testing Library doesn't expose a direct
+    // contextMenu helper, so we dispatch the synthetic event on the
+    // row's button.
+    const careerRow = within(sidebar).getByRole('button', {
+      name: /expand career/i,
+    })
+    await user.pointer({ keys: '[MouseRight]', target: careerRow })
+
+    // Context menu portals into document.body (outside the sidebar
+    // tree), so we query at the screen level.
+    const hideItem = await screen.findByRole('menuitem', {
+      name: /hide from sidebar/i,
+    })
+    await user.click(hideItem)
+
+    // Folder disappears immediately.
+    await waitFor(() => {
+      expect(within(sidebar).queryByText('career')).not.toBeInTheDocument()
+    })
+    // Sibling stays visible.
+    expect(within(sidebar).getByText('index.md')).toBeInTheDocument()
+
+    // Reset button now appears in the toolbar — count is 1.
+    const resetBtn = await within(sidebar).findByLabelText(
+      /show all 1 hidden items/i,
+    )
+    await user.click(resetBtn)
+
+    await waitFor(() => {
+      expect(within(sidebar).getByText('career')).toBeInTheDocument()
+    })
+    // After reset, the button itself is gone.
+    expect(
+      within(sidebar).queryByLabelText(/show all .* hidden items/i),
+    ).not.toBeInTheDocument()
   })
 })

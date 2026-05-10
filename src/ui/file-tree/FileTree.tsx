@@ -1,17 +1,23 @@
-import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useState,
+  type ReactNode,
+} from 'react'
 import { Link } from 'react-router'
-import { List, Network, RefreshCw } from 'lucide-react'
+import { Eye, List, Network, RefreshCw } from 'lucide-react'
 import type { VaultEntry, VaultId, VaultPath } from '@/core/vault'
-import type { RecentFile, ScrollPosition } from '@/stores/reader-store'
-import { useReaderStore } from '@/stores/reader-store'
+import { useSidebarVisibilityStore } from '@/stores/sidebar-visibility-store'
 import { getAdapter, useVaultStore } from '@/stores/vault-store'
 import { filesForTag } from '@/core/navigation/tag-index'
 import type { TagIndex } from '@/core/navigation/tag-index'
 import { getTagIndex } from '@/ui/reading-shell/tag-index-cache'
 import { getListing, sortEntries } from './file-tree-cache'
-import { ContinueAndRecent } from './ContinueAndRecent'
 import { SectionsNav } from './SectionsNav'
 import { FileTreeNode } from './FileTreeNode'
+import { SidebarContextMenu } from './SidebarContextMenu'
 import { TagFilterBar } from './TagFilterBar'
 
 const GraphView = lazy(() =>
@@ -20,13 +26,16 @@ const GraphView = lazy(() =>
 
 type ViewMode = 'tree' | 'graph'
 
-const EMPTY_RECENT_FILES: RecentFile[] = []
-const EMPTY_SCROLL_MAP: Record<VaultPath, ScrollPosition> = {}
-
 interface FileTreeProps {
   vaultId: VaultId
   /** Path of the document/folder currently in view. `""` = vault root. */
   currentPath: VaultPath
+}
+
+interface ContextMenuState {
+  x: number
+  y: number
+  entry: VaultEntry
 }
 
 export function FileTree({ vaultId, currentPath }: FileTreeProps): ReactNode {
@@ -35,17 +44,33 @@ export function FileTree({ vaultId, currentPath }: FileTreeProps): ReactNode {
   const [viewMode, setViewMode] = useState<ViewMode>('tree')
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
   const contentRevision = useVaultStore(
     (state) => state.contentRevisionByVault[vaultId] ?? 0,
   )
   const refreshVaultContent = useVaultStore(
     (state) => state.refreshVaultContent,
   )
-  const recentFiles = useReaderStore(
-    (state) => state.recentByVault[vaultId] ?? EMPTY_RECENT_FILES,
+  const hideFromSidebar = useSidebarVisibilityStore((s) => s.hide)
+  const resetVisibility = useSidebarVisibilityStore((s) => s.reset)
+  // Subscribe to the live count so the toolbar button shows/hides
+  // reactively as the user toggles entries.
+  const hiddenCount = useSidebarVisibilityStore(
+    (s) => s.hiddenByVault[vaultId]?.size ?? 0,
   )
-  const scrollByPath = useReaderStore(
-    (state) => state.scrollByVault[vaultId] ?? EMPTY_SCROLL_MAP,
+  // Wait for the visibility store to hydrate from Dexie before rendering
+  // tree entries — otherwise the user sees their hidden folders flash
+  // for a frame between mount and the IDB read landing. The store's
+  // `init()` is fired once at app startup from `main.tsx`.
+  const visibilityReady = useSidebarVisibilityStore((s) => s.ready)
+
+  const handleContextMenu = useCallback(
+    (event: React.MouseEvent<HTMLElement>, entry: VaultEntry) => {
+      event.preventDefault()
+      event.stopPropagation()
+      setContextMenu({ x: event.clientX, y: event.clientY, entry })
+    },
+    [],
   )
 
   useEffect(() => {
@@ -118,6 +143,20 @@ export function FileTree({ vaultId, currentPath }: FileTreeProps): ReactNode {
       >
         <Network size={14} aria-hidden="true" />
       </button>
+      {hiddenCount > 0 && (
+        <button
+          type="button"
+          className="swirlread-file-tree__view-btn swirlread-file-tree__view-btn--reset"
+          title={`Show all hidden items (${String(hiddenCount)})`}
+          aria-label={`Show all ${String(hiddenCount)} hidden items`}
+          onClick={() => void resetVisibility(vaultId)}
+        >
+          <Eye size={14} aria-hidden="true" />
+          <span className="swirlread-file-tree__reset-count">
+            {hiddenCount}
+          </span>
+        </button>
+      )}
       <button
         type="button"
         className="swirlread-file-tree__view-btn swirlread-file-tree__refresh-btn"
@@ -171,7 +210,7 @@ export function FileTree({ vaultId, currentPath }: FileTreeProps): ReactNode {
     )
   }
 
-  if (!rootEntries) {
+  if (!rootEntries || !visibilityReady) {
     return (
       <div className="swirlread-file-tree__container">
         {toolbar}
@@ -198,24 +237,33 @@ export function FileTree({ vaultId, currentPath }: FileTreeProps): ReactNode {
         />
       ) : (
         <>
-          <ContinueAndRecent
-            vaultId={vaultId}
-            currentPath={currentPath}
-            recents={recentFiles}
-            scrollByPath={scrollByPath}
-          />
           <SectionsNav
             vaultId={vaultId}
             currentPath={currentPath}
             contentRevision={contentRevision}
+            onContextMenu={handleContextMenu}
           />
           <FilesNav
             vaultId={vaultId}
             currentPath={currentPath}
             rootEntries={sortEntries(rootEntries)}
             contentRevision={contentRevision}
+            onContextMenu={handleContextMenu}
           />
         </>
+      )}
+      {contextMenu && (
+        <SidebarContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          label={contextMenu.entry.path || contextMenu.entry.name}
+          onHide={() => {
+            void hideFromSidebar(vaultId, contextMenu.entry.path)
+          }}
+          onClose={() => {
+            setContextMenu(null)
+          }}
+        />
       )}
     </div>
   )
@@ -226,11 +274,16 @@ function FilesNav({
   currentPath,
   rootEntries,
   contentRevision,
+  onContextMenu,
 }: {
   vaultId: VaultId
   currentPath: VaultPath
   rootEntries: VaultEntry[]
   contentRevision: number
+  onContextMenu: (
+    event: React.MouseEvent<HTMLElement>,
+    entry: VaultEntry,
+  ) => void
 }): ReactNode {
   return (
     <div className="swirlread-file-tree__files">
@@ -248,6 +301,7 @@ function FilesNav({
             currentPath={currentPath}
             depth={0}
             contentRevision={contentRevision}
+            onContextMenu={onContextMenu}
           />
         ))}
       </ul>

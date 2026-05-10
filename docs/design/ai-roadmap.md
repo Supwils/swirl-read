@@ -1,6 +1,6 @@
 # SwirlRead — AI Roadmap
 
-> Status: Decided 2026-05-01 — **AI deferred to Phase 2** · Living document
+> Status: Phase 2 first slice **shipped 2026-05-07** — single-document `?` mode is end-to-end. Living document.
 
 ---
 
@@ -41,10 +41,13 @@ AI features are **additive**, not central. SwirlRead must be a great reading exp
 
 First AI features to ship after the reading experience is solid:
 
-- **⌘K `?` mode**: ask a question, AI answers using the currently open file (+ wikilinked files, 1 hop)
-- **Inline explain**: select text → "explain simpler" / "what does this mean?"
-- **Auto TL;DR**: long documents (>2000 words) get an optional summary at the top
-- **Smart highlight**: AI marks the 3 most important sentences in long documents (visual cue, not a modal)
+- ✅ **⌘K `?` mode** (shipped 2026-05-07): ask a question, AI answers using the currently open file + 1-hop wikilink neighbours. Provider abstraction (`AIProvider` in `src/core/ai/`) ships with Anthropic + OpenAI-compatible adapters. Streaming over SSE; AbortController-cancellable; key encrypted at rest with AES-GCM under a non-extractable master `CryptoKey`. Settings panel "AI assistant" group surfaces a Save / Test connection / Clear key flow. Context cap: 4 neighbour files, 8k chars each, 30k total — current document never truncated. Sources are listed in the answer header so the user can see what was sent.
+- ✅ **Rich answer card** (shipped 2026-05-09): the streamed answer renders through the reading shell's Markdown pipeline (`renderMarkdown` + `customComponents`) instead of a `<pre>` text dump. Wikilinks the model emits resolve through the same `WikilinkContext` the reading view uses — they become clickable React Router `<Link>`s with the hover-preview affordance. Sources are clickable chips that close the palette and route to the linked note. A header-level "Copy answer" button writes the full plaintext to the clipboard once streaming completes. Streaming reparse is debounced ~120 ms; final reparse runs immediately when the stream closes so code blocks appear fully Shiki-highlighted at done. New lazy chunk `PaletteAskAnswer` isolates the renderer from non-AI palette use.
+- ✅ **Review cards — Phase A** (shipped 2026-05-09): AI-generated flashcards from any `.md`, stored in Dexie with a 24h TTL, reviewed on a focused `/__review__/:batchId` page. Question on the front, answer + explanation + source link on the back. Click-to-flip, ←/→ next/prev, Space flip, Esc exit. Generation triggered from the document header button or `⌘K → "Generate review cards"`. JSON-via-prompt parsing with a four-strategy tolerant parser; no provider lock-in. Export to Markdown / JSON. Phase B (3D flip animation), Phase C (multi-file batches), Phase D (TTL settings + manual purge UI) deferred.
+- ✅ **Xiaomi MiMo provider + multi-provider default** (shipped 2026-05-09): added `'xiaomi'` to `AIProviderId` and a `createXiaomiProvider` factory that wraps the OpenAI-compat shell with the Xiaomi defaults (`token-plan-sgp.xiaomimimo.com/v1`, `mimo-v2.5-pro`). Settings panel grew a third tab with one-click setup and optional baseURL / model overrides. New `getActiveProvider` / `setActiveProvider` helpers persist the user's "Default for ⌘K" pick in `preferences['ai:activeProvider']`; the palette resolver honors it first, then falls back to the chain Anthropic → Xiaomi → OpenAI-compatible. Multiple providers can be configured side by side under separate encrypted rows.
+- 🔜 **Inline explain**: select text → "explain simpler" / "what does this mean?"
+- 🔜 **Auto TL;DR**: long documents (>2000 words) get an optional summary at the top
+- 🔜 **Smart highlight**: AI marks the 3 most important sentences in long documents (visual cue, not a modal)
 
 No vault-wide indexing yet. AI only sees what's currently in view.
 

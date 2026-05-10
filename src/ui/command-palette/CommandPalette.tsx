@@ -13,8 +13,9 @@ import { useMemo, useState, type ReactNode } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Command } from 'cmdk'
 import { useNavigate } from 'react-router'
-import { Clock, Library, RotateCcw } from 'lucide-react'
+import { Clock, Library, RotateCcw, Sparkles } from 'lucide-react'
 import { basename } from '@/core/vault'
+import { useReviewStore } from '@/stores/review-store'
 import { useTabsStore, type Tab } from '@/stores/tabs-store'
 import { useUIStore } from '@/stores/ui-store'
 import { useTocStore } from '@/stores/toc-store'
@@ -35,6 +36,7 @@ import {
   PaletteFilesGroup,
   PaletteSearchResults,
 } from './PaletteGroups'
+import { PaletteAskResult } from './PaletteAskResult'
 
 // Stable empty-array reference for the recently-closed selector. Zustand
 // uses identity equality by default; returning a fresh `[]` from the
@@ -99,9 +101,23 @@ function PaletteBody({ onSelect }: { onSelect: () => void }): ReactNode {
     tocContext.path === currentFilePath &&
     headings.length > 0
 
+  // Static groups (recents / recently-closed / headings / sections) are
+  // shown in the empty + files modes — never in search or ask, where
+  // they would be irrelevant noise above the actual answer surface.
+  const showStaticGroups = mode.kind === 'recents' || mode.kind === 'files'
+
   const handleSelect = (href: string): void => {
     onSelect()
     void navigate(href)
+  }
+
+  const handleGenerateCards = (): void => {
+    if (!currentVaultId || !currentFilePath) return
+    onSelect()
+    useReviewStore.getState().requestGenerate({
+      vaultId: currentVaultId,
+      path: currentFilePath,
+    })
   }
 
   const handleSelectHeading = (id: string): void => {
@@ -133,7 +149,7 @@ function PaletteBody({ onSelect }: { onSelect: () => void }): ReactNode {
           {emptyMessage(mode, recents.length, currentVaultId)}
         </Command.Empty>
 
-        {mode.kind !== 'search' && recents.length > 0 && (
+        {showStaticGroups && recents.length > 0 && (
           <Command.Group
             heading="Recent files"
             className="swirlread-cmdk__group"
@@ -161,44 +177,42 @@ function PaletteBody({ onSelect }: { onSelect: () => void }): ReactNode {
           </Command.Group>
         )}
 
-        {mode.kind !== 'search' &&
-          currentVaultId &&
-          recentlyClosed.length > 0 && (
-            <Command.Group
-              heading="Recently closed"
-              className="swirlread-cmdk__group"
-            >
-              {recentlyClosed.map((tab) => (
-                <Command.Item
-                  key={`closed::${tab.vaultId}::${tab.path}`}
-                  value={`closed ${tab.path}`}
-                  onSelect={() => {
-                    // Pop the entry from the closed stack so the same
-                    // row doesn't keep showing up after we've already
-                    // brought it back. DocumentPage handles the actual
-                    // tab open via its `openOrFocus` effect.
-                    useTabsStore.getState().reopenClosed(tab.vaultId, tab.path)
-                    handleSelect(`/app/${tab.vaultId}/${tab.path}`)
-                  }}
-                  className="swirlread-cmdk__item"
-                >
-                  <RotateCcw
-                    className="swirlread-cmdk__item-icon"
-                    size={14}
-                    aria-hidden="true"
-                  />
-                  <span className="swirlread-cmdk__item-primary">
-                    {basename(tab.path)}
-                  </span>
-                  <span className="swirlread-cmdk__item-secondary">
-                    Reopen · {tab.path}
-                  </span>
-                </Command.Item>
-              ))}
-            </Command.Group>
-          )}
+        {showStaticGroups && currentVaultId && recentlyClosed.length > 0 && (
+          <Command.Group
+            heading="Recently closed"
+            className="swirlread-cmdk__group"
+          >
+            {recentlyClosed.map((tab) => (
+              <Command.Item
+                key={`closed::${tab.vaultId}::${tab.path}`}
+                value={`closed ${tab.path}`}
+                onSelect={() => {
+                  // Pop the entry from the closed stack so the same
+                  // row doesn't keep showing up after we've already
+                  // brought it back. DocumentPage handles the actual
+                  // tab open via its `openOrFocus` effect.
+                  useTabsStore.getState().reopenClosed(tab.vaultId, tab.path)
+                  handleSelect(`/app/${tab.vaultId}/${tab.path}`)
+                }}
+                className="swirlread-cmdk__item"
+              >
+                <RotateCcw
+                  className="swirlread-cmdk__item-icon"
+                  size={14}
+                  aria-hidden="true"
+                />
+                <span className="swirlread-cmdk__item-primary">
+                  {basename(tab.path)}
+                </span>
+                <span className="swirlread-cmdk__item-secondary">
+                  Reopen · {tab.path}
+                </span>
+              </Command.Item>
+            ))}
+          </Command.Group>
+        )}
 
-        {mode.kind !== 'search' && headingsActive && (
+        {showStaticGroups && headingsActive && (
           <Command.Group
             heading="Headings (this document)"
             className="swirlread-cmdk__group"
@@ -213,7 +227,33 @@ function PaletteBody({ onSelect }: { onSelect: () => void }): ReactNode {
           </Command.Group>
         )}
 
-        {mode.kind !== 'search' && currentVaultId && sections.length > 0 && (
+        {showStaticGroups && currentVaultId && currentFilePath && (
+          <Command.Group
+            heading="Document actions"
+            className="swirlread-cmdk__group"
+          >
+            <Command.Item
+              key={`doc-action::generate-cards::${currentFilePath}`}
+              value={`generate review cards flashcards study quiz ${currentFilePath}`}
+              onSelect={handleGenerateCards}
+              className="swirlread-cmdk__item"
+            >
+              <Sparkles
+                className="swirlread-cmdk__item-icon"
+                size={14}
+                aria-hidden="true"
+              />
+              <span className="swirlread-cmdk__item-primary">
+                Generate review cards
+              </span>
+              <span className="swirlread-cmdk__item-secondary">
+                {basename(currentFilePath)}
+              </span>
+            </Command.Item>
+          </Command.Group>
+        )}
+
+        {showStaticGroups && currentVaultId && sections.length > 0 && (
           <Command.Group
             heading={`Sections in ${currentVaultName ?? currentVaultId}`}
             className="swirlread-cmdk__group"
@@ -263,10 +303,22 @@ function PaletteBody({ onSelect }: { onSelect: () => void }): ReactNode {
             onSelect={handleSelect}
           />
         )}
+
+        {mode.kind === 'ask' && mode.query.length > 0 && (
+          <PaletteAskResult
+            question={mode.query}
+            vaultId={currentVaultId}
+            path={currentFilePath}
+            onSelect={onSelect}
+          />
+        )}
       </Command.List>
       <footer className="swirlread-cmdk__footer">
         <span className="swirlread-cmdk__hint">
           <kbd className="swirlread-cmdk__kbd">&gt;</kbd> full-text search
+        </span>
+        <span className="swirlread-cmdk__hint">
+          <kbd className="swirlread-cmdk__kbd">?</kbd> ask AI
         </span>
         <kbd className="swirlread-cmdk__kbd">↑↓</kbd> navigate
         <kbd className="swirlread-cmdk__kbd">↵</kbd> open

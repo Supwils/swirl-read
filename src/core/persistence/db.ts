@@ -9,6 +9,9 @@
  *   - `scrollPositions`  — per-file scroll memory (M2.7)
  *   - `hintsSeen`        — per-hint id "you've seen this" flag (M9.4)
  *   - `openTabs`         — per-vault open document tabs (multi-tab UI)
+ *   - `aiKeys`           — provider-keyed encrypted API keys (Phase 3)
+ *   - `reviewBatches`    — AI-generated flashcard batches (Phase 3 review)
+ *   - `reviewCards`      — individual review cards inside a batch
  *
  * Handle persistence (binary `FileSystemDirectoryHandle` blobs) lives in a
  * separate idb-keyval store; see `core/vault/handle-storage.ts`. Splitting
@@ -81,6 +84,56 @@ export interface OpenTabRow {
   openedAtMs: number
 }
 
+/** One AES-GCM-encrypted API key row, keyed by `provider`. The decryption
+ *  key lives in the `preferences` table under `ai:masterKey` as a
+ *  non-extractable CryptoKey, so the ciphertext at rest is unreadable
+ *  even with full Dexie inspection. */
+export interface AIKeyRow {
+  provider: string
+  ciphertext: ArrayBuffer
+  iv: Uint8Array
+  /** Free-form provider config that doesn't carry secrets — e.g.
+   *  the OpenAI-compatible base URL or the model id override. */
+  meta?: Record<string, string>
+}
+
+/** One AI-generated review batch (Phase 3 spaced-repetition surface).
+ *  Cards live in {@link ReviewCardRow}, joined by `batchId`. Both rows
+ *  carry an `expiresAtMs` so the TTL purge can drop them in a single
+ *  bulkDelete without walking each card individually. */
+export interface ReviewBatchRow {
+  id: string
+  vaultId: string
+  /** Vault paths the batch was generated from. Single-source batches
+   *  carry one entry; multi-file batches carry many. */
+  sourcePaths: string[]
+  /** Display label — e.g. the source basename or "3 selected files". */
+  label: string
+  /** Human-friendly hint of which AI provider generated the batch. */
+  providerLabel: string
+  createdAtMs: number
+  expiresAtMs: number
+}
+
+/** One review card inside a batch. Indexed by `batchId` so we can pull
+ *  every card for a batch in one range query. */
+export interface ReviewCardRow {
+  id: string
+  batchId: string
+  vaultId: string
+  /** Position within the batch. Lower numbers come first; immutable
+   *  for the lifetime of the card. */
+  order: number
+  question: string
+  answer: string
+  explanation: string
+  /** Path of the source note this card was distilled from. Lets us
+   *  link "Source" back into the reading shell on the answer side. */
+  sourcePath: string
+  createdAtMs: number
+  expiresAtMs: number
+}
+
 interface SwirlReadDB extends Dexie {
   vaults: EntityTable<StoredVault, 'id'>
   preferences: EntityTable<PreferenceRow, 'key'>
@@ -89,6 +142,9 @@ interface SwirlReadDB extends Dexie {
   scrollPositions: EntityTable<ScrollPositionRow, 'id'>
   hintsSeen: EntityTable<HintSeenRow, 'id'>
   openTabs: EntityTable<OpenTabRow, 'id'>
+  aiKeys: EntityTable<AIKeyRow, 'provider'>
+  reviewBatches: EntityTable<ReviewBatchRow, 'id'>
+  reviewCards: EntityTable<ReviewCardRow, 'id'>
 }
 
 function buildDb(): SwirlReadDB {
@@ -133,6 +189,31 @@ function buildDb(): SwirlReadDB {
     hintsSeen: 'id, seenAtMs',
     openTabs: 'id, vaultId, [vaultId+order], openedAtMs',
   })
+  db.version(7).stores({
+    vaults: 'id, name, lastOpenedAtMs',
+    preferences: 'key',
+    recentFiles: 'id, vaultId, openedAtMs',
+    backlinks: 'id, vaultId, targetPath, sourcePath, updatedAtMs',
+    scrollPositions: 'id, vaultId, updatedAtMs',
+    hintsSeen: 'id, seenAtMs',
+    openTabs: 'id, vaultId, [vaultId+order], openedAtMs',
+    aiKeys: 'provider',
+  })
+  db.version(8).stores({
+    vaults: 'id, name, lastOpenedAtMs',
+    preferences: 'key',
+    recentFiles: 'id, vaultId, openedAtMs',
+    backlinks: 'id, vaultId, targetPath, sourcePath, updatedAtMs',
+    scrollPositions: 'id, vaultId, updatedAtMs',
+    hintsSeen: 'id, seenAtMs',
+    openTabs: 'id, vaultId, [vaultId+order], openedAtMs',
+    aiKeys: 'provider',
+    // Range-indexed by `expiresAtMs` so the TTL purge can grab every
+    // expired row in one query. `vaultId` is indexed so vault deletion
+    // can fan out a forget-all in O(matched-rows).
+    reviewBatches: 'id, vaultId, expiresAtMs, createdAtMs',
+    reviewCards: 'id, batchId, vaultId, [batchId+order], expiresAtMs',
+  })
   return db
 }
 
@@ -175,6 +256,9 @@ export async function __resetDbForTests(): Promise<void> {
       db.scrollPositions,
       db.hintsSeen,
       db.openTabs,
+      db.aiKeys,
+      db.reviewBatches,
+      db.reviewCards,
     ],
     async () => {
       await db.vaults.clear()
@@ -184,6 +268,9 @@ export async function __resetDbForTests(): Promise<void> {
       await db.scrollPositions.clear()
       await db.hintsSeen.clear()
       await db.openTabs.clear()
+      await db.aiKeys.clear()
+      await db.reviewBatches.clear()
+      await db.reviewCards.clear()
     },
   )
 }

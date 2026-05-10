@@ -576,10 +576,95 @@ a.swirlread-directory__crumb:hover {
   animation: swirlread-spin 0.8s linear infinite;
 }
 
+/* Reset-visibility button — only present when 1+ entries are hidden,
+ * sits next to the view-mode toggles. The little count chip is purely
+ * cosmetic — it tells the user how many things will reappear. */
+.swirlread-file-tree__view-btn--reset {
+  width: auto;
+  padding: 0 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--color-text-muted);
+}
+
+.swirlread-file-tree__view-btn--reset:hover {
+  color: var(--color-accent);
+}
+
+.swirlread-file-tree__reset-count {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  line-height: 1;
+}
+
 @keyframes swirlread-spin {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Sidebar context menu (Phase 3) ──────────────────────────────────── */
+
+.swirlread-context-menu {
+  position: fixed;
+  z-index: 320;
+  min-width: 180px;
+  padding: 0.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  box-shadow:
+    0 1px 3px var(--color-shadow),
+    0 12px 32px var(--color-shadow);
+  font-family: var(--font-sans);
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+
+.swirlread-context-menu__header {
+  margin: 0;
+  padding: 0.35rem 0.55rem 0.4rem;
+  border-bottom: 1px solid var(--color-border);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.swirlread-context-menu__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.swirlread-context-menu__item:hover,
+.swirlread-context-menu__item:focus-visible {
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  outline: none;
+}
+
+.swirlread-context-menu__item svg {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.swirlread-context-menu__item:hover svg {
+  color: var(--color-accent);
 }
 
 /* Graph-mode container ─────────────────────────────────────────────── */

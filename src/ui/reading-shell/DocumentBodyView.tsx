@@ -11,7 +11,8 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react'
-import { Pencil } from 'lucide-react'
+import { Pencil, Sparkles } from 'lucide-react'
+import { useReviewStore } from '@/stores/review-store'
 import type { WikilinkIndex } from '@/core/navigation/wikilink-resolver'
 import { useEditorStore } from '@/stores/editor-store'
 import { useUIStore } from '@/stores/ui-store'
@@ -103,6 +104,7 @@ export function DocumentBodyView({
   const frontmatterDisplay = useUIStore((s) => s.frontmatterDisplay)
   const adjacent = useAdjacentFiles(vaultId, filePath)
   const isEditing = useIsEditingThisDocument(vaultId, filePath)
+  const requestGenerate = useReviewStore((s) => s.requestGenerate)
 
   const ctxValue = vaultId
     ? { vaultId, currentPath: filePath, index: wikilinkIndex }
@@ -172,6 +174,19 @@ export function DocumentBodyView({
           >
             <Pencil size={13} aria-hidden="true" />
             <span>Edit</span>
+          </button>
+        )}
+        {state.kind === 'rendered' && vaultId && filePath && !isEditing && (
+          <button
+            type="button"
+            className="swirlread-doc-header__edit"
+            onClick={() => {
+              requestGenerate({ vaultId, path: filePath })
+            }}
+            aria-label="Generate review cards from this document"
+          >
+            <Sparkles size={13} aria-hidden="true" />
+            <span>Review cards</span>
           </button>
         )}
       </header>

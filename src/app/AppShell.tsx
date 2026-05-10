@@ -13,6 +13,7 @@ import {
   Settings,
 } from 'lucide-react'
 import { useDialogStore } from '@/stores/dialog-store'
+import { useReviewStore } from '@/stores/review-store'
 import { useUIStore } from '@/stores/ui-store'
 import { useVaultStore } from '@/stores/vault-store'
 import { Logo } from '@/ui/components/Logo'
@@ -61,6 +62,15 @@ const ConfirmDialog = lazy(() =>
   })),
 )
 
+// Phase 3 review: card-generation modal driven by useReviewStore.
+// Mounted once at shell level so any caller (doc header button, palette
+// command, future file-tree multi-select) opens the same dialog instance.
+const GenerateCardsDialog = lazy(() =>
+  import('@/ui/review/GenerateCardsDialog').then((module) => ({
+    default: module.GenerateCardsDialog,
+  })),
+)
+
 export function AppShell() {
   const fileTreeOpen = useUIStore((s) => s.fileTreeOpen)
   const toggleFileTree = useUIStore((s) => s.toggleFileTree)
@@ -71,6 +81,8 @@ export function AppShell() {
   const toggleCommandPalette = useUIStore((s) => s.toggleCommandPalette)
   const shortcutsHelpOpen = useUIStore((s) => s.shortcutsHelpOpen)
   const confirmDialogPayload = useDialogStore((s) => s.confirmPayload)
+  const reviewIntent = useReviewStore((s) => s.pending)
+  const dismissReview = useReviewStore((s) => s.dismissGenerate)
   const chromeMode = useUIStore((s) => s.chromeMode)
   const toggleChromeMode = useUIStore((s) => s.toggleChromeMode)
   const setChromeMode = useUIStore((s) => s.setChromeMode)
@@ -253,6 +265,18 @@ export function AppShell() {
       {confirmDialogPayload && (
         <Suspense fallback={null}>
           <ConfirmDialog />
+        </Suspense>
+      )}
+      {reviewIntent && (
+        <Suspense fallback={null}>
+          <GenerateCardsDialog
+            open
+            vaultId={reviewIntent.vaultId}
+            path={reviewIntent.path}
+            onOpenChange={(open) => {
+              if (!open) dismissReview()
+            }}
+          />
         </Suspense>
       )}
     </div>

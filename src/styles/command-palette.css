@@ -289,3 +289,268 @@
 .swirlread-vault-switcher__item--cta:hover {
   color: var(--color-text);
 }
+
+/* Palette ask result (Phase 3) ────────────────────────────────────── */
+
+.swirlread-ask {
+  margin: 0.6rem 0.7rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-accent) 6%, var(--color-bg));
+  color: var(--color-text);
+}
+
+.swirlread-ask--error {
+  background: color-mix(in srgb, #c0392b 8%, var(--color-bg));
+  border-color: color-mix(in srgb, #c0392b 35%, var(--color-border));
+}
+
+.swirlread-ask__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin: 0 0 0.4rem;
+}
+
+.swirlread-ask__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  margin: 0 0 0.4rem;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.swirlread-ask__header .swirlread-ask__title {
+  margin: 0;
+}
+
+.swirlread-ask__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+  color: var(--color-text-muted);
+}
+
+.swirlread-ask__spinner {
+  animation: swirlread-spin 0.9s linear infinite;
+}
+
+.swirlread-ask__sources {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0 0 0.55rem;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.swirlread-ask__sources-label {
+  margin-right: 0.15rem;
+}
+
+.swirlread-ask__source-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-text) 4%, transparent);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.74rem;
+  cursor: pointer;
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.swirlread-ask__source-chip:hover,
+.swirlread-ask__source-chip:focus-visible {
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  border-color: color-mix(
+    in srgb,
+    var(--color-accent) 35%,
+    var(--color-border)
+  );
+  outline: none;
+}
+
+.swirlread-ask__source-chip[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.swirlread-ask__source-chip svg {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.swirlread-ask__copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.swirlread-ask__copy:hover,
+.swirlread-ask__copy:focus-visible {
+  color: var(--color-text);
+  border-color: color-mix(
+    in srgb,
+    var(--color-accent) 35%,
+    var(--color-border)
+  );
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  outline: none;
+}
+
+.swirlread-ask__body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--color-text);
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.swirlread-ask__body-text {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
+.swirlread-ask__fallback {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: transparent;
+  color: var(--color-text);
+}
+
+/* Markdown-rendered answer body. We reuse `.swirlread-prose` for code
+ * blocks, math, mermaid, etc., but inside the palette we want denser
+ * spacing — overrides below tighten the typography without losing the
+ * shared styling. */
+.swirlread-ask__prose {
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.swirlread-ask__prose > *:first-child {
+  margin-top: 0;
+}
+
+.swirlread-ask__prose > *:last-child {
+  margin-bottom: 0;
+}
+
+.swirlread-ask__prose p {
+  margin: 0 0 0.6em;
+}
+
+.swirlread-ask__prose ul,
+.swirlread-ask__prose ol {
+  margin: 0 0 0.6em 1.2em;
+  padding: 0;
+}
+
+.swirlread-ask__prose li {
+  margin: 0.15em 0;
+}
+
+.swirlread-ask__prose h1,
+.swirlread-ask__prose h2,
+.swirlread-ask__prose h3,
+.swirlread-ask__prose h4 {
+  margin: 0.8em 0 0.35em;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.swirlread-ask__prose h1 {
+  font-size: 1.05rem;
+}
+
+.swirlread-ask__prose h2 {
+  font-size: 1rem;
+}
+
+.swirlread-ask__prose h3,
+.swirlread-ask__prose h4 {
+  font-size: 0.95rem;
+}
+
+.swirlread-ask__prose pre {
+  margin: 0.5em 0;
+  padding: 0.7rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  overflow-x: auto;
+}
+
+.swirlread-ask__prose code {
+  font-size: 0.86em;
+}
+
+.swirlread-ask__prose blockquote {
+  margin: 0.5em 0;
+  padding: 0.1em 0.85em;
+  border-left: 3px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.swirlread-ask__cursor {
+  display: inline-block;
+  margin-left: 0.1em;
+  color: var(--color-accent);
+  animation: swirlread-cursor-blink 1s step-end infinite;
+}
+
+@keyframes swirlread-cursor-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
+}

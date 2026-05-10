@@ -21,6 +21,7 @@ import { deleteHandle } from '@/core/vault'
 import { invalidateBacklinks } from '@/core/navigation/backlinks'
 import { useEditorStore } from '@/stores/editor-store'
 import { useReaderStore } from '@/stores/reader-store'
+import { useSidebarVisibilityStore } from '@/stores/sidebar-visibility-store'
 import { useTabsStore } from '@/stores/tabs-store'
 import type { VaultFileSystem, VaultId, VaultMeta } from '@/core/vault'
 
@@ -215,6 +216,16 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
         .equals(id)
         .delete()
         .catch(() => 0),
+      db.reviewBatches
+        .where('vaultId')
+        .equals(id)
+        .delete()
+        .catch(() => 0),
+      db.reviewCards
+        .where('vaultId')
+        .equals(id)
+        .delete()
+        .catch(() => 0),
     ])
     // FSAPI handle persists in idb-keyval (separate store from Dexie).
     try {
@@ -244,6 +255,7 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     useReaderStore.getState().forgetVault(id)
     useTabsStore.getState().forgetVault(id)
     useEditorStore.getState().forgetVault(id)
+    void useSidebarVisibilityStore.getState().forgetVault(id)
     // Heavy / lazy caches: don't block removal on these resolving.
     void invalidateVaultCachesLazy(id)
 

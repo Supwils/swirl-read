@@ -556,6 +556,68 @@ function dialogText(dialog: HTMLElement): HTMLElement {
   return dialog
 }
 
+describe('CommandPalette — `?` ask mode (Phase 3)', () => {
+  it('shows the ask-mode hint when the user has typed only `?`', async () => {
+    await registerVault('ask-vault', { 'note.md': '#' })
+    const user = userEvent.setup()
+
+    renderPaletteAt('/app/ask-vault/note.md')
+    useUIStore.getState().setCommandPaletteOpen(true)
+
+    const input = await screen.findByPlaceholderText(/Search files/i)
+    await user.type(input, '?')
+
+    expect(
+      await screen.findByText(/your AI provider will answer/i),
+    ).toBeInTheDocument()
+  })
+
+  it('renders the no-provider message when the user asks a question without a configured provider', async () => {
+    await registerVault('ask-vault', { 'note.md': '# Note' })
+    const user = userEvent.setup()
+
+    renderPaletteAt('/app/ask-vault/note.md')
+    useUIStore.getState().setCommandPaletteOpen(true)
+
+    const input = await screen.findByPlaceholderText(/Search files/i)
+    await user.type(input, '? what is this?')
+
+    expect(
+      await screen.findByText(/no ai provider configured/i),
+    ).toBeInTheDocument()
+  })
+
+  it('hides the recents / headings / sections groups while in ask mode', async () => {
+    await registerVault('ask-quiet', {
+      career: { 'career-map.md': '# Career' },
+    })
+    const user = userEvent.setup()
+    useReaderStore.setState({
+      recentByVault: {
+        'ask-quiet': [
+          {
+            vaultId: 'ask-quiet',
+            path: 'career/career-map.md',
+            openedAt: new Date(),
+          },
+        ],
+      },
+      scrollByVault: {},
+      ready: true,
+    })
+
+    renderPaletteAt('/app/ask-quiet')
+    useUIStore.getState().setCommandPaletteOpen(true)
+
+    const input = await screen.findByPlaceholderText(/Search files/i)
+    await user.type(input, '? hi')
+
+    await screen.findByText(/no ai provider configured/i)
+    expect(screen.queryByText('Recent files')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Sections in/i)).not.toBeInTheDocument()
+  })
+})
+
 describe('CommandPalette — Recently closed group', () => {
   it('lists recently-closed tabs for the active vault and reopens on select', async () => {
     const user = userEvent.setup()

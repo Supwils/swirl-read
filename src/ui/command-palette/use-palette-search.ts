@@ -13,19 +13,24 @@ import { getFullTextIndex } from './full-text-cache'
 import { getWalkedFiles } from './walked-files-cache'
 
 /**
- * Route an input string to one of three palette modes. The prefix is
- * consumed: a query of `> hooks` becomes mode `search` with body `hooks`.
+ * Route an input string to one of four palette modes. The prefix is
+ * consumed: a query of `> hooks` becomes mode `search` with body
+ * `hooks`; `? what is X?` becomes mode `ask` with body `what is X?`.
  */
 export type PaletteMode =
   | { kind: 'recents' }
   | { kind: 'files'; query: string }
   | { kind: 'search'; query: string }
+  | { kind: 'ask'; query: string }
 
 export function classifyInput(raw: string): PaletteMode {
   const trimmed = raw.trimStart()
   if (trimmed === '') return { kind: 'recents' }
   if (trimmed.startsWith('>')) {
     return { kind: 'search', query: trimmed.slice(1).trimStart() }
+  }
+  if (trimmed.startsWith('?')) {
+    return { kind: 'ask', query: trimmed.slice(1).trimStart() }
   }
   return { kind: 'files', query: raw.trim() }
 }
@@ -226,8 +231,11 @@ export function placeholderFor(
   if (mode.kind === 'search') {
     return `Search content in ${vaultName ?? vaultId ?? 'vault'}…`
   }
+  if (mode.kind === 'ask') {
+    return 'Ask a question about the current document…'
+  }
   if (vaultId) {
-    return `Search files in ${vaultName ?? vaultId}… (start with > for content)`
+    return `Search files in ${vaultName ?? vaultId}… (start with > for content, ? to ask)`
   }
   return 'Jump to a recent file…'
 }
@@ -245,6 +253,9 @@ export function emptyMessage(
   if (!vaultId) return 'Open a vault to search its files.'
   if (mode.kind === 'search' && mode.query === '') {
     return 'Type a query after > to search file contents…'
+  }
+  if (mode.kind === 'ask' && mode.query === '') {
+    return 'Type a question after ? — your AI provider will answer using the current document.'
   }
   return 'No matches.'
 }

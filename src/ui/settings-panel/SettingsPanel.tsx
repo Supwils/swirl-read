@@ -25,6 +25,7 @@ import {
   type Theme,
 } from '@/stores/ui-store'
 import { useHintsStore } from '@/stores/hints-store'
+import { AIControl } from './AIControl'
 
 const FONT_OPTIONS: { value: FontFamily; label: string }[] = [
   { value: 'serif', label: 'Serif' },
@@ -84,6 +85,7 @@ export function SettingsPanel(): ReactNode {
             <FileTreeControl />
             <TocControl />
             <EditorPreferencesGroup />
+            <AIControl />
           </div>
 
           <footer className="swirlread-settings__footer">

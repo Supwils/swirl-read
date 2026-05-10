@@ -10,6 +10,7 @@ import {
 import { isWithin } from '@/core/vault'
 import type { VaultEntry, VaultId, VaultPath } from '@/core/vault'
 import { pickSectionHomeFromEntries } from '@/core/navigation/section-detector'
+import { useSidebarVisibilityStore } from '@/stores/sidebar-visibility-store'
 import { useTabsStore } from '@/stores/tabs-store'
 import { getAdapter } from '@/stores/vault-store'
 import { getListing, sortEntries } from './file-tree-cache'
@@ -20,6 +21,13 @@ export interface FileTreeNodeProps {
   currentPath: VaultPath
   depth: number
   contentRevision: number
+  /** Right-click handler — propagated up to FileTree which mounts the
+   *  context menu in a portal. Each row reports cursor coords + the
+   *  entry the user clicked on. */
+  onContextMenu: (
+    event: React.MouseEvent<HTMLElement>,
+    entry: VaultEntry,
+  ) => void
 }
 
 export function FileTreeNode({
@@ -28,7 +36,11 @@ export function FileTreeNode({
   currentPath,
   depth,
   contentRevision,
+  onContextMenu,
 }: FileTreeNodeProps): ReactNode {
+  // Subscribing to the live map keeps this node reactive to hide /
+  // unhide. The selector returns the vault-scoped Set (or undefined).
+  const hiddenSet = useSidebarVisibilityStore((s) => s.hiddenByVault[vaultId])
   const isAncestor =
     entry.isDirectory && isWithin(currentPath, entry.path) && currentPath !== ''
   const [expanded, setExpanded] = useState(isAncestor)
@@ -109,6 +121,17 @@ export function FileTreeNode({
     contentRevision,
   ])
 
+  // Hidden filter — placed AFTER all hooks so the early return doesn't
+  // violate the hooks rule. Same semantics as
+  // {@link useSidebarVisibilityStore.isHidden}: a path is hidden if it
+  // (or any of its ancestor directories) is in the set.
+  if (hiddenSet) {
+    if (hiddenSet.has(entry.path)) return null
+    for (const hidden of hiddenSet) {
+      if (entry.path.startsWith(hidden + '/')) return null
+    }
+  }
+
   const indent: React.CSSProperties = { paddingLeft: `${depth * 12}px` }
   const isActive = !entry.isDirectory && currentPath === entry.path
 
@@ -153,6 +176,7 @@ export function FileTreeNode({
               currentPath={currentPath}
               depth={depth + 1}
               contentRevision={contentRevision}
+              onContextMenu={onContextMenu}
             />
           ))}
       </ul>
@@ -166,6 +190,9 @@ export function FileTreeNode({
               isAncestor ? ' is-ancestor' : ''
             }${sectionActive ? ' is-active' : ''}`}
             style={indent}
+            onContextMenu={(event) => {
+              onContextMenu(event, entry)
+            }}
           >
             <button
               type="button"
@@ -210,6 +237,9 @@ export function FileTreeNode({
           }`}
           style={indent}
           onClick={() => setExpanded(!expanded)}
+          onContextMenu={(event) => {
+            onContextMenu(event, entry)
+          }}
           aria-label={`${expanded ? 'Collapse' : 'Expand'} ${entry.name}`}
         >
           <ChevronRight
@@ -245,6 +275,9 @@ export function FileTreeNode({
           // own double-click-to-pin gesture (Cmd-click is reserved by
           // browsers for "open in new tab" and skips the SPA navigation).
           void useTabsStore.getState().pinTab(vaultId, entry.path)
+        }}
+        onContextMenu={(event) => {
+          onContextMenu(event, entry)
         }}
       >
         <span
