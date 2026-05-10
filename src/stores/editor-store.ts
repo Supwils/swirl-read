@@ -29,6 +29,7 @@ import {
   type VaultPath,
 } from '@/core/vault'
 import { getAdapter } from '@/stores/vault-store'
+import { registerVaultDeletionHook } from './vault-lifecycle'
 
 export type EditorConflict = 'clean' | 'stale-on-disk'
 
@@ -288,6 +289,13 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     }
   },
 }))
+
+// Register at module load — editor-store has no persisted state, just
+// the live session. Hook only acts when the active session targeted
+// the deleted vault.
+registerVaultDeletionHook((vaultId) => {
+  useEditorStore.getState().forgetVault(vaultId)
+})
 
 /**
  * Selector helpers for components that don't want to subscribe to the

@@ -11,7 +11,8 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react'
-import { Pencil, Sparkles } from 'lucide-react'
+import { MessageCircle, Pencil, Sparkles } from 'lucide-react'
+import { useNavigate } from 'react-router'
 import { useReviewStore } from '@/stores/review-store'
 import type { WikilinkIndex } from '@/core/navigation/wikilink-resolver'
 import { useEditorStore } from '@/stores/editor-store'
@@ -105,6 +106,7 @@ export function DocumentBodyView({
   const adjacent = useAdjacentFiles(vaultId, filePath)
   const isEditing = useIsEditingThisDocument(vaultId, filePath)
   const requestGenerate = useReviewStore((s) => s.requestGenerate)
+  const navigate = useNavigate()
 
   const ctxValue = vaultId
     ? { vaultId, currentPath: filePath, index: wikilinkIndex }
@@ -174,6 +176,23 @@ export function DocumentBodyView({
           >
             <Pencil size={13} aria-hidden="true" />
             <span>Edit</span>
+          </button>
+        )}
+        {state.kind === 'rendered' && vaultId && filePath && !isEditing && (
+          <button
+            type="button"
+            className="swirlread-doc-header__edit"
+            onClick={() => {
+              void navigate(
+                `/app/${vaultId}/__chat__?attach=${encodeURIComponent(
+                  filePath,
+                )}`,
+              )
+            }}
+            aria-label="Open chat with this document"
+          >
+            <MessageCircle size={13} aria-hidden="true" />
+            <span>Chat</span>
           </button>
         )}
         {state.kind === 'rendered' && vaultId && filePath && !isEditing && (

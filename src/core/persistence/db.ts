@@ -12,6 +12,9 @@
  *   - `aiKeys`           — provider-keyed encrypted API keys (Phase 3)
  *   - `reviewBatches`    — AI-generated flashcard batches (Phase 3 review)
  *   - `reviewCards`      — individual review cards inside a batch
+ *   - `chatSessions`     — optional local chat sessions, scoped to a vault
+ *   - `chatMessages`     — persisted user / assistant messages
+ *   - `chatContextRefs`  — explicit reading-context bridges for a chat
  *
  * Handle persistence (binary `FileSystemDirectoryHandle` blobs) lives in a
  * separate idb-keyval store; see `core/vault/handle-storage.ts`. Splitting
@@ -134,6 +137,46 @@ export interface ReviewCardRow {
   expiresAtMs: number
 }
 
+/** One optional chat session. Chat is scoped to a vault when it is opened from
+ *  the reading shell, but the table allows `vaultId` to be null so a future
+ *  global scratch chat can exist without pretending it belongs to a folder. */
+export interface ChatSessionRow {
+  id: string
+  vaultId?: string
+  title: string
+  mode: string
+  createdAtMs: number
+  updatedAtMs: number
+  archivedAtMs?: number
+}
+
+/** One persisted chat message. Context references live in their own table so
+ *  the user can attach / detach reading sources without rewriting history. */
+export interface ChatMessageRow {
+  id: string
+  sessionId: string
+  role: string
+  content: string
+  model?: string
+  createdAtMs: number
+}
+
+/** A lightweight bridge from a chat session to reading context.
+ *
+ * File-backed refs store only the vault/path/label. `contentSnapshot` is used
+ * only for sources without a stable file identity, such as selected text. */
+export interface ChatContextRefRow {
+  id: string
+  sessionId: string
+  vaultId: string
+  sourceType: string
+  label: string
+  path?: string
+  pinned: boolean
+  createdAtMs: number
+  contentSnapshot?: string
+}
+
 interface SwirlReadDB extends Dexie {
   vaults: EntityTable<StoredVault, 'id'>
   preferences: EntityTable<PreferenceRow, 'key'>
@@ -145,6 +188,9 @@ interface SwirlReadDB extends Dexie {
   aiKeys: EntityTable<AIKeyRow, 'provider'>
   reviewBatches: EntityTable<ReviewBatchRow, 'id'>
   reviewCards: EntityTable<ReviewCardRow, 'id'>
+  chatSessions: EntityTable<ChatSessionRow, 'id'>
+  chatMessages: EntityTable<ChatMessageRow, 'id'>
+  chatContextRefs: EntityTable<ChatContextRefRow, 'id'>
 }
 
 function buildDb(): SwirlReadDB {
@@ -214,6 +260,21 @@ function buildDb(): SwirlReadDB {
     reviewBatches: 'id, vaultId, expiresAtMs, createdAtMs',
     reviewCards: 'id, batchId, vaultId, [batchId+order], expiresAtMs',
   })
+  db.version(9).stores({
+    vaults: 'id, name, lastOpenedAtMs',
+    preferences: 'key',
+    recentFiles: 'id, vaultId, openedAtMs',
+    backlinks: 'id, vaultId, targetPath, sourcePath, updatedAtMs',
+    scrollPositions: 'id, vaultId, updatedAtMs',
+    hintsSeen: 'id, seenAtMs',
+    openTabs: 'id, vaultId, [vaultId+order], openedAtMs',
+    aiKeys: 'provider',
+    reviewBatches: 'id, vaultId, expiresAtMs, createdAtMs',
+    reviewCards: 'id, batchId, vaultId, [batchId+order], expiresAtMs',
+    chatSessions: 'id, vaultId, updatedAtMs, archivedAtMs',
+    chatMessages: 'id, sessionId, [sessionId+createdAtMs]',
+    chatContextRefs: 'id, sessionId, vaultId, [sessionId+createdAtMs]',
+  })
   return db
 }
 
@@ -259,6 +320,9 @@ export async function __resetDbForTests(): Promise<void> {
       db.aiKeys,
       db.reviewBatches,
       db.reviewCards,
+      db.chatSessions,
+      db.chatMessages,
+      db.chatContextRefs,
     ],
     async () => {
       await db.vaults.clear()
@@ -271,6 +335,9 @@ export async function __resetDbForTests(): Promise<void> {
       await db.aiKeys.clear()
       await db.reviewBatches.clear()
       await db.reviewCards.clear()
+      await db.chatSessions.clear()
+      await db.chatMessages.clear()
+      await db.chatContextRefs.clear()
     },
   )
 }

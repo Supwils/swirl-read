@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Format check
+        run: pnpm format:check
+
+      - name: Tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      # Fails the workflow if any tracked chunk exceeded its gzipped
+      # ceiling in `bundle-size.json`. Bumping a limit is intentional —
+      # do it in the same PR that grows the chunk and call it out in
+      # the commit message.
+      - name: Bundle-size budget
+        run: pnpm bundle:check

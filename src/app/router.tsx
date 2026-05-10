@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router'
 import type { RouteObject } from 'react-router'
 import { AppShell } from '@/app/AppShell'
+import { LazyChatPage } from '@/app/chat-route'
 import { ErrorFallback } from '@/app/ErrorFallback'
 import { LazyReviewPage } from '@/app/review-route'
 import { LandingPage } from '@/ui/landing/LandingPage'
@@ -50,6 +51,8 @@ export const routes: RouteObject[] = [
           // Review-page route is more specific than the catch-all
           // below; react-router ranks by specificity, but listing it
           // first also aids readability.
+          { path: '__chat__', element: <LazyChatPage /> },
+          { path: '__chat__/:sessionId', element: <LazyChatPage /> },
           { path: '__review__/:batchId', element: <LazyReviewPage /> },
           { path: '*', element: <DocumentPage /> },
         ],

@@ -1,0 +1,45 @@
+{
+  "_doc": "Gzipped size ceilings, checked by scripts/check-bundle-size.mjs after pnpm build. Each limit picks the largest file matching `pattern` inside dist/assets/. Bumping a limit requires a justification in the commit message.",
+  "limits": [
+    {
+      "name": "main bundle",
+      "pattern": "^index-.*\\.js$",
+      "limitGzKb": 280
+    },
+    {
+      "name": "main CSS",
+      "pattern": "^index-.*\\.css$",
+      "limitGzKb": 32
+    },
+    {
+      "name": "DocumentEditSurface (CodeMirror)",
+      "pattern": "^DocumentEditSurface-.*\\.js$",
+      "limitGzKb": 200
+    },
+    {
+      "name": "CommandPalette",
+      "pattern": "^CommandPalette-.*\\.js$",
+      "limitGzKb": 14
+    },
+    {
+      "name": "PaletteAskAnswer",
+      "pattern": "^PaletteAskAnswer-.*\\.js$",
+      "limitGzKb": 4
+    },
+    {
+      "name": "ReviewPage",
+      "pattern": "^ReviewPage-.*\\.js$",
+      "limitGzKb": 6
+    },
+    {
+      "name": "GenerateCardsDialog",
+      "pattern": "^GenerateCardsDialog-.*\\.js$",
+      "limitGzKb": 6
+    },
+    {
+      "name": "SettingsPanel",
+      "pattern": "^SettingsPanel-.*\\.js$",
+      "limitGzKb": 8
+    }
+  ]
+}

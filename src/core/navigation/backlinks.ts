@@ -8,6 +8,7 @@
 import { db, type BacklinkRow } from '@/core/persistence/db'
 import { isMarkdown, normalizePath, splitPath } from '@/core/vault'
 import type { VaultFileSystem, VaultId, VaultPath } from '@/core/vault'
+import { registerVaultDeletionHook } from '@/stores/vault-lifecycle'
 import { parseWikilinkBody } from '@/core/render/plugins/remark-wikilink'
 import {
   buildWikilinkIndex,
@@ -337,14 +338,34 @@ function buildContext(source: string, start: number, end: number): string {
 }
 
 /**
- * Drop the in-memory backlinks cache for a single vault. Persisted
- * Dexie rows are NOT touched here — call from `removeVault` (which
- * already wipes the rows) so the in-memory map doesn't outlive them.
+ * Drop the in-memory backlinks cache for a single vault. Independent of
+ * the Dexie row delete — callers that want both should use
+ * {@link forgetBacklinksForVault} or rely on the vault-deletion hook
+ * registered below.
  */
 export function invalidateBacklinks(vaultId: VaultId): void {
   caches.delete(vaultId)
 }
 
+/** Drop both the in-memory cache and the persisted backlink rows for
+ *  a vault. Used by the vault-deletion hook; exported for tests + the
+ *  rare future caller that needs to wipe edges without removing the
+ *  whole vault. */
+export async function forgetBacklinksForVault(vaultId: VaultId): Promise<void> {
+  invalidateBacklinks(vaultId)
+  await db.backlinks
+    .where('vaultId')
+    .equals(vaultId)
+    .delete()
+    .catch(() => 0)
+}
+
 export function __resetBacklinksForTests(): void {
   caches.clear()
 }
+
+// Register at module load so vault-store doesn't have to know about
+// the backlinks module's specific cleanup needs.
+registerVaultDeletionHook(async (vaultId) => {
+  await forgetBacklinksForVault(vaultId)
+})

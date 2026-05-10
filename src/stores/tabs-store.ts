@@ -25,6 +25,7 @@ import { create } from 'zustand'
 import { db } from '@/core/persistence/db'
 import { normalizePath } from '@/core/vault'
 import type { VaultId, VaultPath } from '@/core/vault'
+import { registerVaultDeletionHook } from './vault-lifecycle'
 
 /** Soft cap mirrors `MAX_RECENT_FILES_PER_VAULT`. Real users top out
  *  far below this; the cap exists to prevent runaway growth from
@@ -386,5 +387,19 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
         recentlyClosedByVault: nextClosed,
       }
     })
+    // Persisted rows are cleared in the same call so a forgetVault()
+    // leaves no orphan tab rows behind. Fire-and-forget — the in-memory
+    // state is the source of truth for any UI re-render that might
+    // race with the IDB delete.
+    void db.openTabs
+      .where('vaultId')
+      .equals(vaultId)
+      .delete()
+      .catch(() => 0)
   },
 }))
+
+// Register at module load so vault-store doesn't need to know about us.
+registerVaultDeletionHook((vaultId) => {
+  useTabsStore.getState().forgetVault(vaultId)
+})

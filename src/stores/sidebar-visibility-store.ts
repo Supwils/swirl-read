@@ -22,6 +22,7 @@
 import { create } from 'zustand'
 import { db } from '@/core/persistence/db'
 import type { VaultId, VaultPath } from '@/core/vault'
+import { registerVaultDeletionHook } from './vault-lifecycle'
 
 const STORAGE_KEY = 'sidebar:hiddenByVault'
 
@@ -53,6 +54,24 @@ interface SidebarVisibilityActions {
 
 export type SidebarVisibilityStore = SidebarVisibilityState &
   SidebarVisibilityActions
+
+/**
+ * Pure ancestor-aware "is this path masked by the hidden set?" check.
+ * Exported for the file-tree / sections-nav components so they can
+ * apply the same semantics inline without subscribing to actions —
+ * keeping all three call sites in lockstep.
+ */
+export function isPathHiddenInSet(
+  path: VaultPath,
+  hidden: Set<VaultPath> | undefined,
+): boolean {
+  if (!hidden || hidden.size === 0) return false
+  if (hidden.has(path)) return true
+  for (const root of hidden) {
+    if (path.startsWith(root + '/')) return true
+  }
+  return false
+}
 
 async function persist(
   hiddenByVault: Record<VaultId, Set<VaultPath>>,
@@ -92,14 +111,7 @@ export const useSidebarVisibilityStore = create<SidebarVisibilityStore>(
     },
 
     isHidden(vaultId, path) {
-      const set = get().hiddenByVault[vaultId]
-      if (!set || set.size === 0) return false
-      if (set.has(path)) return true
-      // Ancestor check: hidden `notes/junk` should mask `notes/junk/x.md`.
-      for (const hidden of set) {
-        if (path.startsWith(hidden + '/')) return true
-      }
-      return false
+      return isPathHiddenInSet(path, get().hiddenByVault[vaultId])
     },
 
     async hide(vaultId, path) {
@@ -143,3 +155,7 @@ export const useSidebarVisibilityStore = create<SidebarVisibilityStore>(
     },
   }),
 )
+
+registerVaultDeletionHook(async (vaultId) => {
+  await useSidebarVisibilityStore.getState().forgetVault(vaultId)
+})

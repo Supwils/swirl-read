@@ -10,7 +10,10 @@ import {
 import { isWithin } from '@/core/vault'
 import type { VaultEntry, VaultId, VaultPath } from '@/core/vault'
 import { pickSectionHomeFromEntries } from '@/core/navigation/section-detector'
-import { useSidebarVisibilityStore } from '@/stores/sidebar-visibility-store'
+import {
+  isPathHiddenInSet,
+  useSidebarVisibilityStore,
+} from '@/stores/sidebar-visibility-store'
 import { useTabsStore } from '@/stores/tabs-store'
 import { getAdapter } from '@/stores/vault-store'
 import { getListing, sortEntries } from './file-tree-cache'
@@ -122,15 +125,9 @@ export function FileTreeNode({
   ])
 
   // Hidden filter — placed AFTER all hooks so the early return doesn't
-  // violate the hooks rule. Same semantics as
-  // {@link useSidebarVisibilityStore.isHidden}: a path is hidden if it
-  // (or any of its ancestor directories) is in the set.
-  if (hiddenSet) {
-    if (hiddenSet.has(entry.path)) return null
-    for (const hidden of hiddenSet) {
-      if (entry.path.startsWith(hidden + '/')) return null
-    }
-  }
+  // violate the hooks rule. Shares the same ancestor-aware helper the
+  // store and SectionsNav use, so all three surfaces stay in lockstep.
+  if (isPathHiddenInSet(entry.path, hiddenSet)) return null
 
   const indent: React.CSSProperties = { paddingLeft: `${depth * 12}px` }
   const isActive = !entry.isDirectory && currentPath === entry.path

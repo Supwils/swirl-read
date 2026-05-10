@@ -21,7 +21,9 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
-    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test"
+    "bundle:check": "node scripts/check-bundle-size.mjs",
+    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test",
+    "check:full": "pnpm check && pnpm build && pnpm bundle:check"
   },
   "dependencies": {
     "@codemirror/commands": "^6.10.3",

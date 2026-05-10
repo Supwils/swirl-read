@@ -19,11 +19,15 @@ import { create } from 'zustand'
 import { db, metaToStored, storedToMeta } from '@/core/persistence/db'
 import { deleteHandle } from '@/core/vault'
 import { invalidateBacklinks } from '@/core/navigation/backlinks'
-import { useEditorStore } from '@/stores/editor-store'
-import { useReaderStore } from '@/stores/reader-store'
-import { useSidebarVisibilityStore } from '@/stores/sidebar-visibility-store'
-import { useTabsStore } from '@/stores/tabs-store'
+import { runVaultDeletionHooks } from '@/stores/vault-lifecycle'
 import type { VaultFileSystem, VaultId, VaultMeta } from '@/core/vault'
+
+// Per-vault cleanup is no longer hardcoded here. Each store / module
+// that owns vault-scoped state registers a `vault-lifecycle` hook at
+// module load (see reader-store, tabs-store, editor-store,
+// sidebar-visibility-store, review/card-store, chat-store, navigation/
+// backlinks). `removeVault` runs the registry instead of editing this
+// list every time a new domain shows up.
 
 // Cache-invalidation imports for `removeVault` are dynamic (see the
 // inline helper below). Static imports here would pull every per-vault
@@ -185,48 +189,21 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   },
 
   async removeVault(id) {
-    // Persisted state — fan out across every Dexie table that holds
-    // per-vault rows so re-registering the same folder later doesn't
-    // resurrect stale recents / scroll memory / backlinks. Each table
-    // gets its own try/catch so a single failure (permission revoked
-    // mid-cleanup, schema mismatch on an old client) doesn't block the
-    // vault removal itself.
+    // Vault metadata + active-id preference are owned directly by this
+    // store. Every other piece of per-vault state is fanned out via
+    // the vault-lifecycle registry — adding a new domain (chat, review
+    // cards, sidebar visibility, ...) never edits this method.
     await db.vaults.delete(id)
     if (get().activeVaultId === id) {
       await db.preferences.delete(ACTIVE_VAULT_ID_PREF_KEY)
     }
-    await Promise.all([
-      db.recentFiles
-        .where('vaultId')
-        .equals(id)
-        .delete()
-        .catch(() => 0),
-      db.scrollPositions
-        .where('vaultId')
-        .equals(id)
-        .delete()
-        .catch(() => 0),
-      db.backlinks
-        .where('vaultId')
-        .equals(id)
-        .delete()
-        .catch(() => 0),
-      db.openTabs
-        .where('vaultId')
-        .equals(id)
-        .delete()
-        .catch(() => 0),
-      db.reviewBatches
-        .where('vaultId')
-        .equals(id)
-        .delete()
-        .catch(() => 0),
-      db.reviewCards
-        .where('vaultId')
-        .equals(id)
-        .delete()
-        .catch(() => 0),
-    ])
+
+    // Each registered hook owns both its in-memory state and any Dexie
+    // rows it persists. Hooks run in parallel and isolate their own
+    // failures, so one misbehaving subsystem cannot leave a vault
+    // half-removed.
+    await runVaultDeletionHooks(id)
+
     // FSAPI handle persists in idb-keyval (separate store from Dexie).
     try {
       await deleteHandle(id)
@@ -248,15 +225,10 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
     }
     adapters.delete(id)
 
-    // In-memory caches that key by vault id. Drop them so a later
-    // re-registration of the same id starts from a clean slate; the
-    // Dexie-backed sources have already been cleared above.
-    invalidateBacklinks(id)
-    useReaderStore.getState().forgetVault(id)
-    useTabsStore.getState().forgetVault(id)
-    useEditorStore.getState().forgetVault(id)
-    void useSidebarVisibilityStore.getState().forgetVault(id)
-    // Heavy / lazy caches: don't block removal on these resolving.
+    // Lazy / heavy in-memory caches without a natural store home —
+    // file-tree listings, tag index, walked files, full-text index,
+    // graph, wikilink hover preview. Don't block removal on these
+    // resolving; a stale entry just becomes a one-off recompute.
     void invalidateVaultCachesLazy(id)
 
     set((state) => ({

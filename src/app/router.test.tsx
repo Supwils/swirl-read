@@ -36,7 +36,13 @@ describe('production route tree', () => {
       (vaultRoute && 'children' in vaultRoute ? vaultRoute.children : [])?.map(
         (c) => ('index' in c ? '<index>' : c.path),
       ),
-    ).toEqual(['<index>', '__review__/:batchId', '*'])
+    ).toEqual([
+      '<index>',
+      '__chat__',
+      '__chat__/:sessionId',
+      '__review__/:batchId',
+      '*',
+    ])
   })
 
   it('renders LandingPage at /', () => {

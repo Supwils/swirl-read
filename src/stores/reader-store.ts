@@ -10,6 +10,7 @@ import { create } from 'zustand'
 import { db } from '@/core/persistence/db'
 import { normalizePath } from '@/core/vault'
 import type { VaultId, VaultPath } from '@/core/vault'
+import { registerVaultDeletionHook } from './vault-lifecycle'
 
 export const MAX_RECENT_FILES_PER_VAULT = 20
 
@@ -208,8 +209,30 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
         scrollByVault: nextScrolls,
       }
     })
+    // Persisted rows are cleared via the deletion hook below — keeping
+    // both halves in lockstep means a single forgetVault() leaves no
+    // orphan recents or scroll positions in Dexie.
+    void Promise.all([
+      db.recentFiles
+        .where('vaultId')
+        .equals(vaultId)
+        .delete()
+        .catch(() => 0),
+      db.scrollPositions
+        .where('vaultId')
+        .equals(vaultId)
+        .delete()
+        .catch(() => 0),
+    ])
   },
 }))
+
+// Register at module load so vault-store doesn't have to know which
+// stores own per-vault state. Idempotent — calling forgetVault for a
+// vault id that's already gone is a no-op.
+registerVaultDeletionHook((vaultId) => {
+  useReaderStore.getState().forgetVault(vaultId)
+})
 
 export function getRecentFilesForVault(vaultId: VaultId): RecentFile[] {
   return useReaderStore.getState().recentByVault[vaultId] ?? []

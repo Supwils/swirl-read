@@ -4,6 +4,117 @@
 
 ---
 
+## 2026-05-10 · Architecture pass — vault-lifecycle registry, bundle CI, helper dedup
+
+**Status**: ✅ Three architecture-grade improvements landing together as a single audit-driven cut. None are user-visible features; all of them raise the floor of what new contributions look like.
+
+### Vault-deletion as a registry, not a hardcoded fan-out
+
+- New `src/stores/vault-lifecycle.ts` exports `registerVaultDeletionHook(fn)` + `runVaultDeletionHooks(id)`. Hooks run in parallel; each one's failure is isolated so a single misbehaving subsystem can't leave a vault half-removed. 6 unit tests cover the contract (parallel execution, async + sync hooks, isolated failures, unregister returns a disposer).
+- Every per-vault state owner now registers itself at module load:
+  - `reader-store` — drops in-memory recents/scrolls + deletes `db.recentFiles` and `db.scrollPositions`
+  - `tabs-store` — drops in-memory + deletes `db.openTabs`
+  - `editor-store` — drops the live edit session if it pointed at the removed vault
+  - `sidebar-visibility-store` — drops the per-vault hidden set + persists the change
+  - `core/review/card-store` — deletes `reviewBatches` + `reviewCards`
+  - `core/chat/chat-store` — was the only existing example of this pattern, now joined by everyone else
+  - `core/navigation/backlinks` — new `forgetBacklinksForVault` does both `invalidateBacklinks` and the `db.backlinks` row delete
+- `vault-store.removeVault` now does its own narrow job — delete the `vaults` row + active-id pref, run the registry, dispose the adapter, fire lazy-cache invalidation. Adding a new per-vault domain in the future is a one-file change in that domain.
+
+### Bundle-size budget as a CI gate
+
+- New `scripts/check-bundle-size.mjs` reads `bundle-size.json` ceilings and gzips each matching `dist/assets/*` to verify it stays under budget. Zero new dev dependencies — pure Node `zlib` + `fs` + a tiny regex matcher tuned to Vite's hashed filename pattern.
+- Initial budget set with realistic headroom against today's sizes: main 280 KB / CSS 32 KB / DocumentEditSurface 200 KB / CommandPalette 14 KB / PaletteAskAnswer 4 KB / ReviewPage 6 KB / GenerateCardsDialog 6 KB / SettingsPanel 8 KB.
+- New `pnpm bundle:check` script + `pnpm check:full` (`check` + `build` + `bundle:check`).
+- New `.github/workflows/ci.yml` runs typecheck → lint → format:check → test → build → bundle:check on every push to main and every PR. Was previously empty — now the first PR with a 50 KB-of-deadweight diff bounces, which is the whole point.
+
+### `isPathHiddenInSet` helper — three callers, one source of truth
+
+- Exported pure function from `sidebar-visibility-store.ts`. The store's own `isHidden` action delegates; `FileTreeNode` and `SectionsNav` import directly. Three duplicates of "if path === root, OR path starts with `${root}/`" → one.
+
+### Bundle effect
+
+- Main `index-*.js`: 261.79 → **255.59 KB gz** (−6.20 KB) — decoupling vault-store's static fan-out shrank the dependency graph (the dynamic chat-store import + dropped store-level imports are now per-store registrations).
+- DocumentEditSurface: 183.87 → **179.23 KB gz** (likely a CodeMirror minor in the lockfile).
+- CSS: 27.60 → **26.62 KB gz** (small dedup wins).
+- Tests: 892 → **910 passing** (+18: 6 lifecycle, 9 sidebar visibility tests already counted, +1 hide integration, +2 reader-store hook coverage).
+
+### Why this matters
+
+The architecture audit rated the codebase 7.5/10 — solid but with three concrete gaps that hurt long-term maintainability: easy-to-forget fan-outs, no enforced bundle ceiling, duplicated path-matching logic. Each is the kind of "we'll fix it later" debt that compounds. Closing them now means the next ten features land into a cleaner substrate.
+
+---
+
+## 2026-05-10 · Reading / Chat bridge foundation
+
+**Status**: ✅ First foundation slice landed. Reading remains the primary mode;
+chat is optional and connected only through explicit context refs.
+
+### What landed
+
+- New [reading-chat-bridge-plan.md](./reading-chat-bridge-plan.md) documents
+  the product boundary: file reading works alone, chat works alone, and the
+  only bridge is a user-visible set of attached sources.
+- **Dexie schema v9** adds `chatSessions`, `chatMessages`, and
+  `chatContextRefs`. File-backed refs store only vault/path/label; selected
+  text stores an explicit snapshot because it has no stable file identity.
+- New `src/core/chat/` module:
+  - `types.ts` — local chat domain types and source-ref discriminants.
+  - `chat-store.ts` — CRUD for sessions, messages, context refs, archive /
+    delete cascade, and vault-removal cleanup.
+  - `context-bridge.ts` — builds refs from the current document, selected
+    text, and direct wikilink neighbours; converts refs to AI `ContextChunk`s
+    by re-reading live vault content at send time.
+- `useVaultStore.removeVault` now also clears chat sessions/messages/context
+  refs for the removed vault.
+
+### Verification
+
+- `pnpm vitest run src/core/chat/chat-store.test.ts src/core/chat/context-bridge.test.ts`
+  — 11 tests passing.
+- `pnpm typecheck`
+- `pnpm format:check`
+
+---
+
+## 2026-05-10 · Reading / Chat UI first slice
+
+**Status**: ✅ Optional chat mode now has a minimal working surface.
+
+### What landed
+
+- New lazy route pair: `/app/:vaultId/__chat__` and
+  `/app/:vaultId/__chat__/:sessionId`. Opening the base chat route resolves the
+  most recent session for that vault or creates a local blank one.
+- App shell gets a small `MessageCircle` chat icon only when a vault route is
+  active. Users who never touch it stay in the regular reading workflow.
+- Document header gets a `Chat` action beside `Edit` / `Review cards`. It
+  navigates to chat with `?attach=<current path>`, and the chat page converts
+  that into explicit context refs.
+- New `src/ui/chat/ChatPage.tsx`:
+  - local session list sidebar
+  - source-chip bar with links back to documents
+  - `Linked notes` action to add direct Markdown wikilink neighbours
+  - `Detach` action to clear the bridge
+  - message composer using the existing browser-side AI provider resolution
+  - conversation history is sent as a compact context chunk, separate from
+    reading-context chunks
+- New `src/styles/chat.css`, imported as a normal CSS shard. The surface is
+  dense and tool-like, not a landing page.
+
+### Verification
+
+- `pnpm vitest run src/app/router.test.tsx src/core/chat/chat-store.test.ts src/core/chat/context-bridge.test.ts`
+  — 17 tests passing. Router test still emits the existing jsdom
+  `window.scrollTo` warning.
+- `pnpm lint`
+- `pnpm typecheck`
+- Targeted Prettier check over touched files.
+- `pnpm build` passes. Main bundle reports **262.80 KB gz**; chat itself is
+  lazy, but the shell icon / route wiring adds a little to the entry bundle.
+
+---
+
 ## 2026-05-10 · Audit follow-ups + sidebar visibility + Continue/Recent removal
 
 **Status**: ✅ Three follow-up cuts shipped together — sidebar Continue/Recent removed, sidebar right-click "Hide from sidebar" + Show-all reset added, and a batch of audit-driven fixes against the Phase 3 review surface and the AI palette flow.

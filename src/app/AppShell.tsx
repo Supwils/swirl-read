@@ -3,6 +3,7 @@ import { Link, Outlet, useMatch } from 'react-router'
 import {
   BookOpen,
   Maximize2,
+  MessageCircle,
   Minimize2,
   PanelLeftClose,
   PanelLeftOpen,
@@ -214,6 +215,16 @@ export function AppShell() {
           >
             <Search size={18} aria-hidden="true" />
           </button>
+          {vaultId && (
+            <Link
+              to={`/app/${vaultId}/__chat__`}
+              className="swirlread-shell__icon-button"
+              aria-label="Open chat"
+              title="Open chat"
+            >
+              <MessageCircle size={18} aria-hidden="true" />
+            </Link>
+          )}
           <button
             type="button"
             onClick={() => void toggleToc()}

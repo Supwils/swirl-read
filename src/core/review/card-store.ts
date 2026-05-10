@@ -19,6 +19,7 @@ import {
   type ReviewCardRow,
 } from '@/core/persistence/db'
 import type { VaultId } from '@/core/vault'
+import { registerVaultDeletionHook } from '@/stores/vault-lifecycle'
 import type { ReviewBatch, ReviewCard } from './types'
 
 /** Upsert an entire batch + its cards in a single transaction. The
@@ -159,3 +160,9 @@ function rowToCard(r: ReviewCardRow): ReviewCard {
     expiresAt: new Date(r.expiresAtMs),
   }
 }
+
+// The review subsystem has no in-memory store — cards are loaded fresh
+// per page — so the deletion hook just runs the table-level cleanup.
+registerVaultDeletionHook(async (vaultId) => {
+  await forgetVault(vaultId)
+})
