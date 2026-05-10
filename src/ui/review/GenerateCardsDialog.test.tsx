@@ -144,9 +144,14 @@ describe('GenerateCardsDialog — full flow', () => {
     fireGenerate('gen-flow', 'note.md')
 
     // Dialog opens with idle UI — slider + Generate.
-    const generateBtn = await screen.findByRole('button', {
-      name: /^generate$/i,
-    })
+    // GitHub Actions jsdom is slower than local — bump from the 1s
+    // default so the lazy chunk + Suspense + dialog mount chain has
+    // time to settle before findByRole gives up.
+    const generateBtn = await screen.findByRole(
+      'button',
+      { name: /^generate$/i },
+      { timeout: 4000 },
+    )
     await user.click(generateBtn)
 
     // After the model returns, we navigate to /__review__/<batchId>.
@@ -177,7 +182,13 @@ describe('GenerateCardsDialog — full flow', () => {
     renderAt('/app/gen-err/note.md')
     fireGenerate('gen-err', 'note.md')
 
-    await user.click(await screen.findByRole('button', { name: /^generate$/i }))
+    await user.click(
+      await screen.findByRole(
+        'button',
+        { name: /^generate$/i },
+        { timeout: 4000 },
+      ),
+    )
 
     // Error UI appears — both Close and Retry are reachable.
     await screen.findByText(/could not parse as cards/i, undefined, {
@@ -211,7 +222,13 @@ describe('GenerateCardsDialog — full flow', () => {
     renderAt('/app/gen-cancel/note.md')
     fireGenerate('gen-cancel', 'note.md')
 
-    await user.click(await screen.findByRole('button', { name: /^generate$/i }))
+    await user.click(
+      await screen.findByRole(
+        'button',
+        { name: /^generate$/i },
+        { timeout: 4000 },
+      ),
+    )
 
     // The "Asking the model" status appears once the request is in
     // flight — that's our signal the AbortController is now hot.
@@ -235,7 +252,13 @@ describe('GenerateCardsDialog — full flow', () => {
     renderAt('/app/gen-no-key/note.md')
     fireGenerate('gen-no-key', 'note.md')
 
-    await user.click(await screen.findByRole('button', { name: /^generate$/i }))
+    await user.click(
+      await screen.findByRole(
+        'button',
+        { name: /^generate$/i },
+        { timeout: 4000 },
+      ),
+    )
 
     expect(
       await screen.findByText(/no ai provider configured/i),

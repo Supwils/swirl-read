@@ -4,8 +4,9 @@
  *
  * Reads the `bundle-size.json` ceilings at the repo root and asserts
  * that each pattern's matching file in `dist/assets/` stays under the
- * configured gzipped limit. Designed to run after `pnpm build`, both
- * locally (`pnpm bundle:check`) and in CI.
+ * configured gzipped limit. Runs after `pnpm build` as part of the
+ * local pre-commit pipeline (`pnpm check:full`); there is no GitHub
+ * CI — see CLAUDE.md "CI is local" for the reasoning.
  *
  * Why home-grown instead of `size-limit`:
  *   - zero new dev dependency

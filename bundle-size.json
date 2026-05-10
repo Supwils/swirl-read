@@ -1,5 +1,5 @@
 {
-  "_doc": "Gzipped size ceilings, checked by scripts/check-bundle-size.mjs after pnpm build. Each limit picks the largest file matching `pattern` inside dist/assets/. Bumping a limit requires a justification in the commit message.",
+  "_doc": "Gzipped size ceilings, checked by scripts/check-bundle-size.mjs after pnpm build. Each limit picks the largest file matching `pattern` inside dist/assets/. Bumping a limit requires a justification in the commit message. Run via `pnpm bundle:check` or as part of the local `pnpm check:full` pre-commit pipeline (no GitHub CI — see CLAUDE.md).",
   "limits": [
     {
       "name": "main bundle",
