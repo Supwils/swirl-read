@@ -25,7 +25,7 @@ import type { VaultFileSystem, VaultId, VaultMeta } from '@/core/vault'
 // Per-vault cleanup is no longer hardcoded here. Each store / module
 // that owns vault-scoped state registers a `vault-lifecycle` hook at
 // module load (see reader-store, tabs-store, editor-store,
-// sidebar-visibility-store, review/card-store, chat-store, navigation/
+// sidebar-visibility-store, review/card-store, navigation/
 // backlinks). `removeVault` runs the registry instead of editing this
 // list every time a new domain shows up.
 
@@ -191,8 +191,8 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   async removeVault(id) {
     // Vault metadata + active-id preference are owned directly by this
     // store. Every other piece of per-vault state is fanned out via
-    // the vault-lifecycle registry — adding a new domain (chat, review
-    // cards, sidebar visibility, ...) never edits this method.
+    // the vault-lifecycle registry — adding a new domain (review cards,
+    // sidebar visibility, ...) never edits this method.
     await db.vaults.delete(id)
     if (get().activeVaultId === id) {
       await db.preferences.delete(ACTIVE_VAULT_ID_PREF_KEY)

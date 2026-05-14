@@ -27,6 +27,7 @@ import { deriveCurrentPathFromPathname } from '@/app/derive-current-path'
 import { useUIStore } from '@/stores/ui-store'
 import { MAX_TABS_PER_VAULT, useTabsStore } from '@/stores/tabs-store'
 import { FileTree } from '@/ui/file-tree/FileTree'
+import { FileShelf } from './FileShelf'
 import { HintToast } from './HintToast'
 import { SidebarResizeHandle } from './SidebarResizeHandle'
 
@@ -50,6 +51,7 @@ export function VaultLayout() {
   const setFileTreeOpen = useUIStore((s) => s.setFileTreeOpen)
   const tocOpen = useUIStore((s) => s.tocOpen)
   const chromeMode = useUIStore((s) => s.chromeMode)
+  const useLegacyTree = useUIStore((s) => s.useLegacyTree)
   const tabCapHit = useTabsStore((s) => s.tabCapHit)
   const previewReplaced = useTabsStore((s) => s.previewReplaced)
   const { pathname } = useLocation()
@@ -176,11 +178,19 @@ export function VaultLayout() {
               }
             }}
           >
-            <FileTree
-              key={vaultId}
-              vaultId={vaultId}
-              currentPath={currentPath}
-            />
+            {useLegacyTree ? (
+              <FileTree
+                key={vaultId}
+                vaultId={vaultId}
+                currentPath={currentPath}
+              />
+            ) : (
+              <FileShelf
+                key={vaultId}
+                vaultId={vaultId}
+                currentPath={currentPath}
+              />
+            )}
             {fileTreePersistent && <SidebarResizeHandle />}
           </aside>
         </>

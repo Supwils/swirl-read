@@ -26,10 +26,14 @@ beforeEach(async () => {
   })
   // RX2: pin to working chrome so fileTreeOpen actually drives sidebar
   // visibility — reading chrome would hide it behind a hover gesture.
+  // RX3: FileShelf is the default sidebar in production; these legacy
+  // FileTree tests opt back into the tree explicitly so they can
+  // continue to assert the tree-specific behavior.
   useUIStore.setState({
     fileTreeOpen: true,
     ready: true,
     chromeMode: 'working',
+    useLegacyTree: true,
   })
   useReaderStore.setState({
     recentByVault: {},

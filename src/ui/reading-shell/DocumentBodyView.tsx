@@ -6,8 +6,7 @@
 
 import { lazy, useEffect, type ReactNode, type RefObject } from 'react'
 import { ChunkBoundary } from '@/ui/components/ChunkBoundary'
-import { MessageCircle, Pencil, Sparkles } from 'lucide-react'
-import { useNavigate } from 'react-router'
+import { Pencil, Sparkles } from 'lucide-react'
 import { useReviewStore } from '@/stores/review-store'
 import type { WikilinkIndex } from '@/core/navigation/wikilink-resolver'
 import { useEditorStore } from '@/stores/editor-store'
@@ -101,7 +100,6 @@ export function DocumentBodyView({
   const adjacent = useAdjacentFiles(vaultId, filePath)
   const isEditing = useIsEditingThisDocument(vaultId, filePath)
   const requestGenerate = useReviewStore((s) => s.requestGenerate)
-  const navigate = useNavigate()
 
   const ctxValue = vaultId
     ? { vaultId, currentPath: filePath, index: wikilinkIndex }
@@ -136,12 +134,22 @@ export function DocumentBodyView({
     )
   }
 
+  // HTML previews benefit from a wider canvas than the prose reading
+  // column — they often contain full-bleed layouts, tables, or stylesheets
+  // tuned for desktop widths. We expand the article max-width only for
+  // this kind so prose docs keep their measured column. The value is
+  // capped by the content column, so left/right sidebars are unaffected.
+  const isHtmlPreview = state.kind === 'html'
+  const articleMaxWidth = isHtmlPreview
+    ? 'max(var(--reader-content-width, 720px), min(1180px, 100%))'
+    : 'var(--reader-content-width, 720px)'
+
   return (
     <article
       className="mx-auto px-6 py-12 font-serif"
       style={{
         color: 'var(--color-text)',
-        maxWidth: 'var(--reader-content-width, 720px)',
+        maxWidth: articleMaxWidth,
       }}
     >
       <header className="swirlread-doc-header">
@@ -171,23 +179,6 @@ export function DocumentBodyView({
           >
             <Pencil size={13} aria-hidden="true" />
             <span>Edit</span>
-          </button>
-        )}
-        {state.kind === 'rendered' && vaultId && filePath && !isEditing && (
-          <button
-            type="button"
-            className="swirlread-doc-header__edit"
-            onClick={() => {
-              void navigate(
-                `/app/${vaultId}/__chat__?attach=${encodeURIComponent(
-                  filePath,
-                )}`,
-              )
-            }}
-            aria-label="Open chat with this document"
-          >
-            <MessageCircle size={13} aria-hidden="true" />
-            <span>Chat</span>
           </button>
         )}
         {state.kind === 'rendered' && vaultId && filePath && !isEditing && (

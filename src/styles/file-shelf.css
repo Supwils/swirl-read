@@ -1,0 +1,266 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   FileShelf — reading-view left rail (RX3 / design-spec replacement for
+   the legacy FileTree). Tints come from the folder palette so the active
+   folder reads as a continuation of the Pebble Garden it was reached from.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.swirlread-file-shelf {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 16px 12px 12px;
+  gap: 12px;
+  background: var(--bg-deep);
+  border-right: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--font-serif);
+}
+
+.swirlread-file-shelf__section {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.swirlread-file-shelf__label {
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 6px;
+}
+
+.swirlread-file-shelf__vault-name {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 1.15;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.swirlread-file-shelf__vault-path {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-faint);
+  word-break: break-all;
+}
+
+.swirlread-file-shelf__recents {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.swirlread-file-shelf__recent {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 8px;
+  border-radius: 5px;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: left;
+}
+
+.swirlread-file-shelf__recent:hover,
+.swirlread-file-shelf__recent[data-current='true'] {
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.swirlread-file-shelf__recent-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.swirlread-file-shelf__divider {
+  border: 0;
+  border-top: 1px solid var(--border-soft);
+  margin: 0;
+}
+
+.swirlread-file-shelf__folders {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.swirlread-file-shelf__folder-row {
+  margin-bottom: 1px;
+}
+
+.swirlread-file-shelf__folder-row[data-expanded='true'] {
+  margin-bottom: 4px;
+}
+
+/* Two-button folder header: chevron + folder name. Chevron is sidebar-
+   internal (expand only); folder name navigates the main reader. */
+.swirlread-file-shelf__folder-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 6px;
+  width: 100%;
+}
+
+.swirlread-file-shelf__folder-header:hover {
+  background: var(--surface);
+}
+
+.swirlread-file-shelf__folder-header[data-current='true'] {
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.swirlread-file-shelf__chevron {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  border-radius: 4px;
+  flex: 0 0 auto;
+}
+
+.swirlread-file-shelf__chevron:hover {
+  background: rgb(0 0 0 / 0.08);
+  color: var(--text);
+}
+
+.swirlread-file-shelf__folder-name-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  padding: 2px 6px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  font: inherit;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 13px;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.swirlread-file-shelf__folder-name-button:hover {
+  background: rgb(0 0 0 / 0.05);
+}
+
+.swirlread-file-shelf__folder-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.swirlread-file-shelf__folder-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  opacity: 0.7;
+  flex: 0 0 auto;
+}
+
+.swirlread-file-shelf__folder-files {
+  list-style: none;
+  margin: 4px 0 0 8px;
+  padding-left: 8px;
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.swirlread-file-shelf__file {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.swirlread-file-shelf__file[data-active='true'] {
+  font-weight: 600;
+}
+
+.swirlread-file-shelf__file-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.swirlread-file-shelf__file-ext {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  opacity: 0.7;
+}
+
+/* Legacy subdir chip removed — sub-folders now render as nested
+   FolderRow instances via recursion. The class name stays in the CSS
+   only because it was referenced from external CSS layers; if no other
+   shard touches it we can drop it in a follow-up. */
+.swirlread-file-shelf__folder-subdir {
+  display: none;
+}
+
+.swirlread-file-shelf__jump {
+  display: flex;
+  gap: 5px;
+}
+
+.swirlread-file-shelf__jump-bump {
+  flex: 1;
+  height: 18px;
+  border-radius: 8px 10px 9px 8px / 9px 8px 10px 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.swirlread-file-shelf__jump-bump[data-active='true'] {
+  border-width: 1.5px;
+}
+
+.swirlread-file-shelf__status {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 12.5px;
+  color: var(--text-faint);
+  padding: 6px 10px;
+}

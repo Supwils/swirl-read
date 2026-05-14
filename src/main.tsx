@@ -6,6 +6,7 @@ import { purgeExpired as purgeExpiredReviewBatches } from '@/core/review/card-st
 import { useHintsStore } from '@/stores/hints-store'
 import { useReaderStore } from '@/stores/reader-store'
 import { useSidebarVisibilityStore } from '@/stores/sidebar-visibility-store'
+import { usePanesStore } from '@/stores/panes-store'
 import { useTabsStore } from '@/stores/tabs-store'
 import { useVaultStore } from '@/stores/vault-store'
 import { useUIStore } from '@/stores/ui-store'
@@ -25,6 +26,7 @@ void useVaultStore.getState().init()
 void useUIStore.getState().init()
 void useReaderStore.getState().init()
 void useTabsStore.getState().init()
+void usePanesStore.getState().init()
 void useHintsStore.getState().init()
 void useSidebarVisibilityStore.getState().init()
 // Auto-restore lives in its own task: re-attach FSAPI adapters whose

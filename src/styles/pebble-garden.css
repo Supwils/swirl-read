@@ -1,0 +1,312 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Pebble Garden — vault root view.
+
+   Layout is grid-area based so the artboard's organic positioning survives
+   responsive resizes. The six-slot grid covers up to six top-level folders;
+   beyond that, a "more folders" pebble appears in the sixth slot and the
+   rest become available through the (Step 4) FileShelf or zoom view.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.swirlread-pebble-garden {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-serif);
+}
+
+.swirlread-pebble-garden__masthead {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  padding: 22px 48px 14px;
+  flex-wrap: wrap;
+}
+
+.swirlread-pebble-garden__kicker {
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.swirlread-pebble-garden__title {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 30px;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin: 0;
+}
+
+.swirlread-pebble-garden__breadcrumb {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.swirlread-pebble-garden__breadcrumb button {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: var(--accent);
+  text-decoration-color: var(--accent-soft);
+}
+
+.swirlread-pebble-garden__breadcrumb button:hover {
+  text-decoration: underline dotted;
+}
+
+/* Grid layout — two modes.
+   - 6+ folders ("dense"): the artboard's 4-col asymmetric layout with
+     named cells, so the user sees the organic pebble arrangement.
+   - <6 folders ("sparse" / drilled view): a responsive auto-fit grid so
+     2 / 3 / 4-folder layouts don't leave huge empty cells.
+   The toggle is `data-layout="dense" | "sparse"`. */
+.swirlread-pebble-garden__grid {
+  display: grid;
+  gap: 22px;
+  padding: 0 48px 28px;
+  position: relative;
+}
+
+.swirlread-pebble-garden__grid[data-layout='dense'] {
+  grid-template-columns: 1.1fr 0.9fr 0.9fr 1.1fr;
+  grid-auto-rows: minmax(198px, auto);
+  grid-template-areas:
+    'cell-0 cell-0 cell-1 cell-1'
+    'cell-0 cell-0 cell-2 cell-2'
+    'cell-3 cell-4 cell-5 cell-5';
+}
+
+.swirlread-pebble-garden__grid[data-layout='sparse'] {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-auto-rows: minmax(220px, auto);
+}
+
+.swirlread-pebble-garden__cell {
+  min-width: 0;
+  min-height: 0;
+}
+.swirlread-pebble-garden__grid[data-layout='dense']
+  .swirlread-pebble-garden__cell--0 {
+  grid-area: cell-0;
+}
+.swirlread-pebble-garden__grid[data-layout='dense']
+  .swirlread-pebble-garden__cell--1 {
+  grid-area: cell-1;
+}
+.swirlread-pebble-garden__grid[data-layout='dense']
+  .swirlread-pebble-garden__cell--2 {
+  grid-area: cell-2;
+}
+.swirlread-pebble-garden__grid[data-layout='dense']
+  .swirlread-pebble-garden__cell--3 {
+  grid-area: cell-3;
+}
+.swirlread-pebble-garden__grid[data-layout='dense']
+  .swirlread-pebble-garden__cell--4 {
+  grid-area: cell-4;
+}
+.swirlread-pebble-garden__grid[data-layout='dense']
+  .swirlread-pebble-garden__cell--5 {
+  grid-area: cell-5;
+}
+
+/* Loose files in the current folder (the drilled view's bottom row).
+   Surfaced when the folder has direct files AND sub-folders — the grid
+   shows the folders and this row shows everything else. */
+.swirlread-pebble-garden__loose {
+  padding: 0 48px 32px;
+  margin-top: 8px;
+}
+
+.swirlread-pebble-garden__loose-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.swirlread-pebble-garden__status {
+  margin: 0 48px 32px;
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+.swirlread-pebble-garden__error {
+  margin: 0 48px 32px;
+  font-family: var(--font-serif);
+  color: var(--text);
+}
+
+.swirlread-pebble-garden__footer {
+  margin-top: auto;
+  padding: 10px 28px;
+  border-top: 1px solid var(--border-soft);
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-faint);
+  letter-spacing: 0.02em;
+}
+
+.swirlread-pebble-garden__footer span:last-child {
+  flex: 1;
+  text-align: right;
+}
+
+.swirlread-pebble-garden__zoom-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-content: flex-start;
+  max-height: 50%;
+  overflow: auto;
+}
+
+.swirlread-pebble-garden__zoom-subfolders {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.swirlread-pebble-garden__zoom-subfolder {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+}
+
+/* Context menu — portal-mounted right-click menu for file pills. ──── */
+.swirlread-pebble-context-menu {
+  position: fixed;
+  z-index: 320;
+  min-width: 260px;
+  padding: 6px;
+  border-radius: 10px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 18px 40px var(--shadow-deep),
+    0 2px 4px var(--shadow);
+  font-family: var(--font-sans);
+  display: flex;
+  flex-direction: column;
+}
+
+.swirlread-pebble-context-menu__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px 8px;
+  border-bottom: 1px solid var(--border-soft);
+  margin-bottom: 4px;
+}
+
+.swirlread-pebble-context-menu__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.swirlread-pebble-context-menu__divider {
+  height: 1px;
+  background: var(--border-soft);
+  margin: 4px 6px;
+}
+
+.swirlread-pebble-context-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.swirlread-pebble-context-menu__item span:first-child {
+  flex: 1;
+}
+
+.swirlread-pebble-context-menu__shortcut {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  opacity: 0.5;
+}
+
+.swirlread-pebble-context-menu__item[data-focused='true'],
+.swirlread-pebble-context-menu__item:hover {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.swirlread-pebble-context-menu__item[data-focused='true']
+  .swirlread-pebble-context-menu__shortcut,
+.swirlread-pebble-context-menu__item:hover
+  .swirlread-pebble-context-menu__shortcut {
+  opacity: 0.95;
+  color: inherit;
+}
+
+.swirlread-pebble-context-menu__item[disabled],
+.swirlread-pebble-context-menu__item[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+@media (max-width: 880px) {
+  .swirlread-pebble-garden__grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(6, 200px);
+    grid-template-areas:
+      'cell-0'
+      'cell-1'
+      'cell-2'
+      'cell-3'
+      'cell-4'
+      'cell-5';
+    padding: 0 20px 24px;
+  }
+  .swirlread-pebble-garden__masthead {
+    padding: 16px 20px 10px;
+  }
+}

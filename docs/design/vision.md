@@ -107,7 +107,7 @@ Being explicit about this prevents scope creep:
 | A cloud knowledge base     | Notion, Confluence, GitBook exist. SwirlRead is local-first by design.                                                                |
 | A second brain builder     | Building your knowledge base is out of scope. Reading it is the entire scope.                                                         |
 | A full authoring workspace | SwirlRead may support quick text repairs, but long-form writing, heavy restructuring, and knowledge-base management belong elsewhere. |
-| An AI chatbot              | AI is a feature to enhance reading and recall, not the main product surface.                                                          |
+| An AI chatbot              | AI is a feature to enhance reading and recall, not a standalone chat surface or the main product mode.                                |
 
 ---
 

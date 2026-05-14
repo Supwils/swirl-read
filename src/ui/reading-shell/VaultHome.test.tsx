@@ -46,61 +46,14 @@ function renderAt(path: string) {
   return render(<RouterProvider router={router} />)
 }
 
-describe('VaultHome — home detection (M4.1)', () => {
-  it('auto-redirects to index.md when one exists at the vault root', async () => {
-    await registerVault('home-redirect', {
-      'index.md': '# Welcome Home\n\nThe entry-point note.',
-      knowledge: { 'react.md': '# React' },
-    })
-    renderAt('/app/home-redirect')
-
-    await waitFor(() => {
-      // RX1: page header h1 AND body h1 both carry the title. Either
-      // is acceptable — assert at least one shows.
-      const headings = screen.getAllByRole('heading', {
-        level: 1,
-        name: /welcome home/i,
-      })
-      expect(headings.length).toBeGreaterThanOrEqual(1)
-    })
-  })
-
-  it('falls back to README.md when there is no index/home', async () => {
-    await registerVault('readme-fallback', {
-      'README.md': '# Project README\n\nRead this first.',
-      'notes.md': 'misc',
-    })
-    renderAt('/app/readme-fallback')
-
-    await waitFor(() => {
-      const headings = screen.getAllByRole('heading', {
-        level: 1,
-        name: /project readme/i,
-      })
-      expect(headings.length).toBeGreaterThanOrEqual(1)
-    })
-  })
-
-  it('renders a navigable directory listing when no home file exists', async () => {
-    await registerVault('listing', {
-      'notes.md': '# Notes',
-      todo: { 'today.md': '# Today' },
-    })
-    renderAt('/app/listing')
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole('link', { name: /notes\.md/i }),
-      ).toBeInTheDocument()
-    })
-    // Folder is also rendered as a link
-    expect(screen.getByRole('link', { name: /todo/i })).toBeInTheDocument()
-    // Breadcrumb anchors back to vault root
-    expect(
-      screen.getByRole('link', { name: /vault root/i }),
-    ).toBeInTheDocument()
-  })
-})
+// The historical M4.1 home-detection auto-redirect (index.md / README.md →
+// open as the vault landing) is intentionally retired by the new design:
+// the vault root now renders Pebble Garden, and the user picks where they
+// want to go. `findVaultHome` itself still lives in
+// `src/core/navigation/section-detector.ts` for callers that want to
+// surface a recommended home file in the future (e.g. a "resume reading"
+// chip on Pebble Garden), and its unit tests cover the resolution rules.
+// The PebbleGarden component has its own test suite.
 
 describe('DocumentPage — directory paths (M4.1 / pre-M4.3)', () => {
   it('lists folder contents with clickable links when navigated to a directory', async () => {

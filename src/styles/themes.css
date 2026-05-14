@@ -1,7 +1,24 @@
 /* ─────────────────────────────────────────────────────────────────────────
    Semantic theme tokens — overridden by `.theme-*` classes.
-   Components reference these via `bg-[var(--color-bg)]` etc.
+
+   Two token families live here:
+
+   1. Legacy `--color-*` tokens that the existing reading shell, prose
+      pipeline, code blocks, and Tailwind theme keys all reference. These
+      stay untouched so the rest of the app keeps rendering.
+
+   2. New design-spec tokens for the Pebble Garden + Workspace surfaces:
+      `--bg`, `--paper`, `--text`, `--accent`, the folder palette
+      `--f-<id>` / `--f-<id>-deep` / `--f-<id>-ink`, plus shadow / highlight
+      helpers. New components reference these via `var(--bg)` etc; theme
+      changes are still a single root-class swap. The values are sourced
+      verbatim from docs/new-design/HANDOFF.md §2.
+
+   Folder ID = token suffix. Adding a folder = adding a token group (and
+   adding the ID to FOLDER_COLORS in src/core/vault/folder-color.ts).
    ───────────────────────────────────────────────────────────────────────── */
+
+/* ─── Sepia (default light) — also drives :root ────────────────────────── */
 :root,
 .theme-sepia {
   --color-bg: #f4ecd8;
@@ -14,8 +31,50 @@
   --color-border: #d4c8a8;
   --color-surface: #ede2c5;
   --color-shadow: rgb(58 47 36 / 0.08);
+
+  /* Design-spec tokens (Pebble Garden + Workspace). */
+  --bg: #f4ecd8;
+  --bg-deep: #ebe1c5;
+  --paper: #fbf6e7;
+  --text: #3a2f24;
+  --text-muted: #6b5942;
+  --text-faint: #a8956f;
+  --accent: #8b6f47;
+  --accent-soft: #b9986a;
+  --border: #d4c8a8;
+  --border-soft: #e3d9bd;
+  --surface: #ede2c5;
+  --shadow: rgb(58 47 36 / 0.1);
+  --shadow-deep: rgb(58 47 36 / 0.18);
+  --highlight: rgb(139 111 71 / 0.18);
+
+  /* Folder palette — each: fill, deep (border/dot), ink (deep text). */
+  --f-knowledge: #e6c4a4;
+  --f-knowledge-deep: #c89a72;
+  --f-knowledge-ink: #5e3618;
+
+  --f-career: #c8d4ab;
+  --f-career-deep: #9bb077;
+  --f-career-ink: #2f4221;
+
+  --f-reading: #b9cfde;
+  --f-reading-deep: #88aac4;
+  --f-reading-ink: #233e54;
+
+  --f-ai: #d5c1d6;
+  --f-ai-deep: #a98caa;
+  --f-ai-ink: #3e2540;
+
+  --f-tasks: #ead8a8;
+  --f-tasks-deep: #cab476;
+  --f-tasks-ink: #5c441c;
+
+  --f-journal: #e4c2b8;
+  --f-journal-deep: #c08c80;
+  --f-journal-ink: #4e221c;
 }
 
+/* ─── Light — design-spec light folder palette layered on cool grey ───── */
 .theme-light {
   --color-bg: #fafaf8;
   --color-text: #1a1a1a;
@@ -27,8 +86,45 @@
   --color-border: #e0e0de;
   --color-surface: #ffffff;
   --color-shadow: rgb(0 0 0 / 0.06);
+
+  /* Design-spec tokens — mirror sepia folder palette so Pebble Garden
+     looks correct regardless of which "light" the user picked. */
+  --bg: #fafaf8;
+  --bg-deep: #f1f1ee;
+  --paper: #ffffff;
+  --text: #1a1a1a;
+  --text-muted: #4a4a4a;
+  --text-faint: #8a8a86;
+  --accent: #0066cc;
+  --accent-soft: #4f8ddb;
+  --border: #e0e0de;
+  --border-soft: #ececea;
+  --surface: #f4f4f1;
+  --shadow: rgb(0 0 0 / 0.06);
+  --shadow-deep: rgb(0 0 0 / 0.12);
+  --highlight: rgb(0 102 204 / 0.16);
+
+  --f-knowledge: #e6c4a4;
+  --f-knowledge-deep: #c89a72;
+  --f-knowledge-ink: #5e3618;
+  --f-career: #c8d4ab;
+  --f-career-deep: #9bb077;
+  --f-career-ink: #2f4221;
+  --f-reading: #b9cfde;
+  --f-reading-deep: #88aac4;
+  --f-reading-ink: #233e54;
+  --f-ai: #d5c1d6;
+  --f-ai-deep: #a98caa;
+  --f-ai-ink: #3e2540;
+  --f-tasks: #ead8a8;
+  --f-tasks-deep: #cab476;
+  --f-tasks-ink: #5c441c;
+  --f-journal: #e4c2b8;
+  --f-journal-deep: #c08c80;
+  --f-journal-ink: #4e221c;
 }
 
+/* ─── Dark ─────────────────────────────────────────────────────────────── */
 .theme-dark {
   --color-bg: #1e1e1e;
   --color-text: #d4d4d4;
@@ -40,8 +136,44 @@
   --color-border: #3a3a3a;
   --color-surface: #252525;
   --color-shadow: rgb(0 0 0 / 0.4);
+
+  /* Design-spec tokens. */
+  --bg: #1c1916;
+  --bg-deep: #14110e;
+  --paper: #25211b;
+  --text: #e4dbc7;
+  --text-muted: #a89881;
+  --text-faint: #695e4f;
+  --accent: #d4a767;
+  --accent-soft: #b88c4f;
+  --border: #3a3229;
+  --border-soft: #2a2520;
+  --surface: #221e19;
+  --shadow: rgb(0 0 0 / 0.35);
+  --shadow-deep: rgb(0 0 0 / 0.55);
+  --highlight: rgb(212 167 103 / 0.22);
+
+  --f-knowledge: #3e2c1f;
+  --f-knowledge-deep: #6a4a30;
+  --f-knowledge-ink: #d6a576;
+  --f-career: #2f3826;
+  --f-career-deep: #506240;
+  --f-career-ink: #b6c992;
+  --f-reading: #1f2d39;
+  --f-reading-deep: #36506a;
+  --f-reading-ink: #98bbd4;
+  --f-ai: #2e2236;
+  --f-ai-deep: #4e3a5a;
+  --f-ai-ink: #cdadcf;
+  --f-tasks: #34291a;
+  --f-tasks-deep: #5a4422;
+  --f-tasks-ink: #d5b87a;
+  --f-journal: #2d201d;
+  --f-journal-deep: #553733;
+  --f-journal-ink: #d6a99e;
 }
 
+/* ─── OLED — dark folder palette, pure-black canvas ───────────────────── */
 .theme-oled {
   --color-bg: #000000;
   --color-text: #cccccc;
@@ -53,9 +185,43 @@
   --color-border: #222222;
   --color-surface: #0a0a0a;
   --color-shadow: rgb(0 0 0 / 0.6);
+
+  --bg: #000000;
+  --bg-deep: #050505;
+  --paper: #0a0a0a;
+  --text: #d6d6d6;
+  --text-muted: #8c8c8c;
+  --text-faint: #5a5a5a;
+  --accent: #ff9d4d;
+  --accent-soft: #c97c3a;
+  --border: #1f1f1f;
+  --border-soft: #161616;
+  --surface: #111111;
+  --shadow: rgb(0 0 0 / 0.6);
+  --shadow-deep: rgb(0 0 0 / 0.8);
+  --highlight: rgb(255 157 77 / 0.22);
+
+  --f-knowledge: #3e2c1f;
+  --f-knowledge-deep: #6a4a30;
+  --f-knowledge-ink: #d6a576;
+  --f-career: #2f3826;
+  --f-career-deep: #506240;
+  --f-career-ink: #b6c992;
+  --f-reading: #1f2d39;
+  --f-reading-deep: #36506a;
+  --f-reading-ink: #98bbd4;
+  --f-ai: #2e2236;
+  --f-ai-deep: #4e3a5a;
+  --f-ai-ink: #cdadcf;
+  --f-tasks: #34291a;
+  --f-tasks-deep: #5a4422;
+  --f-tasks-ink: #d5b87a;
+  --f-journal: #2d201d;
+  --f-journal-deep: #553733;
+  --f-journal-ink: #d6a99e;
 }
 
-/* Auto: follow system. Sepia in light, Dark in dark. */
+/* ─── Auto — follow system ────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
   .theme-auto {
     --color-bg: #1e1e1e;
@@ -68,6 +234,40 @@
     --color-border: #3a3a3a;
     --color-surface: #252525;
     --color-shadow: rgb(0 0 0 / 0.4);
+
+    --bg: #1c1916;
+    --bg-deep: #14110e;
+    --paper: #25211b;
+    --text: #e4dbc7;
+    --text-muted: #a89881;
+    --text-faint: #695e4f;
+    --accent: #d4a767;
+    --accent-soft: #b88c4f;
+    --border: #3a3229;
+    --border-soft: #2a2520;
+    --surface: #221e19;
+    --shadow: rgb(0 0 0 / 0.35);
+    --shadow-deep: rgb(0 0 0 / 0.55);
+    --highlight: rgb(212 167 103 / 0.22);
+
+    --f-knowledge: #3e2c1f;
+    --f-knowledge-deep: #6a4a30;
+    --f-knowledge-ink: #d6a576;
+    --f-career: #2f3826;
+    --f-career-deep: #506240;
+    --f-career-ink: #b6c992;
+    --f-reading: #1f2d39;
+    --f-reading-deep: #36506a;
+    --f-reading-ink: #98bbd4;
+    --f-ai: #2e2236;
+    --f-ai-deep: #4e3a5a;
+    --f-ai-ink: #cdadcf;
+    --f-tasks: #34291a;
+    --f-tasks-deep: #5a4422;
+    --f-tasks-ink: #d5b87a;
+    --f-journal: #2d201d;
+    --f-journal-deep: #553733;
+    --f-journal-ink: #d6a99e;
   }
 }
 
@@ -83,5 +283,39 @@
     --color-border: #d4c8a8;
     --color-surface: #ede2c5;
     --color-shadow: rgb(58 47 36 / 0.08);
+
+    --bg: #f4ecd8;
+    --bg-deep: #ebe1c5;
+    --paper: #fbf6e7;
+    --text: #3a2f24;
+    --text-muted: #6b5942;
+    --text-faint: #a8956f;
+    --accent: #8b6f47;
+    --accent-soft: #b9986a;
+    --border: #d4c8a8;
+    --border-soft: #e3d9bd;
+    --surface: #ede2c5;
+    --shadow: rgb(58 47 36 / 0.1);
+    --shadow-deep: rgb(58 47 36 / 0.18);
+    --highlight: rgb(139 111 71 / 0.18);
+
+    --f-knowledge: #e6c4a4;
+    --f-knowledge-deep: #c89a72;
+    --f-knowledge-ink: #5e3618;
+    --f-career: #c8d4ab;
+    --f-career-deep: #9bb077;
+    --f-career-ink: #2f4221;
+    --f-reading: #b9cfde;
+    --f-reading-deep: #88aac4;
+    --f-reading-ink: #233e54;
+    --f-ai: #d5c1d6;
+    --f-ai-deep: #a98caa;
+    --f-ai-ink: #3e2540;
+    --f-tasks: #ead8a8;
+    --f-tasks-deep: #cab476;
+    --f-tasks-ink: #5c441c;
+    --f-journal: #e4c2b8;
+    --f-journal-deep: #c08c80;
+    --f-journal-ink: #4e221c;
   }
 }

@@ -12,9 +12,8 @@
  *   - `aiKeys`           — provider-keyed encrypted API keys (Phase 3)
  *   - `reviewBatches`    — AI-generated flashcard batches (Phase 3 review)
  *   - `reviewCards`      — individual review cards inside a batch
- *   - `chatSessions`     — optional local chat sessions, scoped to a vault
- *   - `chatMessages`     — persisted user / assistant messages
- *   - `chatContextRefs`  — explicit reading-context bridges for a chat
+ *   - `panes`            — per-vault pane state (single|dual mode, active id,
+ *                          each pane's current document path) for Workspace
  *
  * Handle persistence (binary `FileSystemDirectoryHandle` blobs) lives in a
  * separate idb-keyval store; see `core/vault/handle-storage.ts`. Splitting
@@ -137,44 +136,13 @@ export interface ReviewCardRow {
   expiresAtMs: number
 }
 
-/** One optional chat session. Chat is scoped to a vault when it is opened from
- *  the reading shell, but the table allows `vaultId` to be null so a future
- *  global scratch chat can exist without pretending it belongs to a folder. */
-export interface ChatSessionRow {
-  id: string
-  vaultId?: string
-  title: string
-  mode: string
-  createdAtMs: number
-  updatedAtMs: number
-  archivedAtMs?: number
-}
-
-/** One persisted chat message. Context references live in their own table so
- *  the user can attach / detach reading sources without rewriting history. */
-export interface ChatMessageRow {
-  id: string
-  sessionId: string
-  role: string
-  content: string
-  model?: string
-  createdAtMs: number
-}
-
-/** A lightweight bridge from a chat session to reading context.
- *
- * File-backed refs store only the vault/path/label. `contentSnapshot` is used
- * only for sources without a stable file identity, such as selected text. */
-export interface ChatContextRefRow {
-  id: string
-  sessionId: string
+/** One pane-state row, keyed by `vaultId`. Persisted so reloads restore
+ *  both panes' current documents, split ratio, and active focus. */
+export interface PaneStateRow {
   vaultId: string
-  sourceType: string
-  label: string
-  path?: string
-  pinned: boolean
-  createdAtMs: number
-  contentSnapshot?: string
+  panes: { id: string; currentPath: string | null }[]
+  activePaneId: string
+  viewMode: 'single' | 'dual'
 }
 
 interface SwirlReadDB extends Dexie {
@@ -188,9 +156,7 @@ interface SwirlReadDB extends Dexie {
   aiKeys: EntityTable<AIKeyRow, 'provider'>
   reviewBatches: EntityTable<ReviewBatchRow, 'id'>
   reviewCards: EntityTable<ReviewCardRow, 'id'>
-  chatSessions: EntityTable<ChatSessionRow, 'id'>
-  chatMessages: EntityTable<ChatMessageRow, 'id'>
-  chatContextRefs: EntityTable<ChatContextRefRow, 'id'>
+  panes: EntityTable<PaneStateRow, 'vaultId'>
 }
 
 function buildDb(): SwirlReadDB {
@@ -271,9 +237,23 @@ function buildDb(): SwirlReadDB {
     aiKeys: 'provider',
     reviewBatches: 'id, vaultId, expiresAtMs, createdAtMs',
     reviewCards: 'id, batchId, vaultId, [batchId+order], expiresAtMs',
-    chatSessions: 'id, vaultId, updatedAtMs, archivedAtMs',
-    chatMessages: 'id, sessionId, [sessionId+createdAtMs]',
-    chatContextRefs: 'id, sessionId, vaultId, [sessionId+createdAtMs]',
+  })
+  // Panes table: one row per vault holds both panes' state (current doc,
+  // active focus, view mode). Tabs remain per-vault and window-shared;
+  // adding pane state alongside without touching openTabs keeps the
+  // migration trivial — no row rewriting, no compound keys.
+  db.version(10).stores({
+    vaults: 'id, name, lastOpenedAtMs',
+    preferences: 'key',
+    recentFiles: 'id, vaultId, openedAtMs',
+    backlinks: 'id, vaultId, targetPath, sourcePath, updatedAtMs',
+    scrollPositions: 'id, vaultId, updatedAtMs',
+    hintsSeen: 'id, seenAtMs',
+    openTabs: 'id, vaultId, [vaultId+order], openedAtMs',
+    aiKeys: 'provider',
+    reviewBatches: 'id, vaultId, expiresAtMs, createdAtMs',
+    reviewCards: 'id, batchId, vaultId, [batchId+order], expiresAtMs',
+    panes: 'vaultId',
   })
   return db
 }
@@ -320,9 +300,7 @@ export async function __resetDbForTests(): Promise<void> {
       db.aiKeys,
       db.reviewBatches,
       db.reviewCards,
-      db.chatSessions,
-      db.chatMessages,
-      db.chatContextRefs,
+      db.panes,
     ],
     async () => {
       await db.vaults.clear()
@@ -335,9 +313,7 @@ export async function __resetDbForTests(): Promise<void> {
       await db.aiKeys.clear()
       await db.reviewBatches.clear()
       await db.reviewCards.clear()
-      await db.chatSessions.clear()
-      await db.chatMessages.clear()
-      await db.chatContextRefs.clear()
+      await db.panes.clear()
     },
   )
 }

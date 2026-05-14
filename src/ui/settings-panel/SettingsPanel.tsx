@@ -83,6 +83,7 @@ export function SettingsPanel(): ReactNode {
             <ContentWidthControl />
             <FrontmatterControl />
             <FileTreeControl />
+            <LegacyTreeControl />
             <TocControl />
             <EditorPreferencesGroup />
             <AIControl />
@@ -279,6 +280,30 @@ function FileTreeControl(): ReactNode {
         checked={fileTreeOpen}
         onChange={(event) => {
           void setFileTreeOpen(event.target.checked)
+        }}
+        className="swirlread-settings__checkbox"
+      />
+    </label>
+  )
+}
+
+function LegacyTreeControl(): ReactNode {
+  const useLegacyTree = useUIStore((state) => state.useLegacyTree)
+  const setUseLegacyTree = useUIStore((state) => state.setUseLegacyTree)
+
+  return (
+    <label className="swirlread-settings__toggle-row">
+      <span>
+        <span className="swirlread-settings__label">Legacy file tree</span>
+        <span className="swirlread-settings__hint">
+          Show the older tree-style sidebar instead of the new FileShelf
+        </span>
+      </span>
+      <input
+        type="checkbox"
+        checked={useLegacyTree}
+        onChange={(event) => {
+          void setUseLegacyTree(event.target.checked)
         }}
         className="swirlread-settings__checkbox"
       />

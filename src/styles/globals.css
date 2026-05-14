@@ -66,11 +66,13 @@
 @import './command-palette.css';
 @import './settings.css';
 @import './landing.css';
+@import './pebble-garden.css';
+@import './file-shelf.css';
+@import './workspace.css';
 @import './file-renderers.css';
 @import './media.css';
 @import './prose-ext.css';
 @import './zen-mobile.css';
 @import './editor.css';
 @import './review.css';
-@import './chat.css';
 @import './chunk-boundary.css';

@@ -5,3 +5,7 @@ public
 *.tsbuildinfo
 pnpm-lock.yaml
 .pnpm-store
+
+# Design artboards & handoff docs — preserve verbatim from the design canvas
+# so the JSX matches docs/new-design/index.html. Don't auto-reformat them.
+docs/new-design/

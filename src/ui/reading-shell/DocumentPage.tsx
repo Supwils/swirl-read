@@ -24,10 +24,30 @@ interface FileVersion {
 
 type ExternalChangeState = 'clean' | 'changed'
 
-export function DocumentPage() {
+/**
+ * Optional overrides for embedding DocumentPage inside the Workspace's
+ * second pane. When `vaultIdProp` / `filePathProp` are provided they win
+ * over `useParams`, so the embedded pane can read a different doc than
+ * the URL. When `scrollContainerRef` is provided, scroll memory binds
+ * to that container instead of the window — required because dual mode
+ * gives each pane its own scrollable region.
+ */
+export interface DocumentPageProps {
+  vaultIdProp?: string
+  filePathProp?: string
+  scrollContainerRef?: React.RefObject<HTMLElement | null>
+  /** Scoping key for scroll memory; defaults to none (window scroll). */
+  scrollKeyScope?: string
+  /** When false, suppresses TOC publication for the embedded pane. The
+   *  TOC store is a singleton — only one pane should drive it at a
+   *  time. Defaults to true (URL-driven pane). */
+  publishTOC?: boolean
+}
+
+export function DocumentPage(props: DocumentPageProps = {}) {
   const params = useParams<{ vaultId: string; '*': string }>()
-  const vaultId = params.vaultId
-  const filePath = params['*'] ?? ''
+  const vaultId = props.vaultIdProp ?? params.vaultId
+  const filePath = props.filePathProp ?? params['*'] ?? ''
   const [retryToken, setRetryToken] = useState(0)
   const [wikilinkIndex, setWikilinkIndex] = useState<WikilinkIndex | null>(null)
   const [externalChange, setExternalChange] =
@@ -101,7 +121,11 @@ export function DocumentPage() {
 
   // Publish heading list to the TOC store after each successful render.
   // Walking the rendered DOM keeps headings, slugs, and ids in one place.
+  // Embedded panes (publishTOC === false) skip this — the TOC store is
+  // a singleton and the URL-driven pane already owns it.
+  const publishTOC = props.publishTOC ?? true
   useEffect(() => {
+    if (!publishTOC) return
     if (state.kind !== 'rendered') {
       useTocStore.getState().clear()
       return
@@ -133,20 +157,25 @@ export function DocumentPage() {
     return () => {
       cancelled = true
     }
-  }, [state, vaultId, filePath])
+  }, [state, vaultId, filePath, publishTOC])
 
   // Always clear on unmount so the TOC doesn't outlive the document.
   useEffect(() => {
+    if (!publishTOC) return
     return () => {
       useTocStore.getState().clear()
     }
-  }, [])
+  }, [publishTOC])
 
-  // Scroll memory: restore once content has rendered.
+  // Scroll memory: restore once content has rendered. In dual-pane mode
+  // the Workspace passes a container ref + a paneId-scoped storage key
+  // so the two panes' positions don't clobber each other.
   useScrollMemory({
     vaultId,
     path: filePath,
     restoreToken: state.kind === 'rendered' ? state : null,
+    scrollContainerRef: props.scrollContainerRef,
+    keyScope: props.scrollKeyScope,
   })
 
   // RX1: derive an article-style title.

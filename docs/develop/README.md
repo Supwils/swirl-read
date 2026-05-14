@@ -13,9 +13,8 @@ The product is fully designed. These documents tell you HOW to build it.
 | 3   | [engineering-principles.md](./engineering-principles.md)             | Code style, naming, architecture rules, testing philosophy, definition of done           |
 | 4   | [reader-experience-craft-plan.md](./reader-experience-craft-plan.md) | Reader UX craft plan: document header, chrome, navigation, context rail, command palette |
 | 5   | [lightweight-editing-plan.md](./lightweight-editing-plan.md)         | Phase 2 quick-edit design: write interface, permission escalation, state, UI, save loop  |
-| 6   | [reading-chat-bridge-plan.md](./reading-chat-bridge-plan.md)         | Optional chat mode design: explicit bridge from reading context to local chat sessions   |
-| 7   | [phase-1-implementation-plan.md](./phase-1-implementation-plan.md)   | **The ordered task list.** Execute these tasks in milestone order.                       |
-| 8   | [work-log.md](./work-log.md)                                         | Reverse-chronological implementation log. Update on every task completion.               |
+| 6   | [phase-1-implementation-plan.md](./phase-1-implementation-plan.md)   | **The ordered task list.** Execute these tasks in milestone order.                       |
+| 7   | [work-log.md](./work-log.md)                                         | Reverse-chronological implementation log. Update on every task completion.               |
 
 ## Current Status
 

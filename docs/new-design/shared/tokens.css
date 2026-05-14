@@ -1,0 +1,231 @@
+/* SwirlRead — Pebble Garden tokens.
+   Built on the original app's theme system (sepia + dark), with folder
+   colors tuned to harmonise rather than pop. Each folder gets a fill
+   and a deep ink. Both light and dark variants are defined so a single
+   `.cz.theme-light` / `.cz.theme-dark` switch flips every surface. */
+
+.cz {
+  /* Type — back to the brand stack. */
+  --serif: "Source Serif 4", "Source Serif Pro", Georgia, "Times New Roman", serif;
+  --sans:  "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mono:  "JetBrains Mono", "SF Mono", ui-monospace, Menlo, monospace;
+
+  font-family: var(--serif);
+  color: var(--text);
+  background: var(--bg);
+  font-feature-settings: "kern", "liga", "calt";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.cz, .cz * { box-sizing: border-box; }
+
+/* ── Light theme (Sepia, the SwirlRead default) ───────────────────── */
+.cz.theme-light {
+  --bg:           #f4ecd8;
+  --bg-deep:      #ebe1c5;
+  --paper:        #fbf6e7;
+  --text:         #3a2f24;
+  --text-muted:   #6b5942;
+  --text-faint:   #a8956f;
+  --accent:       #8b6f47;
+  --accent-soft:  #b9986a;
+  --link:         #8b6f47;
+  --border:       #d4c8a8;
+  --border-soft:  #e3d9bd;
+  --surface:      #ede2c5;
+  --shadow:       rgba(58, 47, 36, 0.10);
+  --shadow-deep:  rgba(58, 47, 36, 0.18);
+  --highlight:    rgba(139, 111, 71, 0.18);
+
+  /* Folder palette — each: fill, deep (border/dot), ink (deep title color) */
+  --f-knowledge:        #e6c4a4;
+  --f-knowledge-deep:   #c89a72;
+  --f-knowledge-ink:    #5e3618;
+
+  --f-career:           #c8d4ab;
+  --f-career-deep:      #9bb077;
+  --f-career-ink:       #2f4221;
+
+  --f-reading:          #b9cfde;
+  --f-reading-deep:     #88aac4;
+  --f-reading-ink:      #233e54;
+
+  --f-ai:               #d5c1d6;
+  --f-ai-deep:          #a98caa;
+  --f-ai-ink:           #3e2540;
+
+  --f-tasks:            #ead8a8;
+  --f-tasks-deep:       #cab476;
+  --f-tasks-ink:        #5c441c;
+
+  --f-journal:          #e4c2b8;
+  --f-journal-deep:     #c08c80;
+  --f-journal-ink:      #4e221c;
+}
+
+/* ── Dark theme ──────────────────────────────────────────────────── */
+.cz.theme-dark {
+  --bg:           #1c1916;
+  --bg-deep:      #14110e;
+  --paper:        #25211b;
+  --text:         #e4dbc7;
+  --text-muted:   #a89881;
+  --text-faint:   #695e4f;
+  --accent:       #d4a767;
+  --accent-soft:  #b88c4f;
+  --link:         #d4a767;
+  --border:       #3a3229;
+  --border-soft:  #2a2520;
+  --surface:      #221e19;
+  --shadow:       rgba(0, 0, 0, 0.35);
+  --shadow-deep:  rgba(0, 0, 0, 0.55);
+  --highlight:    rgba(212, 167, 103, 0.22);
+
+  /* Folder palette in dark: low-luminance fills with the same hue
+     family. Ink becomes the soft tinted text. */
+  --f-knowledge:        #3e2c1f;
+  --f-knowledge-deep:   #6a4a30;
+  --f-knowledge-ink:    #d6a576;
+
+  --f-career:           #2f3826;
+  --f-career-deep:      #506240;
+  --f-career-ink:       #b6c992;
+
+  --f-reading:          #1f2d39;
+  --f-reading-deep:     #36506a;
+  --f-reading-ink:      #98bbd4;
+
+  --f-ai:               #2e2236;
+  --f-ai-deep:          #4e3a5a;
+  --f-ai-ink:           #cdadcf;
+
+  --f-tasks:            #34291a;
+  --f-tasks-deep:       #5a4422;
+  --f-tasks-ink:        #d5b87a;
+
+  --f-journal:          #2d201d;
+  --f-journal-deep:     #553733;
+  --f-journal-ink:      #d6a99e;
+}
+
+/* Default theme = light. */
+.cz { /* fallback so even unlabelled .cz renders */ }
+.cz:not(.theme-light):not(.theme-dark) {
+  /* re-declare light tokens, hard-coded, so the un-themed root looks right. */
+  --bg:           #f4ecd8;
+  --bg-deep:      #ebe1c5;
+  --paper:        #fbf6e7;
+  --text:         #3a2f24;
+  --text-muted:   #6b5942;
+  --text-faint:   #a8956f;
+  --accent:       #8b6f47;
+  --accent-soft:  #b9986a;
+  --link:         #8b6f47;
+  --border:       #d4c8a8;
+  --border-soft:  #e3d9bd;
+  --surface:      #ede2c5;
+  --shadow:       rgba(58, 47, 36, 0.10);
+  --shadow-deep:  rgba(58, 47, 36, 0.18);
+  --highlight:    rgba(139, 111, 71, 0.18);
+  --f-knowledge: #e6c4a4; --f-knowledge-deep: #c89a72; --f-knowledge-ink: #5e3618;
+  --f-career:    #c8d4ab; --f-career-deep:    #9bb077; --f-career-ink:    #2f4221;
+  --f-reading:   #b9cfde; --f-reading-deep:   #88aac4; --f-reading-ink:   #233e54;
+  --f-ai:        #d5c1d6; --f-ai-deep:        #a98caa; --f-ai-ink:        #3e2540;
+  --f-tasks:     #ead8a8; --f-tasks-deep:     #cab476; --f-tasks-ink:     #5c441c;
+  --f-journal:   #e4c2b8; --f-journal-deep:   #c08c80; --f-journal-ink:   #4e221c;
+}
+
+/* ── Primitives ──────────────────────────────────────────────────── */
+
+.cz h1, .cz h2, .cz h3 {
+  font-family: var(--serif);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  text-wrap: balance;
+  margin: 0;
+}
+
+.cz .label-tiny {
+  font-family: var(--sans);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.cz .ui  { font-family: var(--sans); }
+.cz .mono { font-family: var(--mono); }
+.cz .italic { font-style: italic; color: var(--text-muted); }
+
+/* Hair-thin rule */
+.cz .rule      { border: 0; border-top: 1px solid var(--border); margin: 0; }
+.cz .rule-soft { border: 0; border-top: 1px solid var(--border-soft); margin: 0; }
+
+/* Chip — quiet pill for tags / nav. No drop-shadow; relies on color
+   contrast only. */
+.cz .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-family: var(--sans);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: transparent;
+  white-space: nowrap;
+  line-height: 1.6;
+}
+.cz .chip-strong {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+.cz .chip-accent {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+/* Segmented control — used for the single/dual toggle and light/dark. */
+.cz .seg {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  overflow: hidden;
+  padding: 2px;
+  gap: 2px;
+}
+.cz .seg > span {
+  padding: 3px 11px;
+  border-radius: 999px;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  line-height: 1.6;
+}
+.cz .seg > span.on {
+  background: var(--text);
+  color: var(--bg);
+}
+
+/* Reading-progress gauge */
+.cz .gauge {
+  height: 2px;
+  background: var(--border-soft);
+  position: relative;
+  overflow: hidden;
+  border-radius: 1px;
+}
+.cz .gauge > i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--accent);
+  border-radius: 1px;
+}

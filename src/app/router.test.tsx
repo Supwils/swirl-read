@@ -28,7 +28,7 @@ describe('production route tree', () => {
       app?.children?.map((c) => ('index' in c ? '<index>' : c.path)),
     ).toEqual(['<index>', ':vaultId'])
     // The vaultId route now wraps a layout (VaultLayout) with its own
-    // index (VaultHome) and splat child (DocumentPage).
+    // index (PebbleGarden) and splat child (DocumentPage).
     const vaultRoute = app?.children?.find(
       (c) => !('index' in c) && c.path === ':vaultId',
     )
@@ -36,13 +36,7 @@ describe('production route tree', () => {
       (vaultRoute && 'children' in vaultRoute ? vaultRoute.children : [])?.map(
         (c) => ('index' in c ? '<index>' : c.path),
       ),
-    ).toEqual([
-      '<index>',
-      '__chat__',
-      '__chat__/:sessionId',
-      '__review__/:batchId',
-      '*',
-    ])
+    ).toEqual(['<index>', '__review__/:batchId', '*'])
   })
 
   it('renders LandingPage at /', () => {
@@ -62,11 +56,12 @@ describe('production route tree', () => {
     ).toBeInTheDocument()
   })
 
-  it('renders VaultHome with vaultId at /app/:vaultId', async () => {
+  it('renders PebbleGarden with reauthorize prompt at /app/:vaultId', async () => {
     renderAt('/app/my-knowledge')
-    // Unregistered vault shows the M6.3 reauthorize prompt with the
-    // vault id as the heading. The 'no-handle' branch resolves
-    // asynchronously after listHandleIds().
+    // Unregistered vault: PebbleGarden detects the missing adapter and
+    // mounts the M6.3 reauthorize prompt with the vault id as the
+    // heading. The 'no-handle' branch resolves asynchronously after
+    // listHandleIds().
     expect(
       await screen.findByRole('heading', { level: 2, name: /my-knowledge/i }),
     ).toBeInTheDocument()

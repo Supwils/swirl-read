@@ -1,8 +1,23 @@
 # SwirlRead — Reading Experience Design
 
-> Status: Decided 2026-05-01 · Living document
+> Status: Decided 2026-05-01 · Living document · **Browse + multi-pane refresh shipped 2026-05-13**
 
 This document captures the visual and interaction design of the core reading experience. It is the product's identity.
+
+---
+
+## 2026-05-13 update — Pebble Garden + Workspace
+
+The vault root view and the reading shell were rebuilt to match the design canvas in `docs/new-design/`:
+
+- **Browse**: the vault root (`/app/:vaultId`) now renders **Pebble Garden** — top-level folders as organic pastel tiles, files inside as monospace pills. Sub-folder navigation is by drilling (clicking a pebble title); deep folders show their children as their own pebbles. `+N more` on a pebble reveals hidden files inline; folder titles drill in. Right-click any file pill opens the design-spec ContextMenu (Open here / Open in split pane / Open beside / Open in new tab / divider / Peek preview / Reveal in folder / Copy path / Copy contents).
+- **Reading shell**: documents render inside the **Workspace** which can be single or dual pane. ⌘\ splits, ⌘W closes the active pane, ⌘1 / ⌘2 focus pane 1 / 2. The splitter snaps to 40 / 50 / 60. Single mode behavior is byte-for-byte identical to the pre-refactor experience; only dual mode introduces per-pane scroll containers.
+- **Left rail**: a new **FileShelf** (`src/ui/reading-shell/FileShelf.tsx`) replaces the file-tree sidebar by default. Vault summary + Recently opened + collapsible folders + a 6-color "Jump" pebble strip. The legacy `FileTree` stays behind `settings.useLegacyTree` for one release window.
+- **Chrome toggles**: the header bar now exposes a `Single / Dual` segmented toggle (when on a vault route) and a `Light / Dark` theme toggle as first-class controls. Sepia / OLED / Auto are still settable from the settings panel.
+
+The "single-column, 720 px, hover-summoned UI" doctrine below is unchanged for single-pane reading. The dual-pane layout intentionally drops the 720 px clamp so two columns can fit comfortably side by side.
+
+Folder palette source of truth: `src/styles/themes.css` (`--f-<id>` / `-deep` / `-ink` for `knowledge / career / reading / ai / tasks / journal`). Unknown folders hash-mod-6 into the same six buckets — see `src/core/vault/folder-color.ts`.
 
 ---
 

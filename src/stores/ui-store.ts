@@ -80,6 +80,23 @@ export const DEFAULT_EDITOR_LINE_NUMBERS = false
 export const DEFAULT_EDITOR_LINE_WRAP = true
 export const DEFAULT_EDITOR_FONT_SIZE: EditorFontSize = 'md'
 export const DEFAULT_TOC_MAX_LEVEL: TocMaxLevel = 6
+/**
+ * RX3 — opt-in fallback to the legacy `FileTree.tsx` sidebar. Defaults to
+ * `false` so new vaults render the design-spec `FileShelf` instead. The
+ * old tree is kept behind this flag for one release window per the Pebble
+ * Garden + Workspace handoff; it will be removed once telemetry shows
+ * no-one is using it.
+ */
+export const DEFAULT_USE_LEGACY_TREE = false
+/**
+ * Persisted "which folder is currently expanded in the FileShelf". One row
+ * at a time so the sidebar never sprawls into a wall. `null` means none.
+ */
+export const DEFAULT_SHELF_EXPANDED_FOLDER_ID: string | null = null
+/** Per-window splitter ratio for the dual-pane Workspace (PR B Step 5). */
+export const DEFAULT_PANE_SPLIT_RATIO = 0.5
+export const PANE_SPLIT_RATIO_MIN = 0.2
+export const PANE_SPLIT_RATIO_MAX = 0.8
 
 const PREF_PREFIX = 'ui:'
 
@@ -101,6 +118,9 @@ interface UIStoreState {
   editorLineWrap: boolean
   editorFontSize: EditorFontSize
   tocMaxLevel: TocMaxLevel
+  useLegacyTree: boolean
+  shelfExpandedFolderId: string | null
+  paneSplitRatio: number
   /** True after `init()` has finished loading from Dexie. */
   ready: boolean
 }
@@ -130,6 +150,9 @@ interface UIStoreActions {
   setEditorLineWrap: (on: boolean) => Promise<void>
   setEditorFontSize: (size: EditorFontSize) => Promise<void>
   setTocMaxLevel: (level: TocMaxLevel) => Promise<void>
+  setUseLegacyTree: (on: boolean) => Promise<void>
+  setShelfExpandedFolderId: (id: string | null) => Promise<void>
+  setPaneSplitRatio: (ratio: number) => Promise<void>
   resetToDefaults: () => Promise<void>
 }
 
@@ -194,6 +217,9 @@ const isFiniteNumber = (v: unknown): v is number =>
 
 const isBoolean = (v: unknown): v is boolean => typeof v === 'boolean'
 
+const isNullableString = (v: unknown): v is string | null =>
+  v === null || typeof v === 'string'
+
 /* ─── Store ────────────────────────────────────────────────────────── */
 
 export const useUIStore = create<UIStore>((set, get) => ({
@@ -214,6 +240,9 @@ export const useUIStore = create<UIStore>((set, get) => ({
   editorLineWrap: DEFAULT_EDITOR_LINE_WRAP,
   editorFontSize: DEFAULT_EDITOR_FONT_SIZE,
   tocMaxLevel: DEFAULT_TOC_MAX_LEVEL,
+  useLegacyTree: DEFAULT_USE_LEGACY_TREE,
+  shelfExpandedFolderId: DEFAULT_SHELF_EXPANDED_FOLDER_ID,
+  paneSplitRatio: DEFAULT_PANE_SPLIT_RATIO,
   ready: false,
 
   async init() {
@@ -233,6 +262,9 @@ export const useUIStore = create<UIStore>((set, get) => ({
       editorLineWrap,
       editorFontSize,
       tocMaxLevel,
+      useLegacyTree,
+      shelfExpandedFolderId,
+      paneSplitRatio,
     ] = await Promise.all([
       readPref('theme', isTheme, DEFAULT_THEME),
       readPref('fontFamily', isFontFamily, DEFAULT_FONT_FAMILY),
@@ -252,6 +284,13 @@ export const useUIStore = create<UIStore>((set, get) => ({
       readPref('editorLineWrap', isBoolean, DEFAULT_EDITOR_LINE_WRAP),
       readPref('editorFontSize', isEditorFontSize, DEFAULT_EDITOR_FONT_SIZE),
       readPref('tocMaxLevel', isTocMaxLevel, DEFAULT_TOC_MAX_LEVEL),
+      readPref('useLegacyTree', isBoolean, DEFAULT_USE_LEGACY_TREE),
+      readPref(
+        'shelfExpandedFolderId',
+        isNullableString,
+        DEFAULT_SHELF_EXPANDED_FOLDER_ID,
+      ),
+      readPref('paneSplitRatio', isFiniteNumber, DEFAULT_PANE_SPLIT_RATIO),
     ])
     set({
       theme,
@@ -272,6 +311,13 @@ export const useUIStore = create<UIStore>((set, get) => ({
       editorLineWrap,
       editorFontSize,
       tocMaxLevel,
+      useLegacyTree,
+      shelfExpandedFolderId,
+      paneSplitRatio: clamp(
+        paneSplitRatio,
+        PANE_SPLIT_RATIO_MIN,
+        PANE_SPLIT_RATIO_MAX,
+      ),
       ready: true,
     })
   },
@@ -392,6 +438,22 @@ export const useUIStore = create<UIStore>((set, get) => ({
     await writePref('tocMaxLevel', level)
   },
 
+  async setUseLegacyTree(on) {
+    set({ useLegacyTree: on })
+    await writePref('useLegacyTree', on)
+  },
+
+  async setShelfExpandedFolderId(id) {
+    set({ shelfExpandedFolderId: id })
+    await writePref('shelfExpandedFolderId', id)
+  },
+
+  async setPaneSplitRatio(ratio) {
+    const clamped = clamp(ratio, PANE_SPLIT_RATIO_MIN, PANE_SPLIT_RATIO_MAX)
+    set({ paneSplitRatio: clamped })
+    await writePref('paneSplitRatio', clamped)
+  },
+
   async resetToDefaults() {
     set({
       theme: DEFAULT_THEME,
@@ -408,6 +470,9 @@ export const useUIStore = create<UIStore>((set, get) => ({
       editorLineWrap: DEFAULT_EDITOR_LINE_WRAP,
       editorFontSize: DEFAULT_EDITOR_FONT_SIZE,
       tocMaxLevel: DEFAULT_TOC_MAX_LEVEL,
+      useLegacyTree: DEFAULT_USE_LEGACY_TREE,
+      shelfExpandedFolderId: DEFAULT_SHELF_EXPANDED_FOLDER_ID,
+      paneSplitRatio: DEFAULT_PANE_SPLIT_RATIO,
     })
     await Promise.all([
       writePref('theme', DEFAULT_THEME),
@@ -424,6 +489,9 @@ export const useUIStore = create<UIStore>((set, get) => ({
       writePref('editorLineWrap', DEFAULT_EDITOR_LINE_WRAP),
       writePref('editorFontSize', DEFAULT_EDITOR_FONT_SIZE),
       writePref('tocMaxLevel', DEFAULT_TOC_MAX_LEVEL),
+      writePref('useLegacyTree', DEFAULT_USE_LEGACY_TREE),
+      writePref('shelfExpandedFolderId', DEFAULT_SHELF_EXPANDED_FOLDER_ID),
+      writePref('paneSplitRatio', DEFAULT_PANE_SPLIT_RATIO),
     ])
   },
 }))

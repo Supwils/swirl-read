@@ -4,7 +4,6 @@ import { Link, Outlet, useMatch } from 'react-router'
 import {
   BookOpen,
   Maximize2,
-  MessageCircle,
   Minimize2,
   PanelLeftClose,
   PanelLeftOpen,
@@ -19,8 +18,16 @@ import { useReviewStore } from '@/stores/review-store'
 import { useUIStore } from '@/stores/ui-store'
 import { useVaultStore } from '@/stores/vault-store'
 import { Logo } from '@/ui/components/Logo'
+import { Toggle } from '@/ui/components/Toggle'
 import { TabStrip } from '@/ui/reading-shell/TabStrip'
 import { VaultSwitcher } from '@/ui/reading-shell/VaultSwitcher'
+import {
+  PANE_1,
+  PANE_2,
+  usePanesStore,
+  type ViewMode,
+} from '@/stores/panes-store'
+import type { Theme } from '@/stores/ui-store'
 import { deriveCurrentPathFromPathname } from './derive-current-path'
 import { useCommandPaletteHotkey } from './use-command-palette-hotkey'
 import { useDirtyNavigationGuard } from './use-dirty-navigation-guard'
@@ -90,6 +97,8 @@ export function AppShell() {
   const setChromeMode = useUIStore((s) => s.setChromeMode)
   const zenMode = useUIStore((s) => s.zenMode)
   const toggleZenMode = useUIStore((s) => s.toggleZenMode)
+  const theme = useUIStore((s) => s.theme)
+  const setTheme = useUIStore((s) => s.setTheme)
   // Whether the file tree is actually pinned (visible persistently).
   // In reading mode the tree is never pinned — only hover-summoned.
   const fileTreePinned = chromeMode === 'working' && fileTreeOpen
@@ -109,6 +118,40 @@ export function AppShell() {
   // hide it cleanly when the user is on a non-vault route like `/app`.
   const vaultMatch = useMatch('/app/:vaultId/*')
   const vaultId = vaultMatch?.params.vaultId
+  // Mode toggle only meaningful on a vault route. Sub to the whole
+  // record so React re-renders when the active vault's pane shape flips.
+  const panesByVault = usePanesStore((s) => s.panesByVault)
+  const vaultViewMode: ViewMode | null = vaultId
+    ? (panesByVault[vaultId]?.viewMode ?? 'single')
+    : null
+
+  /** Map between the chrome theme toggle (which only exposes the two
+   *  primary modes) and the underlying ui-store value (which also has
+   *  sepia / oled / auto, settable from the settings panel). The
+   *  toggle picks 'dark' when the current theme is dark/oled; anything
+   *  else is presented as 'light'. */
+  const themePrimary: 'light' | 'dark' =
+    theme === 'dark' || theme === 'oled' ? 'dark' : 'light'
+
+  const handleThemePrimaryChange = (next: 'light' | 'dark') => {
+    if (next === themePrimary) return
+    const target: Theme = next === 'dark' ? 'dark' : 'sepia'
+    void setTheme(target)
+  }
+
+  const handleViewModeChange = (next: ViewMode) => {
+    if (!vaultId) return
+    const store = usePanesStore.getState()
+    if (next === 'dual' && vaultViewMode === 'single') {
+      void store.splitPane(vaultId)
+      return
+    }
+    if (next === 'single' && vaultViewMode === 'dual') {
+      const active = store.panesByVault[vaultId]?.activePaneId ?? PANE_1
+      const closeTarget = active === PANE_1 ? PANE_2 : PANE_1
+      void store.closePane(vaultId, closeTarget)
+    }
+  }
   // `useMatch` already decodes the splat segment-aware, but route
   // parameters preserve `%` sequences as escaped — run through the
   // shared deriver so we get the same result as `VaultLayout`.
@@ -170,7 +213,27 @@ export function AppShell() {
             <TabStrip vaultId={vaultId} currentPath={currentPath} />
           </div>
         )}
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="flex shrink-0 items-center gap-2">
+          {vaultViewMode !== null && (
+            <Toggle<ViewMode>
+              value={vaultViewMode}
+              ariaLabel="Reading mode"
+              options={[
+                { value: 'single', label: 'Single' },
+                { value: 'dual', label: 'Dual' },
+              ]}
+              onChange={handleViewModeChange}
+            />
+          )}
+          <Toggle<'light' | 'dark'>
+            value={themePrimary}
+            ariaLabel="Theme"
+            options={[
+              { value: 'light', label: 'Light' },
+              { value: 'dark', label: 'Dark' },
+            ]}
+            onChange={handleThemePrimaryChange}
+          />
           <button
             type="button"
             onClick={() => void toggleChromeMode()}
@@ -216,16 +279,6 @@ export function AppShell() {
           >
             <Search size={18} aria-hidden="true" />
           </button>
-          {vaultId && (
-            <Link
-              to={`/app/${vaultId}/__chat__`}
-              className="swirlread-shell__icon-button"
-              aria-label="Open chat"
-              title="Open chat"
-            >
-              <MessageCircle size={18} aria-hidden="true" />
-            </Link>
-          )}
           <button
             type="button"
             onClick={() => void toggleToc()}

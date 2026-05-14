@@ -10,6 +10,12 @@
 
 AI features are **additive**, not central. SwirlRead must be a great reading experience without AI. AI is a Phase 2+ feature that makes a great experience even better.
 
+Current product boundary: AI appears as task-scoped reading tools — command
+palette `?` answers, document-grounded review cards, and future inline explain
+actions. SwirlRead does **not** currently have a standalone chat mode, chat
+session list, or persistent chat sidebar. That keeps the product centered on
+reading instead of becoming a general chatbot with a file viewer attached.
+
 ---
 
 ## Phase Plan
@@ -49,7 +55,8 @@ First AI features to ship after the reading experience is solid:
 - 🔜 **Auto TL;DR**: long documents (>2000 words) get an optional summary at the top
 - 🔜 **Smart highlight**: AI marks the 3 most important sentences in long documents (visual cue, not a modal)
 
-No vault-wide indexing yet. AI only sees what's currently in view.
+No vault-wide indexing yet. AI only sees what's currently in view, and only
+after an explicit user action.
 
 ---
 
@@ -184,7 +191,7 @@ These are non-negotiable and enforced architecturally:
 
 To keep the product focused:
 
-- ❌ **An AI chat sidebar** that's permanently visible (that's ChatGPT, not SwirlRead)
+- ❌ **A standalone AI chat mode or persistent chat sidebar** (that's ChatGPT, not SwirlRead)
 - ❌ **AI that auto-edits your files** (the user owns their content)
 - ❌ **AI that generates new content** unprompted (we read; we don't write for you)
 - ❌ **Provider lock-in** — every AI feature must work across providers

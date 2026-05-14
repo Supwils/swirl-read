@@ -4,6 +4,104 @@
 
 ---
 
+## 2026-05-13 · Browse + Workspace refresh (Pebble Garden, FileShelf, panes-store)
+
+**Status**: ✅ Three landed PRs replace the vault-root file-tree view with a
+design-spec **Pebble Garden** and the reading shell with a single/dual-pane
+**Workspace**. All driven by `docs/new-design/` (AGENTS.md + HANDOFF.md +
+artboards). Single-pane reading is byte-for-byte unchanged; multi-pane and the
+new browse surface ride on top.
+
+### Surfaces
+
+- **`/app/:vaultId`** → `PebbleGarden`. Top-level folders render as organic
+  pastel pebbles (6-color palette in `themes.css` + `folderColorId` resolver in
+  `src/core/vault/folder-color.ts`). Files render as monospace pills inside the
+  pebble; `+N more` expands hidden files inline; clicking a folder title
+  drills into it (multi-level breadcrumb back). Right-click on a file pill
+  opens the shared `ContextMenu` (9 actions in HANDOFF §3.6 order).
+- **`/app/:vaultId/*`** → `Workspace`. Wraps `DocumentPage` so single mode is a
+  transparent passthrough. ⌘\ splits to dual; ⌘W closes the active pane;
+  ⌘1 / ⌘2 focus. Per-pane scroll memory uses the existing reader-store with a
+  paneId-scoped key (`${paneId}::${path}`); pane 2's doc is restored from
+  Dexie on reload (URL only encodes the active pane's path).
+- **Reading-view sidebar** → `FileShelf` replaces `FileTree` by default
+  (`settings.useLegacyTree` flag preserves the tree for one release window).
+  Vault summary + Recently opened + collapsible folders (single-expanded,
+  persisted) + 6-color Jump strip.
+- **Chrome** → new `Light / Dark` + `Single / Dual` segmented toggles in the
+  header. Sepia / OLED / Auto themes still settable from the settings panel.
+
+### Stores
+
+- **New** `src/stores/panes-store.ts` — per-vault `{ panes: [{id, currentPath}],
+activePaneId, viewMode }`. Registers a `vault-lifecycle` deletion hook;
+  Dexie v10 adds a `panes` table keyed by `vaultId`.
+- **ui-store** gains `useLegacyTree`, `shelfExpandedFolderId`, `paneSplitRatio`
+  (with min/max clamps, persistence, reset path).
+- **Tabs and scroll memory** stay window-shared; the simpler model avoids a
+  schema-breaking refactor and keeps PR risk close to zero.
+
+### Tokens
+
+- `src/styles/themes.css` extended with the design-spec
+  `--bg / --paper / --text / --accent / --shadow / --highlight` family and a
+  `--f-<id> / -deep / -ink` group per folder (six folders × three tokens) on
+  every theme. The legacy `--color-*` family is untouched so the existing
+  reading shell, prose, code, and Tailwind theme keys keep rendering.
+- New CSS shards `pebble-garden.css`, `file-shelf.css`, `workspace.css` —
+  imported from `globals.css` in cascade order after the existing shards.
+
+### Tests + verification
+
+- `pnpm check:full` green at the end of each PR.
+- 947 tests passing (was 924); new suites: `folder-color`, `PebbleGarden`,
+  `ContextMenu`, `FileShelf`, `panes-store`.
+- Bundle: main `262.62 KB gz` (was 256.16), CSS `28.98 KB gz` (was 27.41) —
+  both within their `bundle-size.json` budgets.
+- Time-bomb in `card-store.test.ts` (hard-coded `2026-05-11` "future" date)
+  fixed in-flight so `check:full` stays green past that date.
+
+### Known follow-ups
+
+- Sub-folder drilling fetches one level at a time; pre-warm caching is a
+  follow-up for the file-tree-cache module.
+- Touch right-click in Pebble Garden is unresolved (HANDOFF §7).
+- `Peek preview` / `Reveal in folder` items in ContextMenu are disabled until
+  the hover-preview pin + a desktop adapter land.
+- `useLegacyTree` flag is scheduled for removal one release window after this
+  one ships.
+
+---
+
+## 2026-05-10 · Remove standalone chat mode
+
+**Status**: ✅ Chat mode is backed out for now. The product is back to the
+original reading-first shape: document reading, command palette navigation, and
+the existing AI ask / review-card features remain; there is no standalone chat
+route or document-header chat action.
+
+### What changed
+
+- Removed the `/app/:vaultId/__chat__` route pair and its lazy route wrapper.
+- Removed the top-bar chat icon and the document header `Chat` action.
+- Removed the local chat UI, CSS shard, chat persistence module, context bridge,
+  selection-transfer helper, and their tests.
+- Removed the dedicated chat bridge design doc from the develop-docs index.
+- Kept Dexie at schema version 9, but v9 now declares only the current
+  reading/AI/review tables. This avoids trying to open an existing local v9
+  IndexedDB with a lower app schema version.
+
+### Verification
+
+- `pnpm vitest run src/app/router.test.tsx`
+- `pnpm typecheck`
+- `pnpm lint`
+- Targeted Prettier check over touched files.
+- `pnpm build`
+
+---
+
 ## 2026-05-10 · Architecture pass II — ChunkBoundary matrix + integration tests
 
 **Status**: ✅ Second architecture cut following the same audit. Two improvements: per-chunk error boundaries so a single broken renderer no longer blanks the page, and integration tests for the two AI surfaces that were carrying zero component-level coverage.
@@ -11,7 +109,7 @@
 ### ChunkBoundary primitive + matrix
 
 - New `src/ui/components/ChunkBoundary.tsx` — combined `Suspense` + class-component `ErrorBoundary`. Two visual modes: a card-style fallback with Retry button for full-surface failures, and an inline chip for per-block errors inside flowing prose. `getDerivedStateFromError` resets on Retry; `componentDidCatch` logs to `console.error` in dev so the React DevTools workflow stays intact. 6 unit tests cover the contract.
-- Replaced **every** `<Suspense fallback={null}>` site across the codebase: AppShell (settings, palette, shortcuts help, confirm, generate-cards), DocumentBodyView (every file renderer + edit surface), VaultLayout (TOC, tags), the review and chat route wrappers, and PaletteAskResult's answer renderer.
+- Replaced **every** `<Suspense fallback={null}>` site across the codebase: AppShell (settings, palette, shortcuts help, confirm, generate-cards), DocumentBodyView (every file renderer + edit surface), VaultLayout (TOC, tags), the review route wrapper, and PaletteAskResult's answer renderer.
 - Inline wrapping for the heavy renderable nodes the markdown pipeline emits: Mermaid diagrams, KaTeX math (block + inline). New `document-safe-renderers.tsx` exports `SafeMermaidDiagram`, `SafeMathBlock`, `SafeMathInline`; `document-components.tsx` (was `.ts`, now `.tsx`) wires them into the customComponents map. A bad diagram in a 50-paragraph note now shows a small "diagram couldn't render" chip in place of the broken block; surrounding prose continues rendering.
 - New `src/styles/chunk-boundary.css` styles both variants — dashed red-tinted card for the full-size fallback, a tiny inline chip with `vertical-align: baseline` for prose-friendly fit.
 
@@ -51,7 +149,6 @@ Estimated rating delta: 8.3 → ~8.7 / 10. Remaining gap to 9 is mostly Reposito
   - `editor-store` — drops the live edit session if it pointed at the removed vault
   - `sidebar-visibility-store` — drops the per-vault hidden set + persists the change
   - `core/review/card-store` — deletes `reviewBatches` + `reviewCards`
-  - `core/chat/chat-store` — was the only existing example of this pattern, now joined by everyone else
   - `core/navigation/backlinks` — new `forgetBacklinksForVault` does both `invalidateBacklinks` and the `db.backlinks` row delete
 - `vault-store.removeVault` now does its own narrow job — delete the `vaults` row + active-id pref, run the registry, dispose the adapter, fire lazy-cache invalidation. Adding a new per-vault domain in the future is a one-file change in that domain.
 
@@ -68,7 +165,7 @@ Estimated rating delta: 8.3 → ~8.7 / 10. Remaining gap to 9 is mostly Reposito
 
 ### Bundle effect
 
-- Main `index-*.js`: 261.79 → **255.59 KB gz** (−6.20 KB) — decoupling vault-store's static fan-out shrank the dependency graph (the dynamic chat-store import + dropped store-level imports are now per-store registrations).
+- Main `index-*.js`: 261.79 → **255.59 KB gz** (−6.20 KB) — decoupling vault-store's static fan-out shrank the dependency graph; per-vault cleanup now lives with each owning store.
 - DocumentEditSurface: 183.87 → **179.23 KB gz** (likely a CodeMirror minor in the lockfile).
 - CSS: 27.60 → **26.62 KB gz** (small dedup wins).
 - Tests: 892 → **910 passing** (+18: 6 lifecycle, 9 sidebar visibility tests already counted, +1 hide integration, +2 reader-store hook coverage).
@@ -76,78 +173,6 @@ Estimated rating delta: 8.3 → ~8.7 / 10. Remaining gap to 9 is mostly Reposito
 ### Why this matters
 
 The architecture audit rated the codebase 7.5/10 — solid but with three concrete gaps that hurt long-term maintainability: easy-to-forget fan-outs, no enforced bundle ceiling, duplicated path-matching logic. Each is the kind of "we'll fix it later" debt that compounds. Closing them now means the next ten features land into a cleaner substrate.
-
----
-
-## 2026-05-10 · Reading / Chat bridge foundation
-
-**Status**: ✅ First foundation slice landed. Reading remains the primary mode;
-chat is optional and connected only through explicit context refs.
-
-### What landed
-
-- New [reading-chat-bridge-plan.md](./reading-chat-bridge-plan.md) documents
-  the product boundary: file reading works alone, chat works alone, and the
-  only bridge is a user-visible set of attached sources.
-- **Dexie schema v9** adds `chatSessions`, `chatMessages`, and
-  `chatContextRefs`. File-backed refs store only vault/path/label; selected
-  text stores an explicit snapshot because it has no stable file identity.
-- New `src/core/chat/` module:
-  - `types.ts` — local chat domain types and source-ref discriminants.
-  - `chat-store.ts` — CRUD for sessions, messages, context refs, archive /
-    delete cascade, and vault-removal cleanup.
-  - `context-bridge.ts` — builds refs from the current document, selected
-    text, and direct wikilink neighbours; converts refs to AI `ContextChunk`s
-    by re-reading live vault content at send time.
-- `useVaultStore.removeVault` now also clears chat sessions/messages/context
-  refs for the removed vault.
-
-### Verification
-
-- `pnpm vitest run src/core/chat/chat-store.test.ts src/core/chat/context-bridge.test.ts`
-  — 11 tests passing.
-- `pnpm typecheck`
-- `pnpm format:check`
-
----
-
-## 2026-05-10 · Reading / Chat UI first slice
-
-**Status**: ✅ Optional chat mode now has a minimal working surface.
-
-### What landed
-
-- New lazy route pair: `/app/:vaultId/__chat__` and
-  `/app/:vaultId/__chat__/:sessionId`. Opening the base chat route resolves the
-  most recent session for that vault or creates a local blank one.
-- App shell gets a small `MessageCircle` chat icon only when a vault route is
-  active. Users who never touch it stay in the regular reading workflow.
-- Document header gets a `Chat` action beside `Edit` / `Review cards`. It
-  navigates to chat with `?attach=<current path>`, and the chat page converts
-  that into explicit context refs.
-- New `src/ui/chat/ChatPage.tsx`:
-  - local session list sidebar
-  - source-chip bar with links back to documents
-  - `Linked notes` action to add direct Markdown wikilink neighbours
-  - `Detach` action to clear the bridge
-  - message composer using the existing browser-side AI provider resolution
-  - conversation history is sent as a compact context chunk, separate from
-    reading-context chunks
-- New `src/styles/chat.css`, imported as a normal CSS shard. The surface is
-  dense and tool-like, not a landing page.
-
-### Verification
-
-- `pnpm vitest run src/app/router.test.tsx src/core/chat/chat-store.test.ts src/core/chat/context-bridge.test.ts`
-  — 17 tests passing. Router test still emits the existing jsdom
-  `window.scrollTo` warning.
-- `pnpm lint`
-- `pnpm typecheck`
-- Targeted Prettier check over touched files.
-- `pnpm build` passes. Main bundle reports **262.80 KB gz**; chat itself is
-  lazy, but the shell icon / route wiring adds a little to the entry bundle.
-
----
 
 ## 2026-05-10 · Audit follow-ups + sidebar visibility + Continue/Recent removal
 

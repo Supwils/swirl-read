@@ -125,8 +125,11 @@ describe('review card-store', () => {
   })
 
   it('purgeExpired drops batches and cascades their cards', async () => {
-    const expired = new Date('2026-05-08T00:00:00Z')
-    const future = new Date('2026-05-11T00:00:00Z')
+    // Times must be relative to FIXED_NOW (year 2099) rather than 2026, so
+    // `getBatch`'s lazy-purge — which compares against the real wall clock —
+    // doesn't drop the "future" batch out from under the assertion.
+    const expired = new Date(FIXED_NOW.getTime() - 24 * 3600 * 1000)
+    const future = new Date(FIXED_NOW.getTime() + 24 * 3600 * 1000)
     await persistBatch(
       makeBatch({ id: 'old', expiresAt: expired }),
       makeCards('old', 3).map((c) => ({ ...c, expiresAt: expired })),
@@ -136,7 +139,7 @@ describe('review card-store', () => {
       makeCards('new', 3).map((c) => ({ ...c, expiresAt: future })),
     )
 
-    await purgeExpired(new Date('2026-05-09T00:00:00Z').getTime())
+    await purgeExpired(FIXED_NOW.getTime())
     expect(await getBatch('old')).toBeNull()
     expect((await getCardsForBatch('old')).length).toBe(0)
     expect(await getBatch('new')).not.toBeNull()

@@ -44,6 +44,9 @@ export {
 
 export { slugify, generateVaultId } from './id'
 
+export { FOLDER_COLORS, folderColorId } from './folder-color'
+export type { FolderColorId } from './folder-color'
+
 export { FSAPIVaultAdapter } from './fsapi-adapter'
 export type { FSAPIVaultAdapterInit } from './fsapi-adapter'
 

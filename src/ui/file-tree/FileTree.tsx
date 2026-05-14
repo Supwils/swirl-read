@@ -6,19 +6,14 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { Link } from 'react-router'
 import { Eye, List, Network, RefreshCw } from 'lucide-react'
 import type { VaultEntry, VaultId, VaultPath } from '@/core/vault'
 import { useSidebarVisibilityStore } from '@/stores/sidebar-visibility-store'
 import { getAdapter, useVaultStore } from '@/stores/vault-store'
-import { filesForTag } from '@/core/navigation/tag-index'
-import type { TagIndex } from '@/core/navigation/tag-index'
-import { getTagIndex } from '@/ui/reading-shell/tag-index-cache'
 import { getListing, sortEntries } from './file-tree-cache'
 import { SectionsNav } from './SectionsNav'
 import { FileTreeNode } from './FileTreeNode'
 import { SidebarContextMenu } from './SidebarContextMenu'
-import { TagFilterBar } from './TagFilterBar'
 
 const GraphView = lazy(() =>
   import('./GraphView').then((m) => ({ default: m.GraphView })),
@@ -42,7 +37,6 @@ export function FileTree({ vaultId, currentPath }: FileTreeProps): ReactNode {
   const [rootEntries, setRootEntries] = useState<VaultEntry[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('tree')
-  const [activeTag, setActiveTag] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
   const contentRevision = useVaultStore(
@@ -222,36 +216,19 @@ export function FileTree({ vaultId, currentPath }: FileTreeProps): ReactNode {
   return (
     <div className="swirlread-file-tree__container">
       {toolbar}
-      <TagFilterBar
+      <SectionsNav
         vaultId={vaultId}
+        currentPath={currentPath}
         contentRevision={contentRevision}
-        activeTag={activeTag}
-        onSelect={setActiveTag}
+        onContextMenu={handleContextMenu}
       />
-      {activeTag ? (
-        <TaggedFilesList
-          vaultId={vaultId}
-          tag={activeTag}
-          currentPath={currentPath}
-          contentRevision={contentRevision}
-        />
-      ) : (
-        <>
-          <SectionsNav
-            vaultId={vaultId}
-            currentPath={currentPath}
-            contentRevision={contentRevision}
-            onContextMenu={handleContextMenu}
-          />
-          <FilesNav
-            vaultId={vaultId}
-            currentPath={currentPath}
-            rootEntries={sortEntries(rootEntries)}
-            contentRevision={contentRevision}
-            onContextMenu={handleContextMenu}
-          />
-        </>
-      )}
+      <FilesNav
+        vaultId={vaultId}
+        currentPath={currentPath}
+        rootEntries={sortEntries(rootEntries)}
+        contentRevision={contentRevision}
+        onContextMenu={handleContextMenu}
+      />
       {contextMenu && (
         <SidebarContextMenu
           x={contextMenu.x}
@@ -304,93 +281,6 @@ function FilesNav({
             onContextMenu={onContextMenu}
           />
         ))}
-      </ul>
-    </div>
-  )
-}
-
-function TaggedFilesList({
-  vaultId,
-  tag,
-  currentPath,
-  contentRevision,
-}: {
-  vaultId: VaultId
-  tag: string
-  currentPath: VaultPath
-  contentRevision: number
-}): ReactNode {
-  const [paths, setPaths] = useState<VaultPath[] | null>(null)
-
-  useEffect(() => {
-    const vault = getAdapter(vaultId)
-    if (!vault) return
-    let cancelled = false
-    setPaths(null)
-
-    void getTagIndex(vault)
-      .then((index: TagIndex) => {
-        if (!cancelled) setPaths(filesForTag(index, tag))
-      })
-      .catch(() => {
-        if (!cancelled) setPaths([])
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [vaultId, tag, contentRevision])
-
-  if (!paths) {
-    return (
-      <div className="swirlread-tag-results">
-        <p className="swirlread-file-tree__status">Loading…</p>
-      </div>
-    )
-  }
-
-  if (paths.length === 0) {
-    return (
-      <div className="swirlread-tag-results">
-        <p className="swirlread-file-tree__status">No files with #{tag}</p>
-      </div>
-    )
-  }
-
-  return (
-    <div className="swirlread-tag-results">
-      <p className="swirlread-file-tree__section-label">
-        #{tag} · {paths.length} file{paths.length !== 1 ? 's' : ''}
-      </p>
-      <ul className="swirlread-tag-results__list">
-        {paths.map((path) => {
-          const slash = path.lastIndexOf('/')
-          const name = slash === -1 ? path : path.slice(slash + 1)
-          const folder = slash === -1 ? '' : path.slice(0, slash)
-          const stem = name.includes('.')
-            ? name.slice(0, name.lastIndexOf('.'))
-            : name
-          const isCurrent = path === currentPath
-          return (
-            <li key={path} className="swirlread-tag-results__item">
-              <Link
-                to={`/app/${vaultId}/${path}`}
-                className={
-                  isCurrent
-                    ? 'swirlread-tag-results__link swirlread-tag-results__link--current'
-                    : 'swirlread-tag-results__link'
-                }
-              >
-                <span className="swirlread-tag-results__name">{stem}</span>
-                {folder && (
-                  <span className="swirlread-tag-results__folder">
-                    {folder}
-                  </span>
-                )}
-              </Link>
-            </li>
-          )
-        })}
       </ul>
     </div>
   )
