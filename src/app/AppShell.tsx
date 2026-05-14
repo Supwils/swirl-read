@@ -1,15 +1,14 @@
 import { lazy } from 'react'
 import { ChunkBoundary } from '@/ui/components/ChunkBoundary'
-import { Link, Outlet, useMatch } from 'react-router'
+import { Link, Outlet, useMatch, useNavigate } from 'react-router'
 import {
-  BookOpen,
+  Home,
   Maximize2,
   Minimize2,
   PanelLeftClose,
   PanelLeftOpen,
   PanelRightClose,
   PanelRightOpen,
-  PanelTop,
   Search,
   Settings,
 } from 'lucide-react'
@@ -93,12 +92,12 @@ export function AppShell() {
   const reviewIntent = useReviewStore((s) => s.pending)
   const dismissReview = useReviewStore((s) => s.dismissGenerate)
   const chromeMode = useUIStore((s) => s.chromeMode)
-  const toggleChromeMode = useUIStore((s) => s.toggleChromeMode)
   const setChromeMode = useUIStore((s) => s.setChromeMode)
   const zenMode = useUIStore((s) => s.zenMode)
   const toggleZenMode = useUIStore((s) => s.toggleZenMode)
   const theme = useUIStore((s) => s.theme)
   const setTheme = useUIStore((s) => s.setTheme)
+  const navigate = useNavigate()
   // Whether the file tree is actually pinned (visible persistently).
   // In reading mode the tree is never pinned — only hover-summoned.
   const fileTreePinned = chromeMode === 'working' && fileTreeOpen
@@ -187,9 +186,9 @@ export function AppShell() {
               })()
             }
             className="swirlread-shell__icon-button"
-            aria-label={fileTreePinned ? 'Hide file tree' : 'Show file tree'}
+            aria-label={fileTreePinned ? 'Hide file shelf' : 'Show file shelf'}
             aria-pressed={fileTreePinned}
-            title={fileTreePinned ? 'Hide file tree' : 'Show file tree'}
+            title={fileTreePinned ? 'Hide file shelf' : 'Show file shelf'}
           >
             {fileTreePinned ? (
               <PanelLeftClose size={18} aria-hidden="true" />
@@ -207,6 +206,17 @@ export function AppShell() {
             <span>SwirlRead</span>
           </Link>
           {hasAnyVault && <VaultSwitcher />}
+          {vaultId && (
+            <button
+              type="button"
+              onClick={() => void navigate(`/app/${vaultId}`)}
+              className="swirlread-shell__icon-button"
+              aria-label="Back to vault home"
+              title="Back to vault home (Pebble Garden)"
+            >
+              <Home size={18} aria-hidden="true" />
+            </button>
+          )}
         </div>
         {vaultId && (
           <div className="swirlread-shell__tabs">
@@ -234,28 +244,6 @@ export function AppShell() {
             ]}
             onChange={handleThemePrimaryChange}
           />
-          <button
-            type="button"
-            onClick={() => void toggleChromeMode()}
-            className="swirlread-shell__icon-button"
-            aria-label={
-              chromeMode === 'reading'
-                ? 'Switch to working mode'
-                : 'Switch to reading mode'
-            }
-            aria-pressed={chromeMode === 'reading'}
-            title={
-              chromeMode === 'reading'
-                ? 'Reading mode — sidebars hover-summon. Click for working mode.'
-                : 'Working mode — sidebars persistent. Click for reading mode.'
-            }
-          >
-            {chromeMode === 'reading' ? (
-              <BookOpen size={18} aria-hidden="true" />
-            ) : (
-              <PanelTop size={18} aria-hidden="true" />
-            )}
-          </button>
           <button
             type="button"
             onClick={toggleZenMode}

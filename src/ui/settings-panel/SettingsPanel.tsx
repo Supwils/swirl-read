@@ -82,6 +82,7 @@ export function SettingsPanel(): ReactNode {
             <LineHeightControl />
             <ContentWidthControl />
             <FrontmatterControl />
+            <ChromeModeControl />
             <FileTreeControl />
             <LegacyTreeControl />
             <TocControl />
@@ -258,6 +259,39 @@ function FrontmatterControl(): ReactNode {
             }}
           >
             {option.label}
+          </button>
+        ))}
+      </div>
+    </fieldset>
+  )
+}
+
+function ChromeModeControl(): ReactNode {
+  const chromeMode = useUIStore((state) => state.chromeMode)
+  const setChromeMode = useUIStore((state) => state.setChromeMode)
+
+  return (
+    <fieldset className="swirlread-settings__group">
+      <legend className="swirlread-settings__legend">Chrome mode</legend>
+      <p className="swirlread-settings__hint">
+        Reading: sidebars hover-summon. Working: sidebars stay pinned.
+      </p>
+      <div className="swirlread-settings__chip-row">
+        {(['reading', 'working'] as const).map((mode) => (
+          <button
+            key={mode}
+            type="button"
+            className={
+              chromeMode === mode
+                ? 'swirlread-settings__chip swirlread-settings__chip--active'
+                : 'swirlread-settings__chip'
+            }
+            aria-pressed={chromeMode === mode}
+            onClick={() => {
+              void setChromeMode(mode)
+            }}
+          >
+            {mode === 'reading' ? 'Reading' : 'Working'}
           </button>
         ))}
       </div>

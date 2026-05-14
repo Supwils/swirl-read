@@ -26,6 +26,7 @@ import {
 } from '@/stores/panes-store'
 import { usePaneHotkeys } from '@/app/use-pane-hotkeys'
 import { DocumentPage } from './DocumentPage'
+import { PaneTabStrip } from './PaneTabStrip'
 import { Splitter } from './Splitter'
 
 function encodePathForUrl(path: string): string {
@@ -72,9 +73,12 @@ function PaneBody({
           <span className="swirlread-workspace__pane-label">
             {paneId === PANE_1 ? 'Pane 1' : 'Pane 2'}
           </span>
-          <span className="swirlread-workspace__pane-path">
-            {filePath || '(empty)'}
-          </span>
+          <PaneTabStrip
+            vaultId={vaultId}
+            paneId={paneId}
+            currentPath={filePath || null}
+            isActive={isActive}
+          />
           <div className="swirlread-workspace__pane-controls">
             {onExpand && (
               <button

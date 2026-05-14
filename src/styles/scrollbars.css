@@ -75,7 +75,12 @@ html {
 .swirlread-cmdk__list,
 .swirlread-settings__body,
 .swirlread-shortcuts__body,
-.swirlread-tags-panel__body {
+.swirlread-tags-panel__body,
+.swirlread-file-shelf,
+.swirlread-file-shelf__folders,
+.swirlread-workspace__pane-scroll,
+.swirlread-pebble-garden,
+.swirlread-pebble {
   scrollbar-width: thin;
 }
 .swirlread-scroll-thin::-webkit-scrollbar,
@@ -84,7 +89,12 @@ html {
 .swirlread-cmdk__list::-webkit-scrollbar,
 .swirlread-settings__body::-webkit-scrollbar,
 .swirlread-shortcuts__body::-webkit-scrollbar,
-.swirlread-tags-panel__body::-webkit-scrollbar {
+.swirlread-tags-panel__body::-webkit-scrollbar,
+.swirlread-file-shelf::-webkit-scrollbar,
+.swirlread-file-shelf__folders::-webkit-scrollbar,
+.swirlread-workspace__pane-scroll::-webkit-scrollbar,
+.swirlread-pebble-garden::-webkit-scrollbar,
+.swirlread-pebble::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
@@ -94,7 +104,12 @@ html {
 .swirlread-cmdk__list::-webkit-scrollbar-thumb,
 .swirlread-settings__body::-webkit-scrollbar-thumb,
 .swirlread-shortcuts__body::-webkit-scrollbar-thumb,
-.swirlread-tags-panel__body::-webkit-scrollbar-thumb {
+.swirlread-tags-panel__body::-webkit-scrollbar-thumb,
+.swirlread-file-shelf::-webkit-scrollbar-thumb,
+.swirlread-file-shelf__folders::-webkit-scrollbar-thumb,
+.swirlread-workspace__pane-scroll::-webkit-scrollbar-thumb,
+.swirlread-pebble-garden::-webkit-scrollbar-thumb,
+.swirlread-pebble::-webkit-scrollbar-thumb {
   border-width: 2px;
 }
 

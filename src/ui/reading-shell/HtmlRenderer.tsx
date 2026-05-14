@@ -34,6 +34,45 @@ interface HtmlRendererProps {
 
 type ViewMode = 'preview' | 'source'
 
+/**
+ * Theme-matched scrollbar styles injected into the iframe's srcDoc. The
+ * iframe lives in its own document so the app-level scrollbars.css can't
+ * reach inside; this small block keeps the scrollbar visually consistent
+ * with the rest of the reader. Auto-themes via `prefers-color-scheme`
+ * so it stays in sync if the user flips OS dark mode while reading.
+ */
+const HTML_SCROLLBAR_CSS = `<style data-injected="swirlread-scrollbar">
+  html { scrollbar-color: rgba(58, 47, 36, 0.40) transparent; scrollbar-width: thin; }
+  *::-webkit-scrollbar { width: 10px; height: 10px; background: transparent; }
+  *::-webkit-scrollbar-thumb {
+    background-color: rgba(58, 47, 36, 0.30);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  *::-webkit-scrollbar-thumb:hover { background-color: rgba(58, 47, 36, 0.55); }
+  *::-webkit-scrollbar-corner { background: transparent; }
+  @media (prefers-color-scheme: dark) {
+    html { scrollbar-color: rgba(228, 219, 199, 0.40) transparent; }
+    *::-webkit-scrollbar-thumb { background-color: rgba(228, 219, 199, 0.30); }
+    *::-webkit-scrollbar-thumb:hover { background-color: rgba(228, 219, 199, 0.55); }
+  }
+</style>`
+
+/**
+ * Splice the scrollbar style into the iframe srcDoc. If the source has a
+ * `<head>`, we insert at its start so the user's own rules can still
+ * override. If not, we just prepend.
+ */
+function injectScrollbarStyles(source: string): string {
+  const headOpen = source.search(/<head\b[^>]*>/i)
+  if (headOpen >= 0) {
+    const tagEnd = source.indexOf('>', headOpen) + 1
+    return source.slice(0, tagEnd) + HTML_SCROLLBAR_CSS + source.slice(tagEnd)
+  }
+  return HTML_SCROLLBAR_CSS + source
+}
+
 export function HtmlRenderer({ source }: HtmlRendererProps): ReactNode {
   const [mode, setMode] = useState<ViewMode>('preview')
 
@@ -81,7 +120,7 @@ export function HtmlRenderer({ source }: HtmlRendererProps): ReactNode {
           // unique opaque origin, no scripts, no top-nav, no forms, no
           // plugins. Do NOT loosen this without a sanitization pass.
           sandbox=""
-          srcDoc={source}
+          srcDoc={injectScrollbarStyles(source)}
           title="HTML preview"
           className="swirlread-html__frame"
           data-testid="html-renderer-iframe"

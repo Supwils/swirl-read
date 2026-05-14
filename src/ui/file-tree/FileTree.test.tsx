@@ -244,7 +244,7 @@ describe('FileTree (M4.3) — visibility toggle', () => {
     renderAt('/app/shell-toggle')
 
     expect(useUIStore.getState().fileTreeOpen).toBe(true)
-    const button = screen.getByRole('button', { name: /hide file tree/i })
+    const button = screen.getByRole('button', { name: /hide file shelf/i })
     await user.click(button)
     await waitFor(() => {
       expect(useUIStore.getState().fileTreeOpen).toBe(false)

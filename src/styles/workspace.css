@@ -71,6 +71,91 @@
   white-space: nowrap;
 }
 
+/* Per-pane tab strip — sits between pane label and pane controls in
+   dual mode. Each tab is an in-pane file switcher; the chrome's main
+   TabStrip continues to drive the vault-wide URL in single mode. */
+.swirlread-pane-tabs {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.swirlread-pane-tabs::-webkit-scrollbar {
+  height: 4px;
+}
+
+.swirlread-pane-tabs__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px 2px 9px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  max-width: 220px;
+  flex: 0 0 auto;
+}
+
+.swirlread-pane-tabs__tab[data-current='true'] {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+
+.swirlread-pane-tabs__tab[data-pinned='true']
+  .swirlread-pane-tabs__label-button::before {
+  content: '◆';
+  font-size: 8px;
+  margin-right: 5px;
+  opacity: 0.6;
+}
+
+.swirlread-pane-tabs__label-button {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  padding: 1px 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.swirlread-pane-tabs__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.swirlread-pane-tabs__close:hover {
+  background: rgb(0 0 0 / 0.12);
+  opacity: 1;
+}
+
+.swirlread-pane-tabs__tab[data-current='true']
+  .swirlread-pane-tabs__close:hover {
+  background: rgb(255 255 255 / 0.18);
+}
+
 .swirlread-workspace__pane-controls {
   display: flex;
   gap: 4px;

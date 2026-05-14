@@ -12,7 +12,13 @@ describe('HtmlRenderer (M7.5)', () => {
     expect(iframe.tagName).toBe('IFRAME')
     // Empty sandbox string == every restriction enabled.
     expect(iframe.getAttribute('sandbox')).toBe('')
-    expect(iframe.getAttribute('srcdoc')).toBe(SAMPLE)
+    // srcdoc carries the user HTML plus an injected scrollbar style
+    // block (so the iframe's internal scrollbar matches the app theme).
+    // Assert that the original HTML is intact and the injected style is
+    // present; the exact placement is an implementation detail.
+    const srcdoc = iframe.getAttribute('srcdoc') ?? ''
+    expect(srcdoc).toContain(SAMPLE)
+    expect(srcdoc).toContain('data-injected="swirlread-scrollbar"')
   })
 
   it('shows a "Sandboxed" badge so the reader knows scripts are off', () => {

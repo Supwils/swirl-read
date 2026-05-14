@@ -229,6 +229,23 @@ describe('reader store — scroll positions (M2.7)', () => {
     ).toBe(100 + MAX_SCROLL_POSITIONS_PER_VAULT + 4)
   })
 
+  it('stores paneId-scoped keys independently from window-scoped keys', async () => {
+    // Window scroll (no scope): plain path key.
+    await useReaderStore.getState().recordScrollPosition('vault-a', 'a.md', 100)
+    // Pane 1: same path scoped to pane-1.
+    await useReaderStore
+      .getState()
+      .recordScrollPosition('vault-a', 'pane-1::a.md', 200)
+    // Pane 2: same path scoped to pane-2.
+    await useReaderStore
+      .getState()
+      .recordScrollPosition('vault-a', 'pane-2::a.md', 300)
+
+    expect(getScrollPosition('vault-a', 'a.md')?.scrollY).toBe(100)
+    expect(getScrollPosition('vault-a', 'pane-1::a.md')?.scrollY).toBe(200)
+    expect(getScrollPosition('vault-a', 'pane-2::a.md')?.scrollY).toBe(300)
+  })
+
   it('clears scroll positions for one vault only', async () => {
     await useReaderStore.getState().recordScrollPosition('vault-a', 'a.md', 100)
     await useReaderStore.getState().recordScrollPosition('vault-b', 'b.md', 200)
