@@ -48,9 +48,37 @@ export interface OpenAICompatibleConfig {
   fetch?: typeof fetch
 }
 
+/**
+ * Guard against leaking the API key to an untrusted endpoint. HTTPS to any
+ * host is allowed; plain HTTP only for loopback (local LLM backends like
+ * Ollama / LM Studio listen on http://localhost). A cleartext request to a
+ * remote host would expose the Bearer token on the wire, so we refuse it
+ * before the key ever leaves the tab.
+ */
+function assertSafeBaseURL(baseURL: string): void {
+  let url: URL
+  try {
+    url = new URL(baseURL)
+  } catch {
+    throw new AIError('network', 'The AI base URL is not a valid URL.')
+  }
+  const isLoopback =
+    url.hostname === 'localhost' ||
+    url.hostname === '127.0.0.1' ||
+    url.hostname === '[::1]' ||
+    url.hostname === '::1'
+  if (url.protocol === 'https:') return
+  if (url.protocol === 'http:' && isLoopback) return
+  throw new AIError(
+    'network',
+    'The AI base URL must use HTTPS (plain HTTP is allowed only for localhost) so your API key is never sent in the clear.',
+  )
+}
+
 export function createOpenAICompatibleProvider(
   config: OpenAICompatibleConfig,
 ): AIProvider {
+  assertSafeBaseURL(config.baseURL)
   const fetchImpl = config.fetch ?? globalThis.fetch.bind(globalThis)
   const baseURL = config.baseURL.replace(/\/$/, '')
   const endpoint = `${baseURL}/chat/completions`
@@ -128,20 +156,12 @@ function composeUserMessage(prompt: string, context: ContextChunk[]): string {
   return `${blocks.join('\n\n')}\n\nQuestion: ${prompt}`
 }
 
-interface ChatCompletionDelta {
-  choices: {
-    delta?: {
-      content?: string
-      // Reasoning models (DeepSeek-R1, Xiaomi MiMo, Qwen-thinking) split
-      // their output into hidden chain-of-thought (`reasoning_content`)
-      // and the user-visible answer (`content`). When the model truncates
-      // mid-reasoning we'd see only `reasoning_content` — capturing it as
-      // a fallback prevents "empty response" from looking like an outage.
-      reasoning_content?: string
-      reasoning?: string
-    }
-  }[]
-}
+// Reasoning models (DeepSeek-R1, Xiaomi MiMo, Qwen-thinking) split their
+// output into hidden chain-of-thought (`reasoning_content`) and the visible
+// answer (`content`). When the model truncates mid-reasoning we'd see only
+// `reasoning_content` — capturing it as a fallback prevents "empty response"
+// from looking like an outage. We read these fields off a narrowed `unknown`
+// in `parseEvent` rather than asserting a shape onto attacker-reachable JSON.
 
 function parseEvent(raw: string): string | null {
   if (raw.length === 0) return null
@@ -152,10 +172,14 @@ function parseEvent(raw: string): string | null {
     return null
   }
   if (!isObject(parsed)) return null
-  const choices = (parsed as unknown as ChatCompletionDelta).choices
+  // Narrow the untrusted network JSON field-by-field instead of asserting a
+  // shape onto it. `choices[0].delta` is the only path we read.
+  const choices = parsed.choices
   if (!Array.isArray(choices) || choices.length === 0) return null
-  const delta = choices[0]?.delta
-  if (!delta) return null
+  const first: unknown = choices[0]
+  if (!isObject(first)) return null
+  const delta = first.delta
+  if (!isObject(delta)) return null
   // Visible answer wins; we wrap reasoning fragments in <think> tags so
   // downstream parsers (e.g. the review-card JSON parser) can strip them
   // with a single regex pass instead of carrying field-aware logic.

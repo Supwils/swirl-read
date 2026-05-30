@@ -78,6 +78,44 @@ export function Splitter({
     [handlePointerMove, handlePointerUp],
   )
 
+  // Keyboard operation so the split is rebalanceable without a pointer:
+  // ←/→ nudge by 2 %, Home/End jump to the min/max clamp, and the digit-ish
+  // PageUp/PageDown step by 10 %. Each change commits immediately.
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLButtonElement>) => {
+      const STEP = 0.02
+      const PAGE = 0.1
+      let next: number | null = null
+      switch (event.key) {
+        case 'ArrowLeft':
+          next = ratio - STEP
+          break
+        case 'ArrowRight':
+          next = ratio + STEP
+          break
+        case 'PageUp':
+          next = ratio - PAGE
+          break
+        case 'PageDown':
+          next = ratio + PAGE
+          break
+        case 'Home':
+          next = min
+          break
+        case 'End':
+          next = max
+          break
+        default:
+          return
+      }
+      event.preventDefault()
+      const clamped = Math.min(Math.max(next, min), max)
+      onChange(clamped)
+      onCommit?.(clamped)
+    },
+    [ratio, min, max, onChange, onCommit],
+  )
+
   useEffect(() => {
     return () => {
       window.removeEventListener('pointermove', handlePointerMove)
@@ -93,8 +131,11 @@ export function Splitter({
       aria-valuenow={Math.round(ratio * 100)}
       aria-valuemin={Math.round(min * 100)}
       aria-valuemax={Math.round(max * 100)}
+      aria-valuetext={`Left pane ${String(Math.round(ratio * 100))}% width`}
       role="separator"
+      tabIndex={0}
       onPointerDown={handlePointerDown}
+      onKeyDown={handleKeyDown}
     >
       <span aria-hidden="true" />
       <span aria-hidden="true" />

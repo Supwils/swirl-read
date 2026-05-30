@@ -13,6 +13,7 @@
  */
 
 import type { VaultEntry, VaultFile, VaultFileSystem } from './types'
+import { isSystemFolder } from './folder-weight'
 
 export interface WalkOptions {
   /** When set, only files whose extension is in this set are returned
@@ -25,6 +26,14 @@ export interface WalkOptions {
    * snappy.
    */
   maxFiles?: number
+  /**
+   * When `true`, descend into system / hidden folders (`.git`,
+   * `.obsidian`, `node_modules`, …). Defaults to `false` so search and the
+   * command palette see the user's actual notes, not `.git` internals — on
+   * a real Obsidian/git vault those would otherwise eat the file cap and
+   * push real documents out of the results.
+   */
+  includeSystemFolders?: boolean
 }
 
 const DEFAULT_MAX_FILES = 5_000
@@ -35,6 +44,7 @@ export async function walkAllFiles(
 ): Promise<VaultFile[]> {
   const max = options.maxFiles ?? DEFAULT_MAX_FILES
   const ext = options.includeExtensions
+  const includeSystem = options.includeSystemFolders ?? false
   const out: VaultFile[] = []
 
   // BFS keeps the result level-ordered (top-level files before nested
@@ -51,6 +61,7 @@ export async function walkAllFiles(
     }
     for (const entry of entries) {
       if (entry.isDirectory) {
+        if (!includeSystem && isSystemFolder(entry.name)) continue
         queue.push(entry.path)
       } else {
         if (ext && !ext.has(entry.extension.toLowerCase())) continue

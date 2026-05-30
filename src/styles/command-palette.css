@@ -290,6 +290,53 @@
   color: var(--color-text);
 }
 
+.swirlread-vault-switcher__row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.1rem;
+  border-radius: 6px;
+}
+
+.swirlread-vault-switcher__row .swirlread-vault-switcher__item {
+  flex: 1;
+  min-width: 0;
+}
+
+.swirlread-vault-switcher__row:hover .swirlread-vault-switcher__remove,
+.swirlread-vault-switcher__row:focus-within .swirlread-vault-switcher__remove {
+  opacity: 1;
+}
+
+.swirlread-vault-switcher__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  opacity: 0.45;
+  transition:
+    opacity 120ms ease,
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.swirlread-vault-switcher__remove:hover,
+.swirlread-vault-switcher__remove:focus-visible {
+  background: color-mix(in srgb, var(--color-danger, #b03a2e) 16%, transparent);
+  color: var(--color-danger, #b03a2e);
+  opacity: 1;
+  outline: none;
+}
+
+.swirlread-vault-switcher__remove:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
 /* Palette ask result (Phase 3) ────────────────────────────────────── */
 
 .swirlread-ask {

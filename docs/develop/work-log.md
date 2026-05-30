@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-05-30 · Browse/dual-pane polish + R3 production-readiness audit & fixes
+
+Three rounds, one commit. (1) Pebble Garden sizing by recursive **folder weight** (new `core/vault/folder-weight.ts`, skips system folders), system folders sorted last + muted, drill-in "← Back", folder + sub-folder right-click → Open here/left/right, sub-folders shown as chips inside cards. (2) Dual-pane scroll decoupled — each pane is its own bounded scroller (`.swirlread-workspace--dual` height + `overscroll-behavior`), wheel follows the pane under the cursor; splitter grab zone + keyboard resize.
+
+(3) **R3 audit** — three read-only agents swept the whole codebase; findings triaged CRITICAL→LOW and fixed:
+
+- **CRITICAL** — edit-loss guards on pane close/expand + vault switch + router blocker (`confirmLeaveIfDirty` + `editor.cancel()`); `removeVault` made crash-safe (dependent rows/hooks first, metadata last, boot orphan sweep `pruneOrphanedVaultData`, promote next survivor); pane mutators bail for unregistered vault + `getOrInit` stops persisting (kills post-removal orphan-row race).
+- **HIGH** — `walkAllFiles` skips system folders so search/palette see real notes; ContextMenu Open-right navigates + autofocus + pre-paint reposition + disabled items hide shortcuts; FilePill ⌘-click opens right; blob cache cleared on external refresh (`clearBlobURLCache`); dialog-store serializes concurrent confirms; DocumentPage suppresses self-edit "changed outside" banner; re-opening the same folder reuses its vault via `isSameEntry`.
+- **MEDIUM** — ChunkBoundary `resetKey`; PebbleGarden weight pool (concurrency 6, single setState) + `goToCrumb` functional updater; Splitter keyboard + `aria-valuetext`; PaneTabStrip neighbour-survivor; auto-restore `pendingAdapters` lifecycle hook; reader-store prune count-gate; AI `assertSafeBaseURL` (HTTPS / loopback only — no key leak) + narrowed stream JSON; AIControl test-connection no longer surfaces raw errors.
+- **LOW** — removed dead `VaultHome`; honest Pebble footer copy; empty-drill keeps trail; KaTeX `trust:false`; tabs-store cancels reorder timer on `forgetVault`.
+
+All gates green: **1001 tests**, typecheck, lint (max-warnings 0), format, build, bundle (main 265.50 KB gz / 280, CSS 30.30 / 32). XSS surface audited — already strong (`pipeline.ts` inline sanitize schema, `allowDangerousHtml:false`, HTML via `srcDoc`+`sandbox=""`).
+
 ## 2026-05-13 · Browse + Workspace refresh (Pebble Garden, FileShelf, panes-store)
 
 **Status**: ✅ Three landed PRs replace the vault-root file-tree view with a

@@ -59,3 +59,11 @@ export {
   deleteHandle,
   listHandleIds,
 } from './handle-storage'
+
+export {
+  SYSTEM_FOLDER_NAMES,
+  isSystemFolder,
+  folderWeight,
+  invalidateFolderWeights,
+  __resetFolderWeightCacheForTests,
+} from './folder-weight'

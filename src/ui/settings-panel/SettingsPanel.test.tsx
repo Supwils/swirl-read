@@ -1,5 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useApplyUIPrefs } from '@/app/use-apply-ui-prefs'
 import { db, __resetDbForTests } from '@/core/persistence/db'
@@ -109,7 +115,8 @@ describe('SettingsPanel (M2.4)', () => {
     const user = await openSettings()
 
     await user.click(screen.getByRole('button', { name: 'Wide' }))
-    await user.click(screen.getByLabelText(/show the left sidebar/i))
+    const fileTreeGroup = screen.getByRole('group', { name: 'File tree' })
+    await user.click(within(fileTreeGroup).getByRole('button', { name: 'Off' }))
 
     expect(useUIStore.getState().contentWidth).toBe('wide')
     expect(useUIStore.getState().fileTreeOpen).toBe(false)
@@ -122,7 +129,8 @@ describe('SettingsPanel (M2.4)', () => {
   it('toggles the table-of-contents preference (M4.6)', async () => {
     const user = await openSettings()
 
-    await user.click(screen.getByLabelText(/show the right sidebar/i))
+    const tocGroup = screen.getByRole('group', { name: 'Table of contents' })
+    await user.click(within(tocGroup).getByRole('button', { name: 'Off' }))
 
     expect(useUIStore.getState().tocOpen).toBe(!DEFAULT_TOC_OPEN)
     expect((await db.preferences.get('ui:tocOpen'))?.value).toBe(

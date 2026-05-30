@@ -71,8 +71,17 @@ export function PaneTabStrip({
       // missing document.
       void useTabsStore.getState().closeTab(vaultId, path)
       if (currentPath === path) {
+        // Focus the neighbour, not the leftmost tab: the tab to the right of
+        // the closed one slides into its slot; if the closed tab was last,
+        // fall back to the new last (its left neighbour). Matches the main
+        // TabStrip's right-then-left behaviour.
+        const closedIdx = tabs.findIndex((t) => t.path === path)
         const remaining = tabs.filter((t) => t.path !== path)
-        const next = remaining[0]?.path ?? null
+        const next =
+          remaining.length === 0
+            ? null
+            : (remaining[Math.min(closedIdx, remaining.length - 1)]?.path ??
+              null)
         const store = usePanesStore.getState()
         void store.setCurrentPath(vaultId, paneId, next)
         if (next && (isActive || paneId === PANE_1)) {

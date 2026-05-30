@@ -69,11 +69,25 @@
   text-decoration: underline dotted;
 }
 
-/* Grid layout — two modes.
-   - 6+ folders ("dense"): the artboard's 4-col asymmetric layout with
-     named cells, so the user sees the organic pebble arrangement.
-   - <6 folders ("sparse" / drilled view): a responsive auto-fit grid so
-     2 / 3 / 4-folder layouts don't leave huge empty cells.
+/* Explicit one-level-up control, shown alongside the breadcrumb trail when
+   the user has drilled into a sub-folder. Reuses the breadcrumb button look
+   with a touch more weight so it reads as the primary "go back" affordance. */
+.swirlread-pebble-garden__back {
+  font-weight: 600;
+}
+
+.swirlread-pebble-garden__back:hover {
+  text-decoration: underline dotted;
+}
+
+/* Grid layout — span-based so a folder's card SIZE reflects its content
+   volume (recursive weight → 'lg' | 'md' | 'sm'), not its grid position.
+   Each cell carries `data-size`; the spans below turn that into a 1× / 2×
+   footprint. `grid-auto-flow: dense` lets lighter pebbles backfill the gaps
+   a large one leaves, keeping the arrangement compact and organic.
+   - 6+ folders ("dense"): a fixed 4-column masonry.
+   - <6 folders ("sparse" / drilled view): an auto-filling masonry so small
+     folder counts don't leave huge empty cells.
    The toggle is `data-layout="dense" | "sparse"`. */
 .swirlread-pebble-garden__grid {
   display: grid;
@@ -83,46 +97,40 @@
 }
 
 .swirlread-pebble-garden__grid[data-layout='dense'] {
-  grid-template-columns: 1.1fr 0.9fr 0.9fr 1.1fr;
-  grid-auto-rows: minmax(198px, auto);
-  grid-template-areas:
-    'cell-0 cell-0 cell-1 cell-1'
-    'cell-0 cell-0 cell-2 cell-2'
-    'cell-3 cell-4 cell-5 cell-5';
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: minmax(180px, auto);
+  grid-auto-flow: dense;
 }
 
 .swirlread-pebble-garden__grid[data-layout='sparse'] {
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  grid-auto-rows: minmax(220px, auto);
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-auto-rows: minmax(180px, auto);
+  grid-auto-flow: dense;
 }
 
 .swirlread-pebble-garden__cell {
   min-width: 0;
   min-height: 0;
 }
-.swirlread-pebble-garden__grid[data-layout='dense']
-  .swirlread-pebble-garden__cell--0 {
-  grid-area: cell-0;
+
+.swirlread-pebble-garden__cell[data-size='lg'] {
+  grid-column: span 2;
+  grid-row: span 2;
 }
-.swirlread-pebble-garden__grid[data-layout='dense']
-  .swirlread-pebble-garden__cell--1 {
-  grid-area: cell-1;
+.swirlread-pebble-garden__cell[data-size='md'] {
+  grid-column: span 2;
+  grid-row: span 1;
 }
-.swirlread-pebble-garden__grid[data-layout='dense']
-  .swirlread-pebble-garden__cell--2 {
-  grid-area: cell-2;
+.swirlread-pebble-garden__cell[data-size='sm'] {
+  grid-column: span 1;
+  grid-row: span 1;
 }
-.swirlread-pebble-garden__grid[data-layout='dense']
-  .swirlread-pebble-garden__cell--3 {
-  grid-area: cell-3;
-}
-.swirlread-pebble-garden__grid[data-layout='dense']
-  .swirlread-pebble-garden__cell--4 {
-  grid-area: cell-4;
-}
-.swirlread-pebble-garden__grid[data-layout='dense']
-  .swirlread-pebble-garden__cell--5 {
-  grid-area: cell-5;
+
+/* System / hidden folders (`.git`, `node_modules`, …): shown but visually
+   recessed so content folders carry the eye. Tasteful, not a hard gray-out. */
+.swirlread-pebble[data-muted='true'] {
+  opacity: 0.62;
+  filter: saturate(0.7);
 }
 
 /* Loose files in the current folder (the drilled view's bottom row).
@@ -201,6 +209,33 @@
   font-weight: 500;
   color: var(--text);
   cursor: pointer;
+}
+
+/* Sub-folder chips inside a pebble — the folder skeleton rendered above
+   the file pills so structure is visible without drilling in. Base palette
+   is set inline (per the folder's color bucket, like the file pills); the
+   rules here add the interactive lift and keep names from overflowing. */
+.swirlread-pebble__folder-chip {
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease,
+    filter 120ms ease;
+  min-width: 0;
+}
+
+.swirlread-pebble__folder-chip:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.97);
+  box-shadow: 0 2px 6px var(--shadow);
+}
+
+.swirlread-pebble__folder-chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.swirlread-pebble__folder-chip-name {
+  min-width: 0;
 }
 
 /* Context menu — portal-mounted right-click menu for file pills. ──── */
@@ -294,17 +329,18 @@
 }
 
 @media (max-width: 880px) {
-  .swirlread-pebble-garden__grid {
+  .swirlread-pebble-garden__grid[data-layout='dense'],
+  .swirlread-pebble-garden__grid[data-layout='sparse'] {
     grid-template-columns: 1fr;
-    grid-template-rows: repeat(6, 200px);
-    grid-template-areas:
-      'cell-0'
-      'cell-1'
-      'cell-2'
-      'cell-3'
-      'cell-4'
-      'cell-5';
+    grid-auto-rows: minmax(180px, auto);
     padding: 0 20px 24px;
+  }
+  /* Stack cleanly on narrow screens: every card is full-width, 1 row tall. */
+  .swirlread-pebble-garden__cell[data-size='lg'],
+  .swirlread-pebble-garden__cell[data-size='md'],
+  .swirlread-pebble-garden__cell[data-size='sm'] {
+    grid-column: span 1;
+    grid-row: span 1;
   }
   .swirlread-pebble-garden__masthead {
     padding: 16px 20px 10px;

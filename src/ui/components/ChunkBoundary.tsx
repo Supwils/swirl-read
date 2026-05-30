@@ -44,6 +44,12 @@ interface ChunkBoundaryProps {
   inline?: boolean
   /** Suspense fallback while a lazy child is loading. */
   loadingFallback?: ReactNode
+  /** When this value changes, a latched error is cleared so the boundary
+   *  retries rendering. Pass the current document path (or any identity
+   *  that should "reset" the crash) — otherwise a single bad document keeps
+   *  the crash card up even after navigating to a healthy doc of the same
+   *  renderer kind. */
+  resetKey?: unknown
 }
 
 interface ChunkBoundaryState {
@@ -73,6 +79,15 @@ export class ChunkBoundary extends Component<
         '\n',
         info.componentStack,
       )
+    }
+  }
+
+  override componentDidUpdate(prevProps: ChunkBoundaryProps): void {
+    // A new resetKey means we're rendering different content (e.g. the user
+    // navigated to another document). Clear a latched error so the healthy
+    // content gets a chance to render instead of the stale crash card.
+    if (this.state.error && prevProps.resetKey !== this.props.resetKey) {
+      this.setState({ error: null })
     }
   }
 

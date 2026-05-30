@@ -31,6 +31,19 @@
 .swirlread-landing-recents__item {
   margin: 0;
   padding: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 0.15rem;
+  border-radius: 6px;
+}
+
+/* The remove affordance is muted by default so it doesn't shout for
+   attention, but stays visible + tap-able on touch surfaces where
+   :hover never fires. Pointer devices brighten it on hover/focus. */
+.swirlread-landing-recents__item:hover .swirlread-landing-recents__remove,
+.swirlread-landing-recents__item:focus-within
+  .swirlread-landing-recents__remove {
+  opacity: 1;
 }
 
 .swirlread-landing-recents__link {
@@ -42,12 +55,45 @@
   text-decoration: none;
   color: var(--color-text);
   transition: background-color 120ms ease;
+  flex: 1;
+  min-width: 0;
 }
 
 .swirlread-landing-recents__link:hover,
 .swirlread-landing-recents__link:focus-visible {
   background: color-mix(in srgb, var(--color-accent) 12%, transparent);
   outline: none;
+}
+
+.swirlread-landing-recents__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  opacity: 0.45;
+  transition:
+    opacity 120ms ease,
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.swirlread-landing-recents__remove:hover,
+.swirlread-landing-recents__remove:focus-visible {
+  background: color-mix(in srgb, var(--color-danger, #b03a2e) 16%, transparent);
+  color: var(--color-danger, #b03a2e);
+  opacity: 1;
+  outline: none;
+}
+
+/* Keyboard users without :hover still need the remove button reachable. */
+.swirlread-landing-recents__remove:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
 }
 
 .swirlread-landing-recents__icon {
@@ -68,6 +114,14 @@
   font-size: 0.74rem;
   color: var(--color-text-muted);
   white-space: nowrap;
+}
+
+.swirlread-landing-recents__overflow {
+  margin: 0 0.2rem 0.5rem;
+  padding: 0;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  font-style: italic;
 }
 
 .swirlread-landing-recents__cta {

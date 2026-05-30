@@ -55,6 +55,17 @@ export function FolderPicker({ open, onClose, onPicked }: FolderPickerProps) {
         return
       }
       setState('error')
+      // Permission-denied gets a clear, actionable message rather than the
+      // raw DOMException text ("The user aborted a request." etc.).
+      if (
+        err instanceof DOMException &&
+        (err.name === 'NotAllowedError' || err.name === 'SecurityError')
+      ) {
+        setErrorMessage(
+          'SwirlRead needs permission to read that folder. Try again and choose “Allow”.',
+        )
+        return
+      }
       setErrorMessage(
         err instanceof Error
           ? err.message

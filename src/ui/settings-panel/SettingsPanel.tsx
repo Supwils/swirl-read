@@ -25,7 +25,47 @@ import {
   type Theme,
 } from '@/stores/ui-store'
 import { useHintsStore } from '@/stores/hints-store'
+import { Toggle } from '@/ui/components/Toggle'
 import { AIControl } from './AIControl'
+
+/**
+ * BooleanToggleControl — wraps the chrome `Toggle` so the settings panel
+ * presents boolean prefs in the same segmented "On / Off" style as the
+ * theme + view-mode controls in the header. Replaces the legacy bare
+ * `<input type="checkbox">` rows that read as system chrome rather than
+ * SwirlRead UI.
+ */
+function BooleanToggleControl({
+  label,
+  hint,
+  value,
+  onChange,
+}: {
+  label: string
+  hint?: string
+  value: boolean
+  onChange: (next: boolean) => void
+}): ReactNode {
+  return (
+    <div className="swirlread-settings__field swirlread-settings__field--inline">
+      <div className="swirlread-settings__inline-text">
+        <span className="swirlread-settings__label">{label}</span>
+        {hint ? <span className="swirlread-settings__hint">{hint}</span> : null}
+      </div>
+      <Toggle<'on' | 'off'>
+        value={value ? 'on' : 'off'}
+        ariaLabel={label}
+        options={[
+          { value: 'on', label: 'On' },
+          { value: 'off', label: 'Off' },
+        ]}
+        onChange={(next) => {
+          onChange(next === 'on')
+        }}
+      />
+    </div>
+  )
+}
 
 const FONT_OPTIONS: { value: FontFamily; label: string }[] = [
   { value: 'serif', label: 'Serif' },
@@ -304,20 +344,14 @@ function FileTreeControl(): ReactNode {
   const setFileTreeOpen = useUIStore((state) => state.setFileTreeOpen)
 
   return (
-    <label className="swirlread-settings__toggle-row">
-      <span>
-        <span className="swirlread-settings__label">File tree</span>
-        <span className="swirlread-settings__hint">Show the left sidebar</span>
-      </span>
-      <input
-        type="checkbox"
-        checked={fileTreeOpen}
-        onChange={(event) => {
-          void setFileTreeOpen(event.target.checked)
-        }}
-        className="swirlread-settings__checkbox"
-      />
-    </label>
+    <BooleanToggleControl
+      label="File tree"
+      hint="Show the left sidebar"
+      value={fileTreeOpen}
+      onChange={(next) => {
+        void setFileTreeOpen(next)
+      }}
+    />
   )
 }
 
@@ -326,22 +360,14 @@ function LegacyTreeControl(): ReactNode {
   const setUseLegacyTree = useUIStore((state) => state.setUseLegacyTree)
 
   return (
-    <label className="swirlread-settings__toggle-row">
-      <span>
-        <span className="swirlread-settings__label">Legacy file tree</span>
-        <span className="swirlread-settings__hint">
-          Show the older tree-style sidebar instead of the new FileShelf
-        </span>
-      </span>
-      <input
-        type="checkbox"
-        checked={useLegacyTree}
-        onChange={(event) => {
-          void setUseLegacyTree(event.target.checked)
-        }}
-        className="swirlread-settings__checkbox"
-      />
-    </label>
+    <BooleanToggleControl
+      label="Legacy file tree"
+      hint="Show the older tree-style sidebar instead of the new FileShelf"
+      value={useLegacyTree}
+      onChange={(next) => {
+        void setUseLegacyTree(next)
+      }}
+    />
   )
 }
 
@@ -350,20 +376,14 @@ function TocControl(): ReactNode {
   const setTocOpen = useUIStore((state) => state.setTocOpen)
 
   return (
-    <label className="swirlread-settings__toggle-row">
-      <span>
-        <span className="swirlread-settings__label">Table of contents</span>
-        <span className="swirlread-settings__hint">Show the right sidebar</span>
-      </span>
-      <input
-        type="checkbox"
-        checked={tocOpen}
-        onChange={(event) => {
-          void setTocOpen(event.target.checked)
-        }}
-        className="swirlread-settings__checkbox"
-      />
-    </label>
+    <BooleanToggleControl
+      label="Table of contents"
+      hint="Show the right sidebar"
+      value={tocOpen}
+      onChange={(next) => {
+        void setTocOpen(next)
+      }}
+    />
   )
 }
 
@@ -379,39 +399,23 @@ function EditorPreferencesGroup(): ReactNode {
     <fieldset className="swirlread-settings__field">
       <legend className="swirlread-settings__label">Editing</legend>
 
-      <label className="swirlread-settings__field swirlread-settings__field--inline">
-        <span>
-          <span className="swirlread-settings__label">Line numbers</span>
-          <span className="swirlread-settings__hint">
-            Show line gutter while editing
-          </span>
-        </span>
-        <input
-          type="checkbox"
-          checked={editorLineNumbers}
-          onChange={(event) => {
-            void setEditorLineNumbers(event.target.checked)
-          }}
-          className="swirlread-settings__checkbox"
-        />
-      </label>
+      <BooleanToggleControl
+        label="Line numbers"
+        hint="Show line gutter while editing"
+        value={editorLineNumbers}
+        onChange={(next) => {
+          void setEditorLineNumbers(next)
+        }}
+      />
 
-      <label className="swirlread-settings__field swirlread-settings__field--inline">
-        <span>
-          <span className="swirlread-settings__label">Wrap long lines</span>
-          <span className="swirlread-settings__hint">
-            Soft-wrap instead of horizontal scroll
-          </span>
-        </span>
-        <input
-          type="checkbox"
-          checked={editorLineWrap}
-          onChange={(event) => {
-            void setEditorLineWrap(event.target.checked)
-          }}
-          className="swirlread-settings__checkbox"
-        />
-      </label>
+      <BooleanToggleControl
+        label="Wrap long lines"
+        hint="Soft-wrap instead of horizontal scroll"
+        value={editorLineWrap}
+        onChange={(next) => {
+          void setEditorLineWrap(next)
+        }}
+      />
 
       <fieldset className="swirlread-settings__field">
         <legend className="swirlread-settings__label">Editor font size</legend>

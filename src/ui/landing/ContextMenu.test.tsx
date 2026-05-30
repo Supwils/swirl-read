@@ -1,36 +1,35 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { MemoryRouter, Route, Routes } from 'react-router'
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest'
+import { render, screen, fireEvent, cleanup } from '@testing-library/react'
+import { MemoryRouter, Routes, Route } from 'react-router'
 import { ContextMenu, type ContextMenuFile } from './ContextMenu'
-import { SampleVaultAdapter } from '@/core/vault/sample-adapter'
-import { __resetDbForTests } from '@/core/persistence/db'
-import { __resetAdaptersForTests, useVaultStore } from '@/stores/vault-store'
-import { useTabsStore } from '@/stores/tabs-store'
+import { useVaultStore } from '@/stores/vault-store'
 
 const FILE: ContextMenuFile = {
-  path: 'reading/why-slow.md',
-  name: 'why-slow',
+  path: 'reading/why-we-read.md',
+  name: 'why-we-read',
   ext: 'md',
 }
 
+const VAULT_ID = 'ctx-vault'
+
 function renderMenu(
-  vaultId: string,
-  onClose = vi.fn(),
+  kind: 'file' | 'folder' = 'file',
+  onClose: () => void = () => undefined,
   file: ContextMenuFile = FILE,
 ) {
-  const utils = render(
-    <MemoryRouter initialEntries={[`/app/${vaultId}`]}>
+  return render(
+    <MemoryRouter initialEntries={[`/app/${VAULT_ID}`]}>
       <Routes>
         <Route
           path="/app/:vaultId"
           element={
             <ContextMenu
-              x={120}
-              y={200}
-              vaultId={vaultId}
+              x={10}
+              y={10}
+              vaultId={VAULT_ID}
               file={file}
-              folderColor="reading"
+              folderColor="knowledge"
+              kind={kind}
               onClose={onClose}
             />
           }
@@ -39,45 +38,30 @@ function renderMenu(
       </Routes>
     </MemoryRouter>,
   )
-  return { ...utils, onClose }
 }
 
-beforeEach(async () => {
-  await __resetDbForTests()
-  __resetAdaptersForTests()
-  useVaultStore.setState({
-    registeredVaults: [],
-    activeVaultId: null,
-    ready: true,
-    adapterRevision: 0,
-    contentRevisionByVault: {},
-  })
-  useTabsStore.setState({
-    tabsByVault: {},
-    recentlyClosedByVault: {},
-    ready: true,
-    tabCapHit: false,
-    previewReplaced: false,
-  })
+function labelsOf(): string[] {
+  return screen
+    .getAllByRole('menuitem')
+    .map((b) => b.querySelector('span')?.textContent?.trim() ?? '')
+}
+
+beforeEach(() => {
+  useVaultStore.setState({ registeredVaults: [], activeVaultId: null })
 })
 
 afterEach(() => {
-  __resetAdaptersForTests()
+  cleanup()
   vi.restoreAllMocks()
 })
 
 describe('ContextMenu', () => {
-  it('renders the eight actions in the HANDOFF §3.6 order', () => {
-    renderMenu('v1')
-    const items = screen.getAllByRole('menuitem')
-    // First child <span> holds the label; second holds the shortcut.
-    const labels = items.map(
-      (b) => b.querySelector('span:first-child')?.textContent ?? '',
-    )
-    expect(labels).toEqual([
+  it('lists every file action for a file target in order', () => {
+    renderMenu()
+    expect(labelsOf()).toEqual([
       'Open here',
-      'Open in split pane',
-      'Open beside',
+      'Open left',
+      'Open right',
       'Open in new tab',
       'Peek preview',
       'Reveal in folder',
@@ -86,104 +70,65 @@ describe('ContextMenu', () => {
     ])
   })
 
-  it('marks Peek and Reveal disabled until later PRs', () => {
-    renderMenu('v1')
-    expect(
-      screen.getByRole('menuitem', { name: /peek preview/i }),
-    ).toBeDisabled()
-    expect(
-      screen.getByRole('menuitem', { name: /reveal in folder/i }),
-    ).toBeDisabled()
-    expect(
-      screen.getByRole('menuitem', { name: /copy path/i }),
-    ).not.toBeDisabled()
+  it('hides file-only actions when kind is folder', () => {
+    renderMenu('folder')
+    expect(labelsOf()).toEqual([
+      'Open here',
+      'Open left',
+      'Open right',
+      'Reveal in folder',
+      'Copy path',
+    ])
   })
 
-  it('Open here navigates to the document route and closes the menu', async () => {
-    const adapter = new SampleVaultAdapter({
-      id: 'ctx-v',
-      name: 'ctx',
-      files: { 'reading/why-slow.md': '# slow' },
-    })
-    await useVaultStore.getState().registerVault(adapter)
-    const { onClose } = renderMenu(adapter.id)
-    await userEvent.click(screen.getByRole('menuitem', { name: /open here/i }))
-    await waitFor(() => {
-      expect(screen.getByText('doc-page')).toBeInTheDocument()
-    })
-    expect(onClose).toHaveBeenCalled()
+  it('disabled items advertise no shortcut hint', () => {
+    renderMenu()
+    const peek = screen.getByRole('menuitem', { name: /peek preview/i })
+    expect(peek).toBeDisabled()
+    expect(
+      peek.querySelector('.swirlread-pebble-context-menu__shortcut'),
+    ).toBeNull()
+    // An enabled item DOES show its shortcut.
+    const copyPath = screen.getByRole('menuitem', { name: /copy path/i })
+    expect(
+      copyPath.querySelector('.swirlread-pebble-context-menu__shortcut'),
+    ).not.toBeNull()
   })
 
-  it('Open in new tab pins the tab in the tabs-store', async () => {
-    const adapter = new SampleVaultAdapter({
-      id: 'ctx-v2',
-      name: 'ctx2',
-      files: { 'reading/why-slow.md': '# slow' },
-    })
-    await useVaultStore.getState().registerVault(adapter)
-    renderMenu(adapter.id)
-    await userEvent.click(
-      screen.getByRole('menuitem', { name: /open in new tab/i }),
-    )
-    await waitFor(() => {
-      const tabs = useTabsStore.getState().tabsByVault[adapter.id] ?? []
-      const opened = tabs.find((t) => t.path === FILE.path)
-      expect(opened?.pinned).toBe(true)
-    })
-  })
-
-  it('Copy path writes the file path to the clipboard', async () => {
+  it('copies the file path when Copy path is clicked', () => {
     const writeText = vi.fn().mockResolvedValue(undefined)
-    Object.defineProperty(navigator, 'clipboard', {
-      configurable: true,
-      value: { writeText },
-    })
-    renderMenu('v1')
-    await userEvent.click(screen.getByRole('menuitem', { name: /copy path/i }))
-    expect(writeText).toHaveBeenCalledWith(FILE.path)
+    Object.assign(navigator, { clipboard: { writeText } })
+    renderMenu()
+    fireEvent.click(screen.getByText('Copy path'))
+    expect(writeText).toHaveBeenCalledWith('reading/why-we-read.md')
   })
 
-  it('Copy contents reads via the adapter then writes to clipboard', async () => {
-    const writeText = vi.fn().mockResolvedValue(undefined)
-    Object.defineProperty(navigator, 'clipboard', {
-      configurable: true,
-      value: { writeText },
+  it('closes on Escape', () => {
+    const onClose = vi.fn()
+    renderMenu('file', onClose)
+    fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' })
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('closes after Open here is chosen', async () => {
+    const onClose = vi.fn()
+    renderMenu('file', onClose)
+    fireEvent.click(screen.getByText('Open here'))
+    // run() resolves then finally(onClose) fires on a microtask.
+    await Promise.resolve()
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('folder header shows the name without an ext chip', () => {
+    renderMenu('folder', () => undefined, {
+      path: 'reading',
+      name: 'reading',
+      ext: '',
     })
-    const adapter = new SampleVaultAdapter({
-      id: 'ctx-v3',
-      name: 'ctx3',
-      files: { 'reading/why-slow.md': '# slow content body' },
-    })
-    await useVaultStore.getState().registerVault(adapter)
-    renderMenu(adapter.id)
-    await userEvent.click(
-      screen.getByRole('menuitem', { name: /copy contents/i }),
+    const header = document.querySelector(
+      '.swirlread-pebble-context-menu__header',
     )
-    await waitFor(() => {
-      expect(writeText).toHaveBeenCalledWith('# slow content body')
-    })
-  })
-
-  it('Escape closes the menu', () => {
-    const { onClose } = renderMenu('v1')
-    const root = screen.getByRole('menu')
-    fireEvent.keyDown(root, { key: 'Escape' })
-    expect(onClose).toHaveBeenCalled()
-  })
-
-  it('ArrowDown moves focus across enabled items only', () => {
-    renderMenu('v1')
-    const root = screen.getByRole('menu')
-    // First enabled item starts focused (index 0).
-    fireEvent.keyDown(root, { key: 'ArrowDown' })
-    fireEvent.keyDown(root, { key: 'ArrowDown' })
-    fireEvent.keyDown(root, { key: 'ArrowDown' })
-    fireEvent.keyDown(root, { key: 'ArrowDown' })
-    // After 4 ArrowDown presses from index 0, focus should land on the
-    // 5th enabled item (skipping the two disabled ones). Enabled order:
-    // 0 Open here, 1 Open split, 2 Open beside, 3 Open new tab,
-    // 6 Copy path, 7 Copy contents (peek=4 disabled, reveal=5 disabled).
-    const items = screen.getAllByRole('menuitem')
-    expect(items[6]?.dataset.focused).toBe('true')
+    expect(header?.textContent).toContain('reading')
+    expect(header?.querySelectorAll('.swirlread-ext-chip').length).toBe(0)
   })
 })

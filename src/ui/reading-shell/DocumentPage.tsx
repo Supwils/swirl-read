@@ -10,6 +10,7 @@ import {
 } from '@/core/navigation/backlinks'
 import { derivePageTitle } from '@/core/render/page-title'
 import { useTocStore } from '@/stores/toc-store'
+import { useEditorStore } from '@/stores/editor-store'
 import { getAdapter, useVaultStore } from '@/stores/vault-store'
 import type { VaultFile } from '@/core/vault'
 import { useScrollMemory } from './use-scroll-memory'
@@ -88,6 +89,15 @@ export function DocumentPage(props: DocumentPageProps = {}) {
 
   useEffect(() => {
     if (!vaultId || !filePath || state.kind === 'loading') return
+    // While the editor is actively editing THIS file, suppress the
+    // external-change detector. The user's own save rewrites the on-disk
+    // bytes, which would otherwise trip a false "changed outside SwirlRead"
+    // banner on the next focus / poll sync. The editor owns conflict
+    // detection here via its own stale-on-disk pre-check at save time.
+    const editing = useEditorStore.getState().active
+    if (editing?.vaultId === vaultId && editing?.path === filePath) {
+      return
+    }
     const loadedVersion = loadedVersionRef.current
     if (!loadedVersion) return
     const vault = getAdapter(vaultId)

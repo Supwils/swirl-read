@@ -25,6 +25,8 @@ import {
   type PaneId,
 } from '@/stores/panes-store'
 import { usePaneHotkeys } from '@/app/use-pane-hotkeys'
+import { confirmLeaveIfDirty } from '@/app/use-dirty-navigation-guard'
+import { useEditorStore } from '@/stores/editor-store'
 import { DocumentPage } from './DocumentPage'
 import { PaneTabStrip } from './PaneTabStrip'
 import { Splitter } from './Splitter'
@@ -113,7 +115,7 @@ function PaneBody({
               filePathProp={filePath}
               scrollContainerRef={containerRef}
               scrollKeyScope={paneId}
-              publishTOC={false}
+              publishTOC={isActive}
             />
           )
         ) : (
@@ -151,11 +153,18 @@ export function Workspace() {
     }
   }, [vaultId])
 
+  // URL → pane 1 sync. Only meaningful in single mode: there the URL is the
+  // source of truth and drives pane 1. In dual mode, pane state owns both
+  // panes and the URL stays frozen on pane 1, so this effect must NOT run —
+  // otherwise it would clobber a deliberately-different pane-1 doc. Read the
+  // freshest store state here (not the render snapshot) because this effect
+  // can fire before getOrInit lands in the render cycle.
   useEffect(() => {
     if (!vaultId) return
     if (!urlFilePath) return
     const store = usePanesStore.getState()
     const current = store.getOrInit(vaultId)
+    if (current.viewMode === 'dual') return
     const pane1 = current.panes[0]
     if (pane1 && pane1.currentPath !== urlFilePath) {
       void store.setCurrentPath(vaultId, PANE_1, urlFilePath)
@@ -174,36 +183,46 @@ export function Workspace() {
 
   const handleFocus = (paneId: PaneId) => {
     if (activePaneId === paneId) return
+    // Focus is pane-state only. We deliberately do NOT navigate the URL to
+    // the focused pane's doc: the URL is frozen on pane 1 in dual mode, and
+    // rewriting it would re-trigger the URL→pane-1 sync and clobber pane 1.
     void usePanesStore.getState().setActivePane(vaultId, paneId)
-    // When the user clicks into pane 2, sync the URL to pane 2's doc so
-    // the browser back/forward arrows reflect what the user is reading.
-    // (Pane 1 click stays on its current URL.)
-    if (paneId === PANE_2 && pane2Path) {
-      void navigate(`/app/${vaultId}/${encodePathForUrl(pane2Path)}`)
-    }
-    if (paneId === PANE_1 && pane1Path) {
-      void navigate(`/app/${vaultId}/${encodePathForUrl(pane1Path)}`)
-    }
   }
 
   const handleClose = (paneId: PaneId) => {
-    void usePanesStore.getState().closePane(vaultId, paneId)
-    // If we closed pane 1 with pane 2 surviving, the survivor's path
-    // becomes the new URL.
-    const next = usePanesStore.getState().panesByVault[vaultId]
-    const survivor = next?.panes[0]?.currentPath ?? ''
-    if (survivor) {
-      void navigate(`/app/${vaultId}/${encodePathForUrl(survivor)}`)
-    }
+    // Closing a pane unmounts whatever it renders — including a live
+    // editor surface — without a pathname change, so neither the router
+    // blocker nor `beforeunload` would catch an unsaved draft. Gate here.
+    void (async () => {
+      if (!(await confirmLeaveIfDirty())) return
+      // The user accepted leaving (or wasn't dirty). Drop any editor session
+      // now so the surface unmount doesn't strand a zombie dirty session and
+      // the survivor navigate below doesn't re-trip the router dirty blocker.
+      useEditorStore.getState().cancel()
+      await usePanesStore.getState().closePane(vaultId, paneId)
+      // If we closed pane 1 with pane 2 surviving, the survivor's path
+      // becomes the new URL.
+      const survivor =
+        usePanesStore.getState().panesByVault[vaultId]?.panes[0]?.currentPath ??
+        ''
+      if (survivor) {
+        void navigate(`/app/${vaultId}/${encodePathForUrl(survivor)}`)
+      }
+    })()
   }
 
   const handleExpand = (paneId: PaneId) => {
-    const other: PaneId = paneId === PANE_1 ? PANE_2 : PANE_1
-    void usePanesStore.getState().closePane(vaultId, other)
-    const target = paneId === PANE_1 ? pane1Path : pane2Path
-    if (target) {
-      void navigate(`/app/${vaultId}/${encodePathForUrl(target)}`)
-    }
+    // Expanding closes the *other* pane; same edit-loss exposure as close.
+    void (async () => {
+      if (!(await confirmLeaveIfDirty())) return
+      useEditorStore.getState().cancel()
+      const other: PaneId = paneId === PANE_1 ? PANE_2 : PANE_1
+      await usePanesStore.getState().closePane(vaultId, other)
+      const target = paneId === PANE_1 ? pane1Path : pane2Path
+      if (target) {
+        void navigate(`/app/${vaultId}/${encodePathForUrl(target)}`)
+      }
+    })()
   }
 
   if (viewMode === 'single') {
@@ -239,7 +258,7 @@ export function Workspace() {
           onClose={() => handleClose(PANE_1)}
           onExpand={() => handleExpand(PANE_1)}
           showControls
-          isUrlDriven={activePaneId === PANE_1}
+          isUrlDriven={false}
         />
         <Splitter
           ratio={ratio}
@@ -256,7 +275,7 @@ export function Workspace() {
           onClose={() => handleClose(PANE_2)}
           onExpand={() => handleExpand(PANE_2)}
           showControls
-          isUrlDriven={activePaneId === PANE_2}
+          isUrlDriven={false}
         />
       </div>
     </div>

@@ -292,31 +292,31 @@ export function DocumentBodyView({
       {state.kind === 'text' && <PlainTextRenderer source={state.raw} />}
 
       {state.kind === 'code' && (
-        <ChunkBoundary label="code renderer">
+        <ChunkBoundary label="code renderer" resetKey={filePath}>
           <CodeFileRenderer source={state.raw} language={state.language} />
         </ChunkBoundary>
       )}
 
       {state.kind === 'table' && (
-        <ChunkBoundary label="CSV renderer">
+        <ChunkBoundary label="CSV renderer" resetKey={filePath}>
           <CsvRenderer source={state.raw} delimiter={state.delimiter} />
         </ChunkBoundary>
       )}
 
       {state.kind === 'html' && (
-        <ChunkBoundary label="HTML renderer">
+        <ChunkBoundary label="HTML renderer" resetKey={filePath}>
           <HtmlRenderer source={state.raw} />
         </ChunkBoundary>
       )}
 
       {state.kind === 'json' && (
-        <ChunkBoundary label="JSON renderer">
+        <ChunkBoundary label="JSON renderer" resetKey={filePath}>
           <JsonRenderer source={state.raw} />
         </ChunkBoundary>
       )}
 
       {state.kind === 'media' && (
-        <ChunkBoundary label="media renderer">
+        <ChunkBoundary label="media renderer" resetKey={filePath}>
           <MediaRenderer
             vault={state.vault}
             file={state.file}
@@ -326,7 +326,7 @@ export function DocumentBodyView({
       )}
 
       {state.kind === 'binary' && (
-        <ChunkBoundary label="unsupported-file message">
+        <ChunkBoundary label="unsupported-file message" resetKey={filePath}>
           <UnsupportedRenderer file={state.file} />
         </ChunkBoundary>
       )}

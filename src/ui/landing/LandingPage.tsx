@@ -1,6 +1,6 @@
-import { useState, type ReactNode } from 'react'
+import { useState, type MouseEvent, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { FolderOpen, Library, Plus, Sparkles } from 'lucide-react'
+import { FolderOpen, Library, Plus, Sparkles, X } from 'lucide-react'
 import { saveHandle } from '@/core/vault'
 import type { FSAPIVaultAdapter } from '@/core/vault'
 import { SampleVaultAdapter } from '@/core/vault/sample-adapter'
@@ -8,6 +8,7 @@ import {
   buildSampleVaultSpec,
   SAMPLE_VAULT_ID,
 } from '@/core/vault/sample-content'
+import { requestConfirmation } from '@/stores/dialog-store'
 import { useVaultStore } from '@/stores/vault-store'
 import { Logo } from '@/ui/components/Logo'
 import { FolderPicker } from './FolderPicker'
@@ -16,6 +17,7 @@ export function LandingPage(): ReactNode {
   const [pickerOpen, setPickerOpen] = useState(false)
   const navigate = useNavigate()
   const registerVault = useVaultStore((s) => s.registerVault)
+  const removeVault = useVaultStore((s) => s.removeVault)
   // Selecting `registeredVaults` directly returns a stable array slice;
   // Zustand re-renders only on identity change.
   const vaults = useVaultStore((s) => s.registeredVaults)
@@ -39,9 +41,22 @@ export function LandingPage(): ReactNode {
     void navigate(`/app/${adapter.id}`)
   }
 
+  async function handleRemove(id: string, name: string): Promise<void> {
+    const confirmed = await requestConfirmation({
+      title: 'Remove vault from SwirlRead?',
+      description: `“${name}” will be removed from your vault list. The folder on disk and its files are not touched — you can re-open it later from "Open my vault".`,
+      confirmLabel: 'Remove',
+      cancelLabel: 'Keep',
+      destructive: true,
+    })
+    if (!confirmed) return
+    await removeVault(id)
+  }
+
   const isReturning = vaults.length > 0
   // Show the most recently opened vaults first (vault-store keeps this order).
   const recentVaults = vaults.slice(0, 5)
+  const hiddenCount = Math.max(0, vaults.length - recentVaults.length)
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-6 py-10">
@@ -74,7 +89,11 @@ export function LandingPage(): ReactNode {
         {isReturning ? (
           <ReturningSection
             vaults={recentVaults}
+            hiddenCount={hiddenCount}
             onPick={() => setPickerOpen(true)}
+            onRemove={(id, name) => {
+              void handleRemove(id, name)
+            }}
           />
         ) : (
           <FreshSection
@@ -137,10 +156,14 @@ function FreshSection({
 
 function ReturningSection({
   vaults,
+  hiddenCount,
   onPick,
+  onRemove,
 }: {
   vaults: ReturnType<typeof useVaultStore.getState>['registeredVaults']
+  hiddenCount: number
   onPick: () => void
+  onRemove: (id: string, name: string) => void
 }): ReactNode {
   return (
     <section className="swirlread-landing-recents" aria-label="Your vaults">
@@ -164,9 +187,28 @@ function ReturningSection({
                 {formatRelativeDate(vault.lastOpenedAt)}
               </span>
             </Link>
+            <button
+              type="button"
+              className="swirlread-landing-recents__remove"
+              aria-label={`Remove ${vault.name} from your vaults`}
+              title="Remove from SwirlRead (does not delete files)"
+              onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                event.preventDefault()
+                event.stopPropagation()
+                onRemove(vault.id, vault.name)
+              }}
+            >
+              <X size={14} aria-hidden="true" />
+            </button>
           </li>
         ))}
       </ul>
+      {hiddenCount > 0 && (
+        <p className="swirlread-landing-recents__overflow">
+          + {String(hiddenCount)} more {hiddenCount === 1 ? 'vault' : 'vaults'}{' '}
+          not shown. Open the vault switcher inside SwirlRead to see them all.
+        </p>
+      )}
       <button
         type="button"
         onClick={onPick}

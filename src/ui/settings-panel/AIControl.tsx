@@ -754,5 +754,7 @@ function errorMessage(err: unknown): string {
         return err.message
     }
   }
-  return err instanceof Error ? err.message : String(err)
+  // Non-AIError throwables (e.g. a TypeError) can carry the base URL or other
+  // config in their message — don't surface it verbatim in the UI.
+  return 'Something went wrong. Check your settings and try again.'
 }

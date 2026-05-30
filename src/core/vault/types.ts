@@ -198,6 +198,14 @@ export interface VaultFileSystem {
   requestPermission(): Promise<boolean>
 
   /**
+   * Optional. Revoke and drop cached `blob:` URLs without otherwise
+   * disposing the adapter. Called when the vault's content is refreshed
+   * from disk (focus / poll sync) so externally-replaced media re-fetches
+   * fresh bytes. Adapters that don't cache blob URLs omit this.
+   */
+  clearBlobURLCache?(): void
+
+  /**
    * Optional. Release any per-adapter resources held since construction
    * (typically the cached `blob:` URLs handed out by `getBlobURL`).
    *

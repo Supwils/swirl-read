@@ -29,7 +29,7 @@ describe('dialog-store — requestConfirmation', () => {
     expect(useDialogStore.getState().confirmPayload).toBeNull()
   })
 
-  it('auto-cancels a pending confirmation when a new one is requested', async () => {
+  it('serializes concurrent confirmations so each caller gets its own answer', async () => {
     const first = requestConfirmation({
       title: 'A',
       description: 'a',
@@ -40,10 +40,16 @@ describe('dialog-store — requestConfirmation', () => {
       description: 'b',
       confirmLabel: 'B',
     })
-    await expect(first).resolves.toBe(false)
-    expect(useDialogStore.getState().confirmPayload?.title).toBe('B')
+    // The first prompt is on screen; the second is queued behind it.
+    expect(useDialogStore.getState().confirmPayload?.title).toBe('A')
+    // Answering advances to the queued prompt; the first caller gets ITS own
+    // answer, not a forced cancel.
     useDialogStore.getState().answerConfirmation(true)
-    await expect(second).resolves.toBe(true)
+    await expect(first).resolves.toBe(true)
+    expect(useDialogStore.getState().confirmPayload?.title).toBe('B')
+    useDialogStore.getState().answerConfirmation(false)
+    await expect(second).resolves.toBe(false)
+    expect(useDialogStore.getState().confirmPayload).toBeNull()
   })
 
   it('reset() rejects any pending prompt as false and clears payload', async () => {

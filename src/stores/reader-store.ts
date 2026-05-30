@@ -153,13 +153,20 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
     }
     await db.scrollPositions.put(row)
 
-    // Cheap prune: if we're over the cap for this vault, drop oldest rows.
-    const rowsForVault = await db.scrollPositions
+    // Prune oldest rows beyond the cap. A cheap indexed COUNT gates the
+    // expensive materialize-and-sort, so the common case (under the cap, on
+    // every scroll save) is a single count query rather than loading and
+    // JS-sorting the whole vault's rows each time.
+    let prunedPaths: string[] = []
+    const count = await db.scrollPositions
       .where('vaultId')
       .equals(vaultId)
-      .toArray()
-    let prunedPaths: string[] = []
-    if (rowsForVault.length > MAX_SCROLL_POSITIONS_PER_VAULT) {
+      .count()
+    if (count > MAX_SCROLL_POSITIONS_PER_VAULT) {
+      const rowsForVault = await db.scrollPositions
+        .where('vaultId')
+        .equals(vaultId)
+        .toArray()
       const oldest = rowsForVault
         .sort((a, b) => a.updatedAtMs - b.updatedAtMs)
         .slice(0, rowsForVault.length - MAX_SCROLL_POSITIONS_PER_VAULT)

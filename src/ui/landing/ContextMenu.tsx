@@ -16,6 +16,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type KeyboardEvent,
@@ -26,7 +27,7 @@ import { useNavigate } from 'react-router'
 import type { VaultId } from '@/core/vault'
 import { getAdapter } from '@/stores/vault-store'
 import { useTabsStore } from '@/stores/tabs-store'
-import { usePanesStore } from '@/stores/panes-store'
+import { usePanesStore, PANE_1, PANE_2 } from '@/stores/panes-store'
 import type { FolderColorId } from '@/core/vault'
 import { ExtChip } from '@/ui/components/ExtChip'
 
@@ -35,7 +36,8 @@ export interface ContextMenuFile {
   path: string
   /** Filename without extension (for the header label). */
   name: string
-  /** Lowercase extension without leading dot — drives the ExtChip. */
+  /** Lowercase extension without leading dot — drives the ExtChip. For a
+   *  folder target this is the empty string (no chip is shown). */
   ext: string
 }
 
@@ -45,6 +47,10 @@ interface ContextMenuProps {
   vaultId: VaultId
   file: ContextMenuFile
   folderColor: FolderColorId
+  /** Whether the target is a file (default) or a directory. Folders hide
+   *  file-only actions (new tab, peek, copy contents) but still support
+   *  Open here/left/right because a pane can render a DirectoryListing. */
+  kind?: 'file' | 'folder'
   onClose: () => void
 }
 
@@ -83,8 +89,10 @@ export function ContextMenu({
   vaultId,
   file,
   folderColor,
+  kind = 'file',
   onClose,
 }: ContextMenuProps): ReactNode {
+  const isFolder = kind === 'folder'
   const navigate = useNavigate()
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [position, setPosition] = useState({ left: x, top: y })
@@ -100,18 +108,31 @@ export function ContextMenu({
   }, [navigate, vaultId, file.path])
 
   /**
-   * Open in the *other* pane. Splits single → dual if needed; in dual
-   * mode this swaps the secondary pane's target. We deliberately do NOT
-   * navigate when the destination is pane 2 because the URL encodes the
-   * active pane's doc, and panes-store flips activePaneId to the
-   * destination so the focus + URL still match up.
+   * Open the target in pane 1. In single mode this is the URL-driven pane,
+   * so we navigate so the URL → pane-1 sync stays consistent. In dual mode
+   * pane 1 is the URL-encoded pane, so we navigate there too — both halves
+   * agree on pane 1's doc.
    */
-  const openInOtherPane = useCallback(async () => {
-    await usePanesStore.getState().openInOtherPane(vaultId, file.path)
-    const next = usePanesStore.getState().panesByVault[vaultId]
-    if (next?.activePaneId === 'pane-1') {
-      void navigate(`/app/${vaultId}/${encodePathForUrl(file.path)}`)
-    }
+  const openLeft = useCallback(async () => {
+    await usePanesStore.getState().openInPane(vaultId, PANE_1, file.path)
+    void navigate(`/app/${vaultId}/${encodePathForUrl(file.path)}`)
+  }, [navigate, vaultId, file.path])
+
+  /**
+   * Open the target in pane 2. Splits single → dual if needed; in dual mode
+   * this swaps pane 2's target. We deliberately do NOT navigate: the URL
+   * encodes pane 1's doc only, and pane 2 reads from pane state.
+   */
+  const openRight = useCallback(async () => {
+    await usePanesStore.getState().openInPane(vaultId, PANE_2, file.path)
+    // Ensure the Workspace is on screen. Invoked from the Pebble Garden the
+    // URL is still the vault root, so without navigating the split happens
+    // invisibly and the action looks like a no-op. Navigate to pane 1's doc
+    // if it has one (the URL encodes pane 1); otherwise to the just-opened
+    // doc so the route mounts and the dual layout appears.
+    const panes = usePanesStore.getState().panesByVault[vaultId]
+    const target = panes?.panes[0]?.currentPath ?? file.path
+    void navigate(`/app/${vaultId}/${encodePathForUrl(target)}`)
   }, [navigate, vaultId, file.path])
 
   const copyPath = useCallback(async () => {
@@ -139,35 +160,45 @@ export function ContextMenu({
     },
     {
       kind: 'item',
-      key: 'open-split',
-      label: 'Open in split pane',
+      key: 'open-left',
+      label: 'Open left',
       shortcut: '⌘↵',
-      run: () => openInOtherPane(),
+      run: () => openLeft(),
     },
     {
       kind: 'item',
-      key: 'open-beside',
-      label: 'Open beside',
+      key: 'open-right',
+      label: 'Open right',
       shortcut: '⇧⌘↵',
-      run: () => openInOtherPane(),
+      run: () => openRight(),
     },
-    {
-      kind: 'item',
-      key: 'open-new-tab',
-      label: 'Open in new tab',
-      shortcut: '⌥⌘↵',
-      run: () => openPinned(),
-    },
+    // File-only: a folder has no single doc to open in a fresh tab.
+    ...(isFolder
+      ? []
+      : [
+          {
+            kind: 'item' as const,
+            key: 'open-new-tab',
+            label: 'Open in new tab',
+            shortcut: '⌥⌘↵',
+            run: () => openPinned(),
+          },
+        ]),
     { kind: 'divider', key: 'div-1' },
-    {
-      kind: 'item',
-      key: 'peek',
-      label: 'Peek preview',
-      shortcut: 'Space',
-      disabled: true,
-      reason: 'Pinned preview lands with the FileShelf step.',
-      run: () => undefined,
-    },
+    // File-only: peek + copy-contents act on a single document.
+    ...(isFolder
+      ? []
+      : [
+          {
+            kind: 'item' as const,
+            key: 'peek',
+            label: 'Peek preview',
+            shortcut: 'Space',
+            disabled: true,
+            reason: 'Pinned preview lands with the FileShelf step.',
+            run: () => undefined,
+          },
+        ]),
     {
       kind: 'item',
       key: 'reveal',
@@ -184,20 +215,27 @@ export function ContextMenu({
       shortcut: '⌘C',
       run: () => copyPath(),
     },
-    {
-      kind: 'item',
-      key: 'copy-contents',
-      label: 'Copy contents',
-      shortcut: '⇧⌘C',
-      run: () => copyContents(),
-    },
+    ...(isFolder
+      ? []
+      : [
+          {
+            kind: 'item' as const,
+            key: 'copy-contents',
+            label: 'Copy contents',
+            shortcut: '⇧⌘C',
+            run: () => copyContents(),
+          },
+        ]),
   ]
 
   const itemIndexes = actions
     .map((a, i) => (a.kind === 'item' && !a.disabled ? i : -1))
     .filter((i) => i >= 0)
 
-  useEffect(() => {
+  // Reposition before paint (useLayoutEffect) so a menu opened near a
+  // viewport edge never flashes off-screen for a frame; then focus the menu
+  // so Arrow/Enter/Escape work immediately without a click-in first.
+  useLayoutEffect(() => {
     const node = containerRef.current
     if (!node) return
     const rect = node.getBoundingClientRect()
@@ -213,6 +251,10 @@ export function ContextMenu({
       setPosition({ left: nextLeft, top: nextTop })
     }
   }, [x, y])
+
+  useEffect(() => {
+    containerRef.current?.focus()
+  }, [])
 
   useEffect(() => {
     function handlePointerDown(event: PointerEvent): void {
@@ -323,9 +365,13 @@ export function ContextMenu({
                 className="swirlread-pebble-context-menu__item"
               >
                 <span>{action.label}</span>
-                <span className="swirlread-pebble-context-menu__shortcut">
-                  {action.shortcut}
-                </span>
+                {/* Disabled items advertise no shortcut — the binding
+                    doesn't exist yet, so showing it would mislead. */}
+                {!action.disabled && (
+                  <span className="swirlread-pebble-context-menu__shortcut">
+                    {action.shortcut}
+                  </span>
+                )}
               </button>
             </li>
           )

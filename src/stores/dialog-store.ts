@@ -9,13 +9,15 @@
  * `requestConfirmation(opts)` Promise so callers can `if (!await
  * requestConfirmation(...)) return` without owning state.
  *
- * Only one confirmation can be pending at a time; if a second request
- * lands while one is open, the existing one is auto-dismissed as
- * `false` so the second can take its place.
+ * Concurrent requests are SERIALIZED, not collapsed. If a second request
+ * lands while one is open it queues behind the first and is shown after
+ * the user answers — each caller gets the answer to its OWN prompt. (The
+ * previous behaviour auto-resolved the in-flight prompt to `false`, so two
+ * overlapping guards — e.g. the router blocker plus an explicit close —
+ * could answer the wrong dialog and take the wrong discard-vs-keep branch.)
  *
- * The resolve function lives in module scope on purpose — it's not
- * serialisable and would only confuse Zustand's structural-equality
- * checks if it were stored in state.
+ * The resolve fn + queue live in module scope on purpose — they're not
+ * serialisable and would only confuse Zustand's structural-equality checks.
  */
 
 import { create } from 'zustand'
@@ -47,39 +49,53 @@ interface DialogStoreActions {
 
 export type DialogStore = DialogStoreState & DialogStoreActions
 
+interface QueuedConfirm {
+  payload: ConfirmDialogPayload
+  resolve: (answer: boolean) => void
+}
+
 let pendingResolve: ((answer: boolean) => void) | null = null
+const queue: QueuedConfirm[] = []
 
 export const useDialogStore = create<DialogStore>((set) => ({
   confirmPayload: null,
 
   requestConfirmation(opts) {
-    // If a previous prompt is still up, cancel it first so two
-    // concurrent prompts don't race for the same dialog instance.
-    if (pendingResolve) {
-      const stale = pendingResolve
-      pendingResolve = null
-      stale(false)
-    }
-    set({ confirmPayload: opts })
     return new Promise<boolean>((resolve) => {
+      if (pendingResolve) {
+        // A prompt is already on screen — wait our turn rather than
+        // hijacking it. The current caller still gets its own answer.
+        queue.push({ payload: opts, resolve })
+        return
+      }
       pendingResolve = resolve
+      set({ confirmPayload: opts })
     })
   },
 
   answerConfirmation(answer) {
     const resolver = pendingResolve
     pendingResolve = null
-    set({ confirmPayload: null })
     resolver?.(answer)
+    // Advance the queue: show the next prompt (if any) on its own.
+    const next = queue.shift()
+    if (next) {
+      pendingResolve = next.resolve
+      set({ confirmPayload: next.payload })
+    } else {
+      set({ confirmPayload: null })
+    }
   },
 
   reset() {
-    if (pendingResolve) {
-      const stale = pendingResolve
-      pendingResolve = null
-      stale(false)
-    }
+    const stale = pendingResolve
+    pendingResolve = null
+    const drained = queue.splice(0, queue.length)
     set({ confirmPayload: null })
+    // Resolve everything outstanding as `false` (safe default) so no
+    // awaiting caller hangs forever.
+    stale?.(false)
+    for (const item of drained) item.resolve(false)
   },
 }))
 

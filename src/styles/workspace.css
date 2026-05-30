@@ -21,6 +21,17 @@
   overflow: visible;
 }
 
+/* Dual mode binds the surface to a *definite* height (viewport minus the
+   sticky chrome bar) so each pane's `.pane-scroll` becomes a real
+   overflow:auto scroller instead of growing the page. Without this the
+   ancestor chain is min-height-only, the panes grow to content height, and
+   the window scrolls everything together. Single mode keeps `height: 100%`
+   (which collapses to auto against the min-height chain) → window scroll,
+   so reading/scroll-memory/zen behavior there is unchanged. */
+.swirlread-workspace--dual {
+  height: calc(100dvh - var(--shell-header-height));
+}
+
 .swirlread-workspace__panes {
   flex: 1;
   display: grid;
@@ -180,16 +191,18 @@
   color: var(--text);
 }
 
+/* Each pane owns its own scroll container by default (dual mode). Single
+   mode overrides to `overflow: visible` above so it scrolls on the window,
+   preserving the pre-Workspace scroll-memory/zen-mode behavior. */
 .swirlread-workspace__pane-scroll {
   flex: 1;
   overflow: auto;
   min-height: 0;
   min-width: 0;
-}
-
-.swirlread-workspace--dual .swirlread-workspace__pane-scroll {
-  /* In dual mode each pane owns its own scroll. */
-  overflow: auto;
+  /* Keep wheel momentum inside the pane under the cursor: once this pane
+     hits its scroll end, don't chain the scroll to the page or the sibling
+     pane. Reinforces "the wheel controls the pane you're hovering". */
+  overscroll-behavior: contain;
 }
 
 .swirlread-workspace__pane-empty {
@@ -222,6 +235,16 @@
   margin: auto;
   width: 1px;
   background: var(--border);
+}
+
+/* Invisible grab zone — extends the pointer-hit region ~5px past the 6px
+   visible column on each side (≈16px total) so the divider is comfortable
+   to grab without widening the visible 1px line or the grid column. */
+.swirlread-workspace__splitter::after {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline: -5px;
 }
 
 .swirlread-workspace__splitter span {

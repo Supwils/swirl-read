@@ -35,6 +35,12 @@ export function MathRenderer({
           const html = runtime.renderToString(source, {
             displayMode: display,
             throwOnError: false,
+            // `trust: false` (the default, pinned explicitly) disables
+            // \href / \htmlClass / etc., so a `\href{javascript:…}` in vault
+            // content can't inject a live link through the math path — this
+            // string is set via dangerouslySetInnerHTML, so it's defense in
+            // depth alongside the markdown sanitizer.
+            trust: false,
             output: 'htmlAndMathml',
             strict: 'ignore',
           })

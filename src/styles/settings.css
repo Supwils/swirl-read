@@ -171,21 +171,25 @@
   accent-color: var(--color-accent);
 }
 
-.swirlread-settings__toggle-row {
-  display: flex;
+/* Inline boolean control: label/hint on the left, segmented On/Off
+   Toggle on the right. Replaces the legacy checkbox row so booleans
+   look like the other segmented controls in the panel. */
+.swirlread-settings__field--inline {
+  flex-direction: row;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.75rem 0;
-  border-top: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
 }
 
-.swirlread-settings__checkbox {
-  width: 18px;
-  height: 18px;
+.swirlread-settings__inline-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.swirlread-settings__field--inline .swirlread-chrome-toggle {
   flex-shrink: 0;
-  accent-color: var(--color-accent);
 }
 
 .swirlread-settings__footer {

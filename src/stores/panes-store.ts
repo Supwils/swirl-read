@@ -19,6 +19,19 @@ import { db, type PaneStateRow } from '@/core/persistence/db'
 import { normalizePath } from '@/core/vault'
 import type { VaultId, VaultPath } from '@/core/vault'
 import { registerVaultDeletionHook } from './vault-lifecycle'
+import { useVaultStore } from './vault-store'
+
+/**
+ * True while `vaultId` is still a registered vault. Persisting mutators
+ * gate on this so a late async action (e.g. an "Open right" context-menu
+ * click that resolves *after* the vault was removed) can't re-insert an
+ * orphan `panes` row that `forgetVault` has no second chance to clean.
+ * In every legitimate flow the vault is registered before a pane mutator
+ * runs, so this is a no-op except during the removal race.
+ */
+function vaultIsRegistered(vaultId: VaultId): boolean {
+  return useVaultStore.getState().registeredVaults.some((v) => v.id === vaultId)
+}
 
 export type PaneId = 'pane-1' | 'pane-2'
 export const PANE_1: PaneId = 'pane-1'
@@ -67,6 +80,15 @@ interface PanesStoreActions {
   /** Open a path in the non-active pane. Splits into dual mode if needed
    *  and focuses the destination pane. */
   openInOtherPane: (vaultId: VaultId, path: VaultPath) => Promise<void>
+  /** Open a path in a *specific* pane and focus it.
+   *  - Single mode + PANE_2: split into dual so pane 2 lands on `path`.
+   *  - Single mode + PANE_1: set pane 1's path and keep focus on it.
+   *  - Dual mode: set the target pane's path, then focus it. */
+  openInPane: (
+    vaultId: VaultId,
+    paneId: PaneId,
+    path: VaultPath,
+  ) => Promise<void>
   /** Drop in-memory + Dexie state for a vault. Idempotent. */
   forgetVault: (vaultId: VaultId) => void
 }
@@ -132,15 +154,23 @@ export const usePanesStore = create<PanesStore>((set, get) => ({
   getOrInit(vaultId) {
     const current = get().panesByVault[vaultId]
     if (current) return current
+    // Seed an in-memory single-pane default on first access so repeat reads
+    // are stable, but NEVER persist — a Dexie row is written only by a real
+    // mutation (the first `setCurrentPath` when a doc opens). Merely viewing
+    // a vault no longer churns storage or seeds a future orphan row. The
+    // seed is skipped for an unregistered vault so a post-removal read can't
+    // leave a stale entry behind.
     const fresh = defaultVaultPanes()
-    set((state) => ({
-      panesByVault: { ...state.panesByVault, [vaultId]: fresh },
-    }))
-    void persist(vaultId, fresh)
+    if (vaultIsRegistered(vaultId)) {
+      set((state) => ({
+        panesByVault: { ...state.panesByVault, [vaultId]: fresh },
+      }))
+    }
     return fresh
   },
 
   async setActivePane(vaultId, paneId) {
+    if (!vaultIsRegistered(vaultId)) return
     const current = get().panesByVault[vaultId] ?? defaultVaultPanes()
     if (!current.panes.some((p) => p.id === paneId)) return
     if (current.activePaneId === paneId) return
@@ -152,6 +182,7 @@ export const usePanesStore = create<PanesStore>((set, get) => ({
   },
 
   async setCurrentPath(vaultId, paneId, path) {
+    if (!vaultIsRegistered(vaultId)) return
     const current = get().panesByVault[vaultId] ?? defaultVaultPanes()
     const normalized = path === null ? null : normalizePath(path)
     const updated = current.panes.map((p) =>
@@ -165,6 +196,7 @@ export const usePanesStore = create<PanesStore>((set, get) => ({
   },
 
   async splitPane(vaultId, path) {
+    if (!vaultIsRegistered(vaultId)) return
     const current = get().panesByVault[vaultId] ?? defaultVaultPanes()
     if (current.viewMode === 'dual') return
     const pane1 = current.panes[0] ?? { id: PANE_1, currentPath: null }
@@ -187,6 +219,7 @@ export const usePanesStore = create<PanesStore>((set, get) => ({
   },
 
   async closePane(vaultId, paneId) {
+    if (!vaultIsRegistered(vaultId)) return
     const current = get().panesByVault[vaultId] ?? defaultVaultPanes()
     if (current.viewMode === 'single') return
     const survivors = current.panes.filter((p) => p.id !== paneId)
@@ -220,6 +253,18 @@ export const usePanesStore = create<PanesStore>((set, get) => ({
     const otherId: PaneId = current.activePaneId === PANE_1 ? PANE_2 : PANE_1
     await get().setCurrentPath(vaultId, otherId, path)
     await get().setActivePane(vaultId, otherId)
+  },
+
+  async openInPane(vaultId, paneId, path) {
+    const current = get().panesByVault[vaultId] ?? defaultVaultPanes()
+    if (current.viewMode === 'single' && paneId === PANE_2) {
+      // Pane 2 doesn't exist yet — split so it lands on `path`. splitPane
+      // already focuses PANE_2.
+      await get().splitPane(vaultId, path)
+      return
+    }
+    await get().setCurrentPath(vaultId, paneId, path)
+    await get().setActivePane(vaultId, paneId)
   },
 
   forgetVault(vaultId) {

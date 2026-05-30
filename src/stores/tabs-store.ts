@@ -377,6 +377,14 @@ export const useTabsStore = create<TabsStore>((set, get) => ({
   },
 
   forgetVault(vaultId) {
+    // Cancel any pending debounced reorder-persist so a timer armed just
+    // before removal can't re-insert openTabs rows after we delete them
+    // below — that would orphan them (the vault is gone).
+    const timer = reorderPersistTimers.get(vaultId)
+    if (timer !== undefined) {
+      clearTimeout(timer)
+      reorderPersistTimers.delete(vaultId)
+    }
     set((state) => {
       const nextTabs = { ...state.tabsByVault }
       const nextClosed = { ...state.recentlyClosedByVault }

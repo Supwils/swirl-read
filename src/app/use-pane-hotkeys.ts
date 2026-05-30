@@ -87,16 +87,10 @@ export function usePaneHotkeys(): void {
           return
         }
         event.preventDefault()
+        // Focus only — do NOT rewrite the URL to the focused pane's doc.
+        // The URL is frozen on pane 1 in dual mode; navigating here would
+        // re-trigger the URL→pane-1 sync in Workspace and clobber pane 1.
         void store.focusPane(vaultId, paneId)
-        // Sync URL to the focused pane's path so back/forward make sense.
-        const target =
-          usePanesStore
-            .getState()
-            .panesByVault[vaultId]?.panes.find((p) => p.id === paneId)
-            ?.currentPath ?? ''
-        if (target) {
-          void navigate(`/app/${vaultId}/${encodePathForUrl(target)}`)
-        }
       }
     }
 

@@ -1,9 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { PebbleGarden } from './PebbleGarden'
 import { SampleVaultAdapter } from '@/core/vault/sample-adapter'
+import { __resetFolderWeightCacheForTests } from '@/core/vault/folder-weight'
 import { __resetDbForTests } from '@/core/persistence/db'
 import { __resetAdaptersForTests, useVaultStore } from '@/stores/vault-store'
 
@@ -33,6 +40,7 @@ async function registerSample(adapter: SampleVaultAdapter) {
 beforeEach(async () => {
   await __resetDbForTests()
   __resetAdaptersForTests()
+  __resetFolderWeightCacheForTests()
   useVaultStore.setState({
     registeredVaults: [],
     activeVaultId: null,
@@ -215,5 +223,200 @@ describe('PebbleGarden', () => {
       name: /more folders/i,
     })
     expect(moreButton).toBeInTheDocument()
+  })
+
+  it('renders system folders muted and last', async () => {
+    const adapter = makeAdapter({
+      'knowledge/a.md': '#',
+      'knowledge/b.md': '#',
+      '.git/HEAD': 'ref',
+      '.git/config': '[core]',
+    })
+    await registerSample(adapter)
+
+    const { container } = renderGarden(adapter.id)
+
+    await screen.findByRole('button', { name: 'knowledge' })
+    // The system folder is shown, not hidden.
+    const gitTitle = await screen.findByRole('button', { name: '.git' })
+    expect(gitTitle).toBeInTheDocument()
+
+    // Its pebble carries the muted flag…
+    const gitPebble = gitTitle.closest('.swirlread-pebble')
+    expect(gitPebble).toHaveAttribute('data-muted', 'true')
+    // …while a content folder does not.
+    const knowledgePebble = screen
+      .getByRole('button', { name: 'knowledge' })
+      .closest('.swirlread-pebble')
+    expect(knowledgePebble).not.toHaveAttribute('data-muted')
+
+    // …and it sorts after the content folder in DOM order.
+    const titles = Array.from(
+      container.querySelectorAll('.swirlread-pebble__title'),
+    ).map((el) => el.textContent)
+    expect(titles.indexOf('knowledge')).toBeLessThan(titles.indexOf('.git'))
+  })
+
+  it('sizes a content-heavy folder larger than a sparse one', async () => {
+    const files: Record<string, string> = {
+      'small/only.md': '#',
+    }
+    // 41 recursive descendant files → weight ≥ 40 → 'lg'.
+    for (let i = 0; i < 41; i++) {
+      files[`big/nested/note-${String(i).padStart(2, '0')}.md`] = '#'
+    }
+    const adapter = makeAdapter(files)
+    await registerSample(adapter)
+
+    const { container } = renderGarden(adapter.id)
+    await screen.findByRole('button', { name: 'big' })
+
+    // Weights resolve asynchronously after first paint; wait for the heavy
+    // folder's cell to upgrade to the large span.
+    await waitFor(() => {
+      const bigCell = screen
+        .getByRole('button', { name: 'big' })
+        .closest('.swirlread-pebble-garden__cell')
+      expect(bigCell).toHaveAttribute('data-size', 'lg')
+    })
+
+    const smallCell = within(container)
+      .getByRole('button', { name: 'small' })
+      .closest('.swirlread-pebble-garden__cell')
+    expect(smallCell).toHaveAttribute('data-size', 'sm')
+  })
+
+  it('shows a Back button when drilled that goes up one level', async () => {
+    const adapter = makeAdapter({
+      'knowledge/sub/deep.md': '#',
+      'knowledge/top.md': '#',
+    })
+    await registerSample(adapter)
+
+    renderGarden(adapter.id)
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'knowledge' }),
+    )
+    // Inside `knowledge` now; the nested folder appears.
+    await screen.findByRole('button', { name: 'sub' })
+    await userEvent.click(await screen.findByRole('button', { name: 'sub' }))
+
+    // Two levels deep → a Back button is present.
+    const back = await screen.findByRole('button', { name: /back/i })
+    expect(back).toBeInTheDocument()
+    await userEvent.click(back)
+
+    // Back from `sub` lands on `knowledge` (one level up), not the root.
+    expect(
+      await screen.findByRole('heading', { level: 1, name: /knowledge/i }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'sub' })).toBeInTheDocument()
+
+    // From `knowledge`, Back returns to the vault root.
+    await userEvent.click(await screen.findByRole('button', { name: /back/i }))
+    expect(
+      await screen.findByRole('heading', { level: 1, name: /sample pebbles/i }),
+    ).toBeInTheDocument()
+  })
+
+  it('opens a folder context menu on right-click with pane actions', async () => {
+    const adapter = makeAdapter({
+      'knowledge/a.md': '#',
+      'knowledge/b.md': '#',
+    })
+    await registerSample(adapter)
+
+    const { container } = renderGarden(adapter.id)
+    await screen.findByRole('button', { name: 'knowledge' })
+
+    const pebble = container.querySelector('.swirlread-pebble')
+    expect(pebble).not.toBeNull()
+    fireEvent.contextMenu(pebble!)
+
+    // Folder menu surfaces the pane actions…
+    expect(await screen.findByText('Open left')).toBeInTheDocument()
+    expect(screen.getByText('Open right')).toBeInTheDocument()
+    // …but hides file-only actions like Copy contents.
+    expect(screen.queryByText('Copy contents')).not.toBeInTheDocument()
+  })
+
+  it('renders sub-folders as chips inside the folder pebble', async () => {
+    const adapter = makeAdapter({
+      'knowledge/readme.md': '#',
+      'knowledge/projects/plan.md': '#',
+      'knowledge/goals/q1.md': '#',
+    })
+    await registerSample(adapter)
+
+    const { container } = renderGarden(adapter.id)
+    await screen.findByRole('button', { name: 'knowledge' })
+
+    // The sub-folders surface as their own chips inside the card — without
+    // drilling in first. The chips carry the folder color via data-folder-id.
+    const chips = Array.from(
+      container.querySelectorAll<HTMLElement>('.swirlread-pebble__folder-chip'),
+    )
+    const chipNames = chips.map(
+      (chip) =>
+        chip.querySelector('.swirlread-pebble__folder-chip-name')?.textContent,
+    )
+    expect(chipNames).toEqual(expect.arrayContaining(['projects', 'goals']))
+  })
+
+  it('drills into a sub-folder when its chip is clicked', async () => {
+    const adapter = makeAdapter({
+      'knowledge/readme.md': '#',
+      'knowledge/projects/plan.md': '#',
+    })
+    await registerSample(adapter)
+
+    const { container } = renderGarden(adapter.id)
+    await screen.findByRole('button', { name: 'knowledge' })
+
+    const projectsChip = Array.from(
+      container.querySelectorAll<HTMLElement>('.swirlread-pebble__folder-chip'),
+    ).find(
+      (chip) =>
+        chip.querySelector('.swirlread-pebble__folder-chip-name')
+          ?.textContent === 'projects',
+    )
+    expect(projectsChip).toBeDefined()
+    await userEvent.click(projectsChip!)
+
+    // Drilling into `projects` switches the masthead heading and exposes the
+    // Back affordance, mirroring the title-click drill behaviour.
+    expect(
+      await screen.findByRole('heading', { level: 1, name: /projects/i }),
+    ).toBeInTheDocument()
+    expect(
+      await screen.findByRole('button', { name: /back/i }),
+    ).toBeInTheDocument()
+  })
+
+  it('opens the folder context menu on sub-folder chip right-click', async () => {
+    const adapter = makeAdapter({
+      'knowledge/readme.md': '#',
+      'knowledge/projects/plan.md': '#',
+    })
+    await registerSample(adapter)
+
+    const { container } = renderGarden(adapter.id)
+    await screen.findByRole('button', { name: 'knowledge' })
+
+    const projectsChip = Array.from(
+      container.querySelectorAll<HTMLElement>('.swirlread-pebble__folder-chip'),
+    ).find(
+      (chip) =>
+        chip.querySelector('.swirlread-pebble__folder-chip-name')
+          ?.textContent === 'projects',
+    )
+    expect(projectsChip).toBeDefined()
+    fireEvent.contextMenu(projectsChip!)
+
+    // The chip opens the FOLDER menu (pane actions present, file-only absent).
+    expect(await screen.findByText('Open left')).toBeInTheDocument()
+    expect(screen.getByText('Open right')).toBeInTheDocument()
+    expect(screen.queryByText('Copy contents')).not.toBeInTheDocument()
   })
 })

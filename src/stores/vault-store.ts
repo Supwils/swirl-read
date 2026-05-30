@@ -16,11 +16,57 @@
  */
 
 import { create } from 'zustand'
+import type { Table } from 'dexie'
 import { db, metaToStored, storedToMeta } from '@/core/persistence/db'
 import { deleteHandle } from '@/core/vault'
 import { invalidateBacklinks } from '@/core/navigation/backlinks'
 import { runVaultDeletionHooks } from '@/stores/vault-lifecycle'
 import type { VaultFileSystem, VaultId, VaultMeta } from '@/core/vault'
+
+/**
+ * Boot-time orphan sweep. `removeVault` deletes per-vault rows before the
+ * `vaults` metadata row so an interruption can only ever leave a stale
+ * *metadata* row (harmless, retried) — never orphaned dependent rows. But
+ * older builds, hard crashes, or manual IndexedDB edits can still leave
+ * rows whose `vaultId` no longer maps to a registered vault. We sweep them
+ * once on init so storage doesn't accumulate dead per-vault data.
+ *
+ * Best-effort: a sweep failure must never block app boot.
+ */
+/** Minimal Dexie surface the sweep needs: every per-vault table carries a
+ *  `vaultId` column and a string primary key (synthetic `id`, or `vaultId`
+ *  itself for `panes`). Erasing to this shape lets one helper sweep them
+ *  all without fighting each table's distinct InsertType generic. */
+type VaultKeyedTable = Table<{ vaultId: string }, string>
+
+async function sweepOrphans(
+  table: VaultKeyedTable,
+  known: Set<string>,
+): Promise<void> {
+  const orphanKeys = await table
+    .filter((row) => !known.has(row.vaultId))
+    .primaryKeys()
+  if (orphanKeys.length > 0) await table.bulkDelete(orphanKeys)
+}
+
+async function pruneOrphanedVaultData(knownIds: Set<VaultId>): Promise<void> {
+  // All seven tables have string primary keys, so the structural cast is
+  // sound — the helper only reads `vaultId` and deletes by primary key.
+  const tables = [
+    db.recentFiles,
+    db.backlinks,
+    db.scrollPositions,
+    db.openTabs,
+    db.reviewBatches,
+    db.reviewCards,
+    db.panes,
+  ] as unknown as VaultKeyedTable[]
+  try {
+    await Promise.all(tables.map((table) => sweepOrphans(table, knownIds)))
+  } catch {
+    /* best-effort — a failed sweep must never block boot */
+  }
+}
 
 // Per-vault cleanup is no longer hardcoded here. Each store / module
 // that owns vault-scoped state registers a `vault-lifecycle` hook at
@@ -148,6 +194,9 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
       activeVaultId: activeId,
       ready: true,
     })
+    // Drop any per-vault rows left behind by an interrupted removal or an
+    // older build. Fire-and-forget so boot isn't gated on the sweep.
+    void pruneOrphanedVaultData(new Set(stored.map((s) => s.id)))
   },
 
   async registerVault(adapter) {
@@ -189,14 +238,13 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   },
 
   async removeVault(id) {
-    // Vault metadata + active-id preference are owned directly by this
-    // store. Every other piece of per-vault state is fanned out via
-    // the vault-lifecycle registry — adding a new domain (review cards,
-    // sidebar visibility, ...) never edits this method.
-    await db.vaults.delete(id)
-    if (get().activeVaultId === id) {
-      await db.preferences.delete(ACTIVE_VAULT_ID_PREF_KEY)
-    }
+    // Order matters for crash-safety. Every piece of *dependent* per-vault
+    // state is deleted FIRST; the `vaults` metadata row + active-id
+    // preference (owned directly by this store) come LAST. If the process
+    // dies mid-removal the metadata row still exists, so the vault stays
+    // registered and a retry re-runs cleanup — strictly better than
+    // orphaned rows with no vault left to trigger their deletion. A boot
+    // sweep (`pruneOrphanedVaultData`) backstops any older orphan.
 
     // Each registered hook owns both its in-memory state and any Dexie
     // rows it persists. Hooks run in parallel and isolate their own
@@ -227,13 +275,35 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
 
     // Lazy / heavy in-memory caches without a natural store home —
     // file-tree listings, tag index, walked files, full-text index,
-    // graph, wikilink hover preview. Don't block removal on these
-    // resolving; a stale entry just becomes a one-off recompute.
-    void invalidateVaultCachesLazy(id)
+    // graph, wikilink hover preview. Awaited so removal only resolves
+    // once the derived caches are actually dropped.
+    await invalidateVaultCachesLazy(id)
+
+    // Metadata last — see the ordering note above.
+    await db.vaults.delete(id)
+
+    // When the active vault is the one being removed, promote the next
+    // most-recently-opened survivor instead of dropping the user back to
+    // the picker. `registeredVaults` is kept most-recent-first.
+    const wasActive = get().activeVaultId === id
+    const survivors = get().registeredVaults.filter((v) => v.id !== id)
+    const nextActiveId: VaultId | null = wasActive
+      ? (survivors[0]?.id ?? null)
+      : get().activeVaultId
+    if (wasActive) {
+      if (nextActiveId) {
+        await db.preferences.put({
+          key: ACTIVE_VAULT_ID_PREF_KEY,
+          value: nextActiveId,
+        })
+      } else {
+        await db.preferences.delete(ACTIVE_VAULT_ID_PREF_KEY)
+      }
+    }
 
     set((state) => ({
       registeredVaults: state.registeredVaults.filter((v) => v.id !== id),
-      activeVaultId: state.activeVaultId === id ? null : state.activeVaultId,
+      activeVaultId: nextActiveId,
       contentRevisionByVault: Object.fromEntries(
         Object.entries(state.contentRevisionByVault).filter(
           ([vaultId]) => vaultId !== id,
@@ -243,6 +313,10 @@ export const useVaultStore = create<VaultStore>((set, get) => ({
   },
 
   async refreshVaultContent(id) {
+    // External-change refresh: drop cached blob URLs so media replaced on
+    // disk outside SwirlRead re-fetches fresh bytes (the per-file blob cache
+    // is otherwise only evicted on internal writeText).
+    adapters.get(id)?.clearBlobURLCache?.()
     invalidateBacklinks(id)
     await invalidateVaultCachesLazy(id)
     set((state) => ({
