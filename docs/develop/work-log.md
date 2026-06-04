@@ -15,7 +15,7 @@ Three rounds, one commit. (1) Pebble Garden sizing by recursive **folder weight*
 - **MEDIUM** — ChunkBoundary `resetKey`; PebbleGarden weight pool (concurrency 6, single setState) + `goToCrumb` functional updater; Splitter keyboard + `aria-valuetext`; PaneTabStrip neighbour-survivor; auto-restore `pendingAdapters` lifecycle hook; reader-store prune count-gate; AI `assertSafeBaseURL` (HTTPS / loopback only — no key leak) + narrowed stream JSON; AIControl test-connection no longer surfaces raw errors.
 - **LOW** — removed dead `VaultHome`; honest Pebble footer copy; empty-drill keeps trail; KaTeX `trust:false`; tabs-store cancels reorder timer on `forgetVault`.
 
-All gates green: **1001 tests**, typecheck, lint (max-warnings 0), format, build, bundle (main 265.50 KB gz / 280, CSS 30.30 / 32). XSS surface audited — already strong (`pipeline.ts` inline sanitize schema, `allowDangerousHtml:false`, HTML via `srcDoc`+`sandbox=""`).
+All gates green: **985 tests**, typecheck, lint (max-warnings 0), format, build, bundle (main 266.06 KB gz / 280, CSS 29.81 KB gz / 32). XSS surface audited — already strong (`pipeline.ts` inline sanitize schema, `allowDangerousHtml:false`, HTML via `srcDoc`+`sandbox=""`).
 
 ## 2026-05-13 · Browse + Workspace refresh (Pebble Garden, FileShelf, panes-store)
 

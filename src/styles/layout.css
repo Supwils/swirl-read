@@ -239,19 +239,26 @@ body:has(.swirlread-vault-layout__sidebar-resize[data-dragging='true']) {
 }
 
 .swirlread-vault-layout__toc {
-  position: sticky;
+  /* Overlay the right edge instead of taking a flex column. A sticky in-flow
+     rail stole `--toc-width` from the content the instant it was pinned, which
+     re-centered the article and made it visibly jump on every toggle. As a
+     fixed overlay (the same model the hover-summoned `--floating` variant
+     already uses) the content column never reflows, so clicking the toggle is
+     as steady as hovering. Opaque background so article text doesn't bleed
+     through behind the rail. */
+  position: fixed;
+  right: 0;
   top: var(--shell-header-height);
-  align-self: flex-start;
   width: var(--toc-width);
-  flex-shrink: 0;
   height: calc(100vh - var(--shell-header-height));
   overflow-y: auto;
   overflow-x: hidden;
   border-left: 1px solid var(--color-border);
-  background: color-mix(in srgb, var(--color-surface) 25%, transparent);
+  background: var(--color-bg);
   padding: 1.4em 0.9em 1em;
   font-family: var(--font-sans);
   font-size: 0.84em;
+  z-index: 5;
 }
 
 /*
