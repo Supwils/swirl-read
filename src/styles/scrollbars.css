@@ -80,7 +80,8 @@ html {
 .swirlread-file-shelf__folders,
 .swirlread-workspace__pane-scroll,
 .swirlread-pebble-garden,
-.swirlread-pebble {
+.swirlread-pebble,
+.swirlread-shell__tabs {
   scrollbar-width: thin;
 }
 .swirlread-scroll-thin::-webkit-scrollbar,
@@ -98,6 +99,11 @@ html {
   width: 8px;
   height: 8px;
 }
+/* Tab strip gets an extra-thin horizontal scrollbar so it fits the 48 px header. */
+.swirlread-shell__tabs::-webkit-scrollbar {
+  width: 0;
+  height: 4px;
+}
 .swirlread-scroll-thin::-webkit-scrollbar-thumb,
 .swirlread-vault-layout__sidebar::-webkit-scrollbar-thumb,
 .swirlread-vault-layout__toc::-webkit-scrollbar-thumb,
@@ -111,6 +117,9 @@ html {
 .swirlread-pebble-garden::-webkit-scrollbar-thumb,
 .swirlread-pebble::-webkit-scrollbar-thumb {
   border-width: 2px;
+}
+.swirlread-shell__tabs::-webkit-scrollbar-thumb {
+  border-width: 1px;
 }
 
 /* Inline content scroll surfaces — code blocks, tables, math, diagrams,

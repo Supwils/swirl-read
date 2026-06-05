@@ -11,6 +11,7 @@ import {
   PanelRightOpen,
   Search,
   Settings,
+  SlidersHorizontal,
 } from 'lucide-react'
 import { useDialogStore } from '@/stores/dialog-store'
 import { useReviewStore } from '@/stores/review-store'
@@ -84,6 +85,7 @@ export function AppShell() {
   const toggleFileTree = useUIStore((s) => s.toggleFileTree)
   const setFileTreeOpen = useUIStore((s) => s.setFileTreeOpen)
   const tocOpen = useUIStore((s) => s.tocOpen)
+  const setTocOpen = useUIStore((s) => s.setTocOpen)
   const toggleToc = useUIStore((s) => s.toggleToc)
   const commandPaletteOpen = useUIStore((s) => s.commandPaletteOpen)
   const toggleCommandPalette = useUIStore((s) => s.toggleCommandPalette)
@@ -98,9 +100,10 @@ export function AppShell() {
   const theme = useUIStore((s) => s.theme)
   const setTheme = useUIStore((s) => s.setTheme)
   const navigate = useNavigate()
-  // Whether the file tree is actually pinned (visible persistently).
-  // In reading mode the tree is never pinned — only hover-summoned.
+  // Whether each sidebar is actually pinned (visible persistently).
+  // In reading mode neither is ever pinned — only hover-summoned.
   const fileTreePinned = chromeMode === 'working' && fileTreeOpen
+  const tocPinned = chromeMode === 'working' && tocOpen
   const hasAnyVault = useVaultStore((s) => s.registeredVaults.length > 0)
   useCommandPaletteHotkey()
   useZenModeHotkey()
@@ -224,26 +227,47 @@ export function AppShell() {
           </div>
         )}
         <div className="flex shrink-0 items-center gap-2">
-          {vaultViewMode !== null && (
-            <Toggle<ViewMode>
-              value={vaultViewMode}
-              ariaLabel="Reading mode"
-              options={[
-                { value: 'single', label: 'Single' },
-                { value: 'dual', label: 'Dual' },
-              ]}
-              onChange={handleViewModeChange}
-            />
-          )}
-          <Toggle<'light' | 'dark'>
-            value={themePrimary}
-            ariaLabel="Theme"
-            options={[
-              { value: 'light', label: 'Light' },
-              { value: 'dark', label: 'Dark' },
-            ]}
-            onChange={handleThemePrimaryChange}
-          />
+          {/* View + theme hover menu — single icon reveals a dropdown */}
+          <div className="swirlread-view-menu">
+            <button
+              type="button"
+              className="swirlread-shell__icon-button"
+              aria-label="Layout and theme options"
+              title="Layout and theme"
+            >
+              <SlidersHorizontal size={18} aria-hidden="true" />
+            </button>
+            <div className="swirlread-view-menu__panel">
+              <div className="swirlread-view-menu__panel-box">
+                {vaultViewMode !== null && (
+                  <div className="swirlread-view-menu__row">
+                    <span className="swirlread-view-menu__label">Layout</span>
+                    <Toggle<ViewMode>
+                      value={vaultViewMode}
+                      ariaLabel="Reading mode"
+                      options={[
+                        { value: 'single', label: 'Single' },
+                        { value: 'dual', label: 'Dual' },
+                      ]}
+                      onChange={handleViewModeChange}
+                    />
+                  </div>
+                )}
+                <div className="swirlread-view-menu__row">
+                  <span className="swirlread-view-menu__label">Theme</span>
+                  <Toggle<'light' | 'dark'>
+                    value={themePrimary}
+                    ariaLabel="Theme"
+                    options={[
+                      { value: 'light', label: 'Light' },
+                      { value: 'dark', label: 'Dark' },
+                    ]}
+                    onChange={handleThemePrimaryChange}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
           <button
             type="button"
             onClick={toggleZenMode}
@@ -269,17 +293,26 @@ export function AppShell() {
           </button>
           <button
             type="button"
-            onClick={() => void toggleToc()}
+            onClick={() =>
+              void (async () => {
+                if (chromeMode === 'reading') {
+                  await setChromeMode('working')
+                  if (!tocOpen) await setTocOpen(true)
+                } else {
+                  await toggleToc()
+                }
+              })()
+            }
             className="swirlread-shell__icon-button"
             aria-label={
-              tocOpen ? 'Hide table of contents' : 'Show table of contents'
+              tocPinned ? 'Hide table of contents' : 'Show table of contents'
             }
-            aria-pressed={tocOpen}
+            aria-pressed={tocPinned}
             title={
-              tocOpen ? 'Hide table of contents' : 'Show table of contents'
+              tocPinned ? 'Hide table of contents' : 'Show table of contents'
             }
           >
-            {tocOpen ? (
+            {tocPinned ? (
               <PanelRightClose size={18} aria-hidden="true" />
             ) : (
               <PanelRightOpen size={18} aria-hidden="true" />

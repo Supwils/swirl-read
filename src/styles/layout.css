@@ -56,12 +56,8 @@
   overflow-x: auto;
   overflow-y: hidden;
   padding: 0 0.6rem 0 0.9rem;
-  /* Hide the scrollbar visually so a wide list doesn't draw a rail
-     across the header; the strip is still scrollable via wheel/drag. */
-  scrollbar-width: none;
-}
-.swirlread-shell__tabs::-webkit-scrollbar {
-  display: none;
+  /* Scrollbar appears only when tabs overflow; height is capped in
+     scrollbars.css so it doesn't crowd the 48 px header. */
 }
 
 .swirlread-vault-layout {
@@ -239,26 +235,19 @@ body:has(.swirlread-vault-layout__sidebar-resize[data-dragging='true']) {
 }
 
 .swirlread-vault-layout__toc {
-  /* Overlay the right edge instead of taking a flex column. A sticky in-flow
-     rail stole `--toc-width` from the content the instant it was pinned, which
-     re-centered the article and made it visibly jump on every toggle. As a
-     fixed overlay (the same model the hover-summoned `--floating` variant
-     already uses) the content column never reflows, so clicking the toggle is
-     as steady as hovering. Opaque background so article text doesn't bleed
-     through behind the rail. */
-  position: fixed;
-  right: 0;
+  position: sticky;
   top: var(--shell-header-height);
+  align-self: flex-start;
   width: var(--toc-width);
+  flex-shrink: 0;
   height: calc(100vh - var(--shell-header-height));
   overflow-y: auto;
   overflow-x: hidden;
   border-left: 1px solid var(--color-border);
-  background: var(--color-bg);
+  background: color-mix(in srgb, var(--color-surface) 25%, transparent);
   padding: 1.4em 0.9em 1em;
   font-family: var(--font-sans);
   font-size: 0.84em;
-  z-index: 5;
 }
 
 /*
@@ -369,4 +358,59 @@ body:has(.swirlread-vault-layout__sidebar-resize[data-dragging='true']) {
 
 .swirlread-doc-nav__btn--next .swirlread-doc-nav__label {
   text-align: right;
+}
+
+/* View + theme hover menu — single icon in the header reveals a dropdown.
+   Pure-CSS hover: the panel sits inside the same wrapper as the trigger so
+   the cursor can move from button → panel without the hover breaking. The
+   transparent `padding-top` bridges the visual gap without a JS state machine. */
+.swirlread-view-menu {
+  position: relative;
+}
+
+.swirlread-view-menu__panel {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  padding-top: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease;
+  z-index: 100;
+}
+
+.swirlread-view-menu:hover .swirlread-view-menu__panel {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.swirlread-view-menu__panel-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.75rem 0.9rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: 0 8px 28px var(--color-shadow);
+  white-space: nowrap;
+  min-width: 180px;
+}
+
+.swirlread-view-menu__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.swirlread-view-menu__label {
+  font-family: var(--font-sans);
+  font-size: 0.8em;
+  color: var(--color-text-muted);
+  min-width: 4em;
 }
