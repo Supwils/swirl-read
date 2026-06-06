@@ -125,28 +125,15 @@ body.density-compact {
 }
 
 /*
- * Floating treatment — applied via the `--floating` modifier whenever a
- * sidebar is shown transiently (hover-summon) rather than pinned in
- * flex flow. Sits over content with a backdrop + shadow, like the
- * small-viewport drawer treatment, so the article width never shifts
- * for a peek-and-leave gesture. Used in both chrome modes: hover
- * always reveals a floating sidebar; only the explicit "pin" toggle in
- * working mode renders it persistent.
- *
- * The double-class selector lifts specificity above the base
- * `.swirlread-vault-layout__sidebar` rule (which sets `position: sticky`
- * + `width` for the persistent treatment) so `position: fixed` actually
- * wins regardless of source order in the stylesheet. Without this, a
- * hover-summoned sidebar would silently fall back to sticky layout and
- * shove the article column sideways.
+ * Floating treatment — applied via the `--floating` modifier when a
+ * sidebar is hover-summoned (transient). Both persistent and floating
+ * sidebars now use `position: fixed` so the article column never shifts
+ * regardless of pinned state. The `--floating` modifier lifts z-index
+ * and adds a shadow + opaque background to distinguish a transient peek
+ * from a quietly-pinned rail.
  */
 .swirlread-vault-layout__sidebar.swirlread-vault-layout__sidebar--floating {
-  position: fixed;
-  top: var(--shell-header-height);
-  left: 0;
   z-index: 70;
-  width: var(--file-tree-width);
-  height: calc(100vh - var(--shell-header-height));
   box-shadow: 6px 0 24px var(--color-shadow);
   background: var(--color-bg);
 }
@@ -163,16 +150,20 @@ body.density-compact {
 }
 
 .swirlread-vault-layout__sidebar {
-  position: sticky;
+  /* Always a fixed overlay — content column never shifts whether the sidebar
+     is pinned (persistent) or hover-summoned (floating). Pinned state stays
+     at z-45 with a semi-transparent background; hover state lifts to z-70
+     with a shadow + opaque background via the `--floating` modifier. */
+  position: fixed;
   top: var(--shell-header-height);
-  align-self: flex-start;
+  left: 0;
+  z-index: 45;
   width: var(--file-tree-width);
-  flex-shrink: 0;
   height: calc(100vh - var(--shell-header-height));
   overflow-y: auto;
   overflow-x: hidden;
   border-right: 1px solid var(--color-border);
-  background: color-mix(in srgb, var(--color-surface) 35%, transparent);
+  background: color-mix(in srgb, var(--color-surface) 60%, transparent);
   padding: var(--shell-sidebar-padding-block) 0
     var(--shell-sidebar-padding-block) var(--sidebar-gutter);
   font-family: var(--font-sans);
