@@ -18,8 +18,10 @@
 import { lazy, useCallback, useMemo, useState, type ReactNode } from 'react'
 import { useHighlightsStore, docKey } from '@/stores/highlights-store'
 import { captureAnchor } from '@/core/highlights/anchor'
+import { highlightsToReviewSource } from '@/core/highlights/to-review-source'
 import type { HighlightColor } from '@/core/highlights/types'
-import type { VaultId, VaultPath } from '@/core/vault'
+import { basename, type VaultId, type VaultPath } from '@/core/vault'
+import { useReviewStore } from '@/stores/review-store'
 import { ChunkBoundary } from '@/ui/components/ChunkBoundary'
 import {
   useHighlightDecoration,
@@ -159,6 +161,22 @@ export function HighlightsLayer({
     dismissPopover()
   }, [popover, dismissPopover])
 
+  // Distil this doc's highlights into a review source and open the generate
+  // dialog (reuses the shared review-store + card generator).
+  const handleGenerateReview = useCallback(() => {
+    if (docHighlights.length === 0) return
+    const src = highlightsToReviewSource(filePath, docHighlights)
+    if (src.text.trim() === '') return
+    useReviewStore.getState().requestGenerate({
+      vaultId,
+      path: filePath,
+      inlineContent: src.text,
+      sourceLabel: `${String(src.count)} highlight${
+        src.count === 1 ? '' : 's'
+      } · ${basename(filePath)}`,
+    })
+  }, [docHighlights, vaultId, filePath])
+
   const activeTarget: PopoverTarget | null =
     popover ??
     (showCreate && selection ? { mode: 'create', rect: selection.rect } : null)
@@ -174,6 +192,7 @@ export function HighlightsLayer({
         onRemove={(id) => {
           void useHighlightsStore.getState().remove(id)
         }}
+        onGenerateReview={handleGenerateReview}
       />
       {activeTarget && (
         <ChunkBoundary label="highlight popover">

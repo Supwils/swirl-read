@@ -11,7 +11,7 @@
  */
 
 import { type ReactNode } from 'react'
-import { Highlighter, Trash2, Unlink } from 'lucide-react'
+import { Highlighter, Sparkles, Trash2, Unlink } from 'lucide-react'
 import type { Highlight } from '@/core/highlights/types'
 
 interface HighlightsListProps {
@@ -20,6 +20,9 @@ interface HighlightsListProps {
   orphanedIds: Set<string>
   onScrollTo: (id: string) => void
   onRemove: (id: string) => void
+  /** Generate review cards distilled from these highlights. Omitted when no
+   *  AI provider context is relevant. */
+  onGenerateReview?: () => void
 }
 
 const SNIPPET_MAX = 140
@@ -29,6 +32,7 @@ export function HighlightsList({
   orphanedIds,
   onScrollTo,
   onRemove,
+  onGenerateReview,
 }: HighlightsListProps): ReactNode {
   if (highlights.length === 0) return null
 
@@ -44,6 +48,16 @@ export function HighlightsList({
         <Highlighter size={16} aria-hidden="true" />
         Highlights
         <span className="swirlread-highlights__count">{highlights.length}</span>
+        {onGenerateReview && (
+          <button
+            type="button"
+            className="swirlread-highlights__review"
+            onClick={onGenerateReview}
+          >
+            <Sparkles size={13} aria-hidden="true" />
+            Make review cards
+          </button>
+        )}
       </h2>
 
       {anchored.length > 0 && (

@@ -1,12 +1,5 @@
-import {
-  lazy,
-  Suspense,
-  useCallback,
-  useEffect,
-  useState,
-  type ReactNode,
-} from 'react'
-import { Eye, List, Network, RefreshCw } from 'lucide-react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { Eye, RefreshCw } from 'lucide-react'
 import type { VaultEntry, VaultId, VaultPath } from '@/core/vault'
 import { useSidebarVisibilityStore } from '@/stores/sidebar-visibility-store'
 import { getAdapter, useVaultStore } from '@/stores/vault-store'
@@ -14,12 +7,6 @@ import { getListing, sortEntries } from './file-tree-cache'
 import { SectionsNav } from './SectionsNav'
 import { FileTreeNode } from './FileTreeNode'
 import { SidebarContextMenu } from './SidebarContextMenu'
-
-const GraphView = lazy(() =>
-  import('./GraphView').then((m) => ({ default: m.GraphView })),
-)
-
-type ViewMode = 'tree' | 'graph'
 
 interface FileTreeProps {
   vaultId: VaultId
@@ -36,7 +23,6 @@ interface ContextMenuState {
 export function FileTree({ vaultId, currentPath }: FileTreeProps): ReactNode {
   const [rootEntries, setRootEntries] = useState<VaultEntry[] | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [viewMode, setViewMode] = useState<ViewMode>('tree')
   const [refreshing, setRefreshing] = useState(false)
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
   const contentRevision = useVaultStore(
@@ -111,32 +97,6 @@ export function FileTree({ vaultId, currentPath }: FileTreeProps): ReactNode {
       role="group"
       aria-label="File tree controls"
     >
-      <button
-        type="button"
-        className={
-          viewMode === 'tree'
-            ? 'swirlread-file-tree__view-btn swirlread-file-tree__view-btn--active'
-            : 'swirlread-file-tree__view-btn'
-        }
-        aria-pressed={viewMode === 'tree'}
-        title="File tree"
-        onClick={() => setViewMode('tree')}
-      >
-        <List size={14} aria-hidden="true" />
-      </button>
-      <button
-        type="button"
-        className={
-          viewMode === 'graph'
-            ? 'swirlread-file-tree__view-btn swirlread-file-tree__view-btn--active'
-            : 'swirlread-file-tree__view-btn'
-        }
-        aria-pressed={viewMode === 'graph'}
-        title="Knowledge graph"
-        onClick={() => setViewMode('graph')}
-      >
-        <Network size={14} aria-hidden="true" />
-      </button>
       {hiddenCount > 0 && (
         <button
           type="button"
@@ -181,25 +141,6 @@ export function FileTree({ vaultId, currentPath }: FileTreeProps): ReactNode {
         >
           {error}
         </div>
-      </div>
-    )
-  }
-
-  if (viewMode === 'graph') {
-    return (
-      <div className="swirlread-file-tree__container swirlread-file-tree__container--graph">
-        {toolbar}
-        <Suspense
-          fallback={
-            <p className="swirlread-graph-view__status">Building graph…</p>
-          }
-        >
-          <GraphView
-            vaultId={vaultId}
-            currentPath={currentPath}
-            contentRevision={contentRevision}
-          />
-        </Suspense>
       </div>
     )
   }

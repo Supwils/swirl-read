@@ -35,6 +35,10 @@ interface GenerateCardsDialogProps {
   open: boolean
   vaultId: VaultId
   path: VaultPath
+  /** When set, generate from this content instead of reading `path`. */
+  inlineContent?: string
+  /** Label for the "Source:" line (defaults to the filename). */
+  sourceLabel?: string
   onOpenChange: (open: boolean) => void
 }
 
@@ -42,6 +46,8 @@ export function GenerateCardsDialog({
   open,
   vaultId,
   path,
+  inlineContent,
+  sourceLabel,
   onOpenChange,
 }: GenerateCardsDialogProps): ReactNode {
   const navigate = useNavigate()
@@ -77,23 +83,30 @@ export function GenerateCardsDialog({
     const controller = new AbortController()
     cancelRef.current = controller
 
-    const adapter = getAdapter(vaultId)
-    if (!adapter) {
-      setStatus({
-        kind: 'error',
-        message: 'Vault is no longer accessible. Try refreshing.',
-      })
-      return
-    }
     let source: string
-    try {
-      source = await adapter.readText(path)
-    } catch {
-      setStatus({
-        kind: 'error',
-        message: 'Could not read the source document.',
-      })
-      return
+    if (inlineContent !== undefined) {
+      // Pre-built source (e.g. distilled from highlights) — no file read.
+      source = inlineContent
+    } else {
+      const adapter = getAdapter(vaultId)
+      if (!adapter) {
+        cancelRef.current = null
+        setStatus({
+          kind: 'error',
+          message: 'Vault is no longer accessible. Try refreshing.',
+        })
+        return
+      }
+      try {
+        source = await adapter.readText(path)
+      } catch {
+        cancelRef.current = null
+        setStatus({
+          kind: 'error',
+          message: 'Could not read the source document.',
+        })
+        return
+      }
     }
     if (controller.signal.aborted) return
 
@@ -141,7 +154,7 @@ export function GenerateCardsDialog({
         })
       }
     }
-  }, [vaultId, path, cardCount, navigate, onOpenChange])
+  }, [vaultId, path, inlineContent, cardCount, navigate, onOpenChange])
 
   return (
     <Dialog.Root open={open} onOpenChange={handleClose}>
@@ -153,7 +166,7 @@ export function GenerateCardsDialog({
             Generate review cards
           </Dialog.Title>
           <Dialog.Description className="swirlread-generate__desc">
-            Source: <code>{basename(path)}</code>
+            Source: <code>{sourceLabel ?? basename(path)}</code>
           </Dialog.Description>
 
           {status.kind === 'idle' && (

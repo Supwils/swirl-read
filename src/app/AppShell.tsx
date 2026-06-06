@@ -394,6 +394,8 @@ export function AppShell() {
             open
             vaultId={reviewIntent.vaultId}
             path={reviewIntent.path}
+            inlineContent={reviewIntent.inlineContent}
+            sourceLabel={reviewIntent.sourceLabel}
             onOpenChange={(open) => {
               if (!open) dismissReview()
             }}

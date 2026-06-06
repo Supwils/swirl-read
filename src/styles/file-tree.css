@@ -563,11 +563,6 @@ a.swirlread-directory__crumb:hover {
   opacity: 0.6;
 }
 
-.swirlread-file-tree__view-btn--active {
-  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
-  color: var(--color-accent);
-}
-
 .swirlread-file-tree__refresh-btn {
   margin-left: auto;
 }
@@ -665,92 +660,4 @@ a.swirlread-directory__crumb:hover {
 
 .swirlread-context-menu__item:hover svg {
   color: var(--color-accent);
-}
-
-/* Graph-mode container ─────────────────────────────────────────────── */
-.swirlread-file-tree__container--graph {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-}
-
-/* Knowledge graph view ─────────────────────────────────────────────── */
-.swirlread-graph-view {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-  background: var(--color-surface);
-  min-height: 300px;
-}
-
-.swirlread-graph-view__svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-  cursor: grab;
-}
-
-.swirlread-graph-view__svg:active {
-  cursor: grabbing;
-}
-
-.swirlread-graph-view__edge {
-  stroke: var(--color-border);
-  stroke-width: 1;
-  stroke-opacity: 0.55;
-}
-
-.swirlread-graph-view__node {
-  fill: color-mix(
-    in srgb,
-    var(--color-accent) 20%,
-    var(--color-surface-raised)
-  );
-  stroke: var(--color-border);
-  stroke-width: 1;
-  transition: fill 0.1s;
-}
-
-.swirlread-graph-view__node--hovered {
-  fill: color-mix(
-    in srgb,
-    var(--color-accent) 50%,
-    var(--color-surface-raised)
-  );
-  stroke: var(--color-accent);
-  stroke-width: 1.5;
-}
-
-.swirlread-graph-view__node--current {
-  fill: var(--color-accent);
-  stroke: color-mix(in srgb, var(--color-accent) 60%, var(--color-text));
-  stroke-width: 1.5;
-}
-
-.swirlread-graph-view__status {
-  font-size: 0.82em;
-  color: var(--color-text-muted);
-  padding: 1em 0.75em;
-  text-align: center;
-}
-
-.swirlread-graph-view__status--error {
-  color: color-mix(in srgb, red 60%, var(--color-text-muted));
-}
-
-.swirlread-graph-view__tooltip {
-  position: absolute;
-  transform: translateX(-50%);
-  background: var(--color-surface-raised);
-  border: 1px solid var(--color-border);
-  border-radius: 5px;
-  padding: 0.2em 0.5em;
-  font-size: 0.74em;
-  color: var(--color-text);
-  font-family: var(--font-mono);
-  white-space: nowrap;
-  pointer-events: none;
-  z-index: 10;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
 }

@@ -215,3 +215,47 @@ describe('resolveAnchor', () => {
     expect(range!.toString()).toBe('Edge quote')
   })
 })
+
+describe('resolveAnchor — fuzzy fallback', () => {
+  const QUOTE = 'the quick brown fox jumps over the lazy dog'
+
+  function anchorFor(html: string, quote: string): Anchor {
+    const root = makeRoot(html)
+    const map = buildPlainTextMap(root)
+    const start = map.text.indexOf(quote)
+    return captureAnchor(rangeForText(root, start, start + quote.length), root)!
+  }
+
+  it('resolves a long quote with a one-character typo edit', () => {
+    const anchor = anchorFor(`<p>${QUOTE}.</p>`, QUOTE)
+    // Edited elsewhere on disk: "lazy" → "lasy" (a typo). Exact match fails;
+    // fuzzy should still find the region with high confidence.
+    const edited = makeRoot(
+      '<p>the quick brown fox jumps over the lasy dog.</p>',
+    )
+    const range = resolveAnchor(anchor, edited)
+    expect(range).not.toBeNull()
+    expect(range!.toString()).toContain('brown fox')
+  })
+
+  it('orphans (null) when the quote is replaced by unrelated text', () => {
+    const anchor = anchorFor(`<p>${QUOTE}.</p>`, QUOTE)
+    const replaced = makeRoot(
+      '<p>completely different sentence with nothing in common here.</p>',
+    )
+    expect(resolveAnchor(anchor, replaced)).toBeNull()
+  })
+
+  it('does NOT fuzzy-match a short quote (too risky) — orphans instead', () => {
+    const root = makeRoot('<p>the brown fox</p>')
+    const map = buildPlainTextMap(root)
+    const start = map.text.indexOf('brown')
+    const anchor = captureAnchor(
+      rangeForText(root, start, start + 'brown'.length),
+      root,
+    )!
+    // "brown" (5 chars) is below the fuzzy minimum; an edit orphans it.
+    const edited = makeRoot('<p>the brawn fox</p>')
+    expect(resolveAnchor(anchor, edited)).toBeNull()
+  })
+})

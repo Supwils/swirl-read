@@ -114,7 +114,7 @@ async function invalidateVaultCachesLazy(id: VaultId): Promise<void> {
         m.invalidateFullTextIndex(id)
       })
       .catch(() => undefined),
-    import('@/ui/file-tree/vault-graph')
+    import('@/core/graph')
       .then((m) => {
         m.invalidateVaultGraph(id)
       })

@@ -4,6 +4,49 @@
 
 ---
 
+## 2026-06-06 · Follow-ups — fuzzy anchoring, review-from-highlights, legacy graph retired, PWA
+
+Closed out the deferred items from the reading-experience wave. All green via
+`pnpm check:full` (**1087 tests**), then a 2-agent review whose findings were
+fixed before commit.
+
+**Highlights — fuzzy anchoring fallback.** When a quote has no exact occurrence
+(lightly edited on disk), `resolveAnchorInMap` now tries a CONSERVATIVE fuzzy
+pass before orphaning: Sørensen–Dice bigram similarity over a bounded window
+near the hint (quotes 12–400 chars, threshold 0.9, radius 600). It runs ONLY on
+the orphan path (exact matches pay nothing), tie-breaks toward the original
+offset, and rejects any window whose DOM range would straddle a skipped subtree
+(code/math) — a wrong highlight is worse than a recoverable orphan.
+
+**Highlights → review.** "Make review cards" in the document-bottom highlights
+list distils the doc's highlights (`highlightsToReviewSource`) and opens the
+existing generate dialog via a new optional `GenerateIntent.inlineContent` /
+`sourceLabel` (the dialog generates from that blob instead of reading the file;
+the no-inline path is byte-identical to before).
+
+**Legacy sidebar GraphView retired.** Deleted `ui/file-tree/GraphView.tsx` +
+the `vault-graph` shim; removed the file-tree graph view-mode (toggle, state,
+branch, dead imports) and its CSS; `vault-store` invalidation now imports
+`invalidateVaultGraph` from `@/core/graph` directly. The full-window `__graph__`
+route and the inline LocalGraphPanel are the graph surfaces now.
+
+**PWA (installable + offline shell).** `vite-plugin-pwa` (generateSW,
+autoUpdate). Precaches the SHELL ONLY (entry JS/CSS + html, 7 entries ~1.07 MB);
+fonts (incl. the ~1.5 MB CJK font + KaTeX) and all lazy chunks are runtime-cached
+on first use (font → CacheFirst, script/style → StaleWhileRevalidate) so a
+Latin-only reader never downloads megabytes up front. `start_url: '/app'`,
+`navigateFallbackDenylist` guards future backend routes, SW disabled in dev.
+Local-first is preserved: vault reads go through the FSAPI handle, never `fetch`,
+so the SW can't touch vault content. `bundle:check` is unaffected (sw/manifest
+emit to the dist root, not `assets/`).
+
+**Review-wave fixes (2 read-only agents):** fuzzy skipped-subtree straddle guard
+
+- nearest-hint tie-break; PWA precache no longer pulls the CJK/KaTeX fonts;
+  `start_url` → `/app`; `navigateFallbackDenylist` added; manifest icon dropped
+  the unpadded `maskable` purpose; `GenerateCardsDialog` error paths null the
+  AbortController.
+
 ## 2026-06-05 · Reading-experience wave — responsive, HTML assets, inline graph, highlights
 
 Five planned + five implemented features across the reading experience, each

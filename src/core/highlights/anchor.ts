@@ -252,7 +252,22 @@ export function resolveAnchorInMap(
   map: PlainTextMap,
 ): Range | null {
   const occurrences = findOccurrences(map.text, anchor.quote)
-  if (occurrences.length === 0) return null
+  if (occurrences.length === 0) {
+    // No exact match — the quote was lightly edited. Try a CONSERVATIVE fuzzy
+    // pass near the hint before giving up; if it can't find a high-confidence
+    // region, orphan (never paint a wrong span).
+    const fuzzy = fuzzyResolve(map.text, anchor)
+    if (!fuzzy) return null
+    const range = rangeForOffsets(map, fuzzy.start, fuzzy.end)
+    // Reject a window that bridges a skipped subtree (code/math): `map.text`
+    // joins text across those gaps with no separator, so a fuzzy window could
+    // straddle one and its DOM range would then WRAP the skipped subtree. Such
+    // a range's rendered text runs much longer than the quote — orphan it.
+    if (range && range.toString().length > anchor.quote.length * 1.5) {
+      return null
+    }
+    return range
+  }
 
   const contextMatches = occurrences.filter((start) =>
     contextMatchesAt(map.text, start, anchor),
@@ -262,6 +277,80 @@ export function resolveAnchorInMap(
   if (chosen === null) return null
 
   return rangeForOffsets(map, chosen, chosen + anchor.quote.length)
+}
+
+// Fuzzy fallback tuning. Deliberately conservative: only quotes long enough to
+// be distinctive, a high similarity bar, and a bounded search window near the
+// original offset — a wrong highlight is worse than an orphaned one (orphans
+// are surfaced in the list and recoverable).
+const FUZZY_MIN_QUOTE = 12
+const FUZZY_MAX_QUOTE = 400
+const FUZZY_THRESHOLD = 0.9
+const FUZZY_RADIUS = 600
+
+/**
+ * Find the best near-the-hint window whose Dice-coefficient similarity to the
+ * quote clears {@link FUZZY_THRESHOLD}. Returns `null` (→ orphan) otherwise.
+ */
+function fuzzyResolve(
+  text: string,
+  anchor: Anchor,
+): { start: number; end: number } | null {
+  const quote = anchor.quote
+  if (quote.length < FUZZY_MIN_QUOTE || quote.length > FUZZY_MAX_QUOTE) {
+    return null
+  }
+  const win = quote.length
+  const lo = Math.max(0, anchor.startHint - FUZZY_RADIUS)
+  const hi = Math.min(text.length, anchor.startHint + FUZZY_RADIUS + win)
+  if (hi - lo < win) return null
+
+  const quoteBigrams = bigramCounts(quote)
+  let bestStart = -1
+  let bestScore = FUZZY_THRESHOLD
+  for (let i = lo; i + win <= hi; i++) {
+    const score = diceCoefficient(quoteBigrams, text.slice(i, i + win))
+    if (score > bestScore + 1e-9) {
+      bestScore = score
+      bestStart = i
+    } else if (
+      bestStart >= 0 &&
+      Math.abs(score - bestScore) <= 1e-9 &&
+      Math.abs(i - anchor.startHint) < Math.abs(bestStart - anchor.startHint)
+    ) {
+      // Tie on similarity → prefer the window nearest the original offset
+      // (mirrors the exact-match path's nearest-hint disambiguation, so a
+      // lightly-edited near-duplicate doesn't grab the wrong occurrence).
+      bestStart = i
+    }
+  }
+  return bestStart < 0 ? null : { start: bestStart, end: bestStart + win }
+}
+
+function bigramCounts(s: string): Map<string, number> {
+  const counts = new Map<string, number>()
+  for (let i = 0; i < s.length - 1; i++) {
+    const bg = s.slice(i, i + 2)
+    counts.set(bg, (counts.get(bg) ?? 0) + 1)
+  }
+  return counts
+}
+
+/** Sørensen–Dice coefficient between a precomputed bigram bag and a string. */
+function diceCoefficient(aBigrams: Map<string, number>, b: string): number {
+  if (b.length < 2) return 0
+  const bBigrams = bigramCounts(b)
+  let overlap = 0
+  let aTotal = 0
+  for (const n of aBigrams.values()) aTotal += n
+  let bTotal = 0
+  for (const [bg, n] of bBigrams) {
+    bTotal += n
+    const inA = aBigrams.get(bg)
+    if (inA !== undefined) overlap += Math.min(inA, n)
+  }
+  if (aTotal + bTotal === 0) return 0
+  return (2 * overlap) / (aTotal + bTotal)
 }
 
 /**

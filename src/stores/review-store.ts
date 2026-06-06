@@ -21,6 +21,11 @@ import type { VaultId, VaultPath } from '@/core/vault'
 export interface GenerateIntent {
   vaultId: VaultId
   path: VaultPath
+  /** When set, cards are generated from THIS content instead of reading the
+   *  file at `path` (e.g. a distilled blob of the document's highlights). */
+  inlineContent?: string
+  /** Human label for the dialog's "Source:" line (defaults to the filename). */
+  sourceLabel?: string
 }
 
 interface ReviewStoreState {

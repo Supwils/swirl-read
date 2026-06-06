@@ -2,6 +2,7 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { VitePWA } from 'vite-plugin-pwa'
 
 // All browsers SwirlRead targets (File System Access API requirement) ship
 // native color-mix() support: Chrome ≥ 111, Edge ≥ 111, Firefox ≥ 113,
@@ -63,7 +64,78 @@ function stripColorMixSupports(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [react(), tailwindcss(), stripColorMixSupports()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    stripColorMixSupports(),
+    // PWA: installable + offline-capable. Local-first already keeps vault
+    // CONTENT off the network (File System Access API), so the service worker
+    // only needs to make the APP SHELL available offline. We precache the
+    // shell (entry JS/CSS + html) and runtime-cache fonts and the many lazy
+    // chunks (Shiki grammars, KaTeX, Mermaid, editor) on first use rather than
+    // precaching megabytes of grammars/CJK fonts up front.
+    VitePWA({
+      registerType: 'autoUpdate',
+      injectRegister: 'auto',
+      includeAssets: ['favicon.svg'],
+      manifest: {
+        name: 'SwirlRead',
+        short_name: 'SwirlRead',
+        description:
+          'Read your knowledge. Beautifully. A local-first Markdown reader.',
+        theme_color: '#8b6f47',
+        background_color: '#f4ecd8',
+        display: 'standalone',
+        // Installed launches go straight into the app (auto-restores the last
+        // vault), not the marketing landing page at '/'. `scope` stays '/' so
+        // the landing page is still in-scope.
+        start_url: '/app',
+        scope: '/',
+        icons: [
+          {
+            src: 'favicon.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
+            // 'any' only — favicon.svg has no maskable safe-zone padding, so
+            // claiming 'maskable' would crop on Android adaptive icons.
+            purpose: 'any',
+          },
+        ],
+      },
+      workbox: {
+        // Precache the SHELL ONLY (entry JS/CSS + html). Every font — the small
+        // Latin woff2 subsets AND the ~1.5 MB CJK font AND the KaTeX fonts —
+        // and every lazy chunk (Shiki grammars, KaTeX, Mermaid, editor) is
+        // cached on first use via the runtime routes below, so a Latin-only
+        // reader never downloads megabytes of CJK/math fonts up front.
+        globPatterns: ['**/index-*.{js,css}', '**/*.html'],
+        navigateFallback: 'index.html',
+        // Don't let the SPA fallback shadow future backend routes or any
+        // path that names a file extension.
+        navigateFallbackDenylist: [/^\/api\//, /\.[^/]+$/],
+        cleanupOutdatedCaches: true,
+        runtimeCaching: [
+          {
+            urlPattern: ({ request }) =>
+              request.destination === 'script' ||
+              request.destination === 'style',
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'swirlread-chunks' },
+          },
+          {
+            urlPattern: ({ request }) => request.destination === 'font',
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'swirlread-fonts',
+              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 90 },
+            },
+          },
+        ],
+      },
+      // Keep the SW out of dev so HMR / the vault picker aren't shadowed.
+      devOptions: { enabled: false },
+    }),
+  ],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

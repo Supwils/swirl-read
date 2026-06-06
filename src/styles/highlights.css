@@ -187,6 +187,27 @@
   font-weight: 500;
 }
 
+.swirlread-highlights__review {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+
+.swirlread-highlights__review:hover,
+.swirlread-highlights__review:focus-visible {
+  color: var(--color-text);
+  border-color: var(--color-accent);
+}
+
 .swirlread-highlights__list {
   list-style: none;
   margin: 0.85rem 0 0;
