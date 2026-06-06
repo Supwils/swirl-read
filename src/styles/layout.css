@@ -1,4 +1,20 @@
 /* AppShell + VaultLayout (M4.3) ──────────────────────────────────────── */
+
+/*
+ * Responsive breakpoint scale (Feature B). The PostCSS pipeline has no
+ * custom-media plugin, so every `@media` below uses raw px. Keep these four
+ * cutovers consistent across the codebase:
+ *
+ *   - compact   ≤ 768px   — phone / narrow tablet
+ *   - cozy      ≤ 1024px  — the existing sidebar→drawer cutover (DO NOT CHANGE)
+ *   - roomy     ≥ 1440px  — comfortable desktop
+ *   - wide      ≥ 1600px  — large monitor; opt-in persistent rails live here
+ *
+ * Shell-density spacing flows through the `--shell-*` vars below: their
+ * `comfortable` defaults equal today's literal values byte-for-byte, and
+ * `body.density-compact` overrides them. Density NEVER touches `--reader-*`
+ * or the prose column — only chrome spacing.
+ */
 :root {
   --shell-header-height: 48px;
   --file-tree-width: 280px;
@@ -8,6 +24,24 @@
      so row hover/active backgrounds still extend full width inside the
      sidebar — they just stop at the gutter rather than kissing the edge. */
   --sidebar-gutter: 8px;
+  /* Density-driven chrome paddings. Comfortable defaults match the literal
+     values these vars replaced (sidebar `0.4em 0 0.4em`, TOC `1.4em 0.9em
+     1em`) so the cascade is unchanged when no density class is present. */
+  --shell-sidebar-padding-block: 0.4em;
+  --shell-toc-padding-block-start: 1.4em;
+  --shell-toc-padding-inline: 0.9em;
+  --shell-toc-padding-block-end: 1em;
+}
+
+/* Compact density — tighter chrome only. Header shrinks 48→40px; rail
+   paddings tighten. No prose / reader variable is touched. */
+body.density-compact {
+  --shell-header-height: 40px;
+  --sidebar-gutter: 6px;
+  --shell-sidebar-padding-block: 0.25em;
+  --shell-toc-padding-block-start: 1em;
+  --shell-toc-padding-inline: 0.7em;
+  --shell-toc-padding-block-end: 0.7em;
 }
 
 .swirlread-shell__icon-button {
@@ -139,7 +173,8 @@
   overflow-x: hidden;
   border-right: 1px solid var(--color-border);
   background: color-mix(in srgb, var(--color-surface) 35%, transparent);
-  padding: 0.4em 0 0.4em var(--sidebar-gutter);
+  padding: var(--shell-sidebar-padding-block) 0
+    var(--shell-sidebar-padding-block) var(--sidebar-gutter);
   font-family: var(--font-sans);
   font-size: 0.86em;
 }
@@ -245,7 +280,8 @@ body:has(.swirlread-vault-layout__sidebar-resize[data-dragging='true']) {
   overflow-x: hidden;
   border-left: 1px solid var(--color-border);
   background: color-mix(in srgb, var(--color-surface) 25%, transparent);
-  padding: 1.4em 0.9em 1em;
+  padding: var(--shell-toc-padding-block-start) var(--shell-toc-padding-inline)
+    var(--shell-toc-padding-block-end);
   font-family: var(--font-sans);
   font-size: 0.84em;
 }
@@ -413,4 +449,137 @@ body:has(.swirlread-vault-layout__sidebar-resize[data-dragging='true']) {
   font-size: 0.8em;
   color: var(--color-text-muted);
   min-width: 4em;
+}
+
+/* ── Feature B Phase B — touch / iPad affordances ──────────────────────
+ *
+ * Everything here is gated behind `@media (hover: none), (pointer: coarse)`
+ * so a desktop mouse pointer is never affected. The hover-summon gesture is
+ * mouse-only; coarse-pointer devices get explicit tap targets, larger icon
+ * buttons, and safe-area-aware padding.
+ *
+ * `env(safe-area-inset-*)` additions are additive — they resolve to 0 on any
+ * device/browser without notches/home-indicators, so they have zero effect
+ * on a regular desktop window.
+ */
+
+/* Edge tap handles. Hidden everywhere by default; the capability query
+   below reveals them. They sit on the same fixed edges as the hover zones
+   and trigger the identical transient-show flow. */
+.swirlread-vault-layout__touch-handle {
+  display: none;
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 55;
+  width: 22px;
+  height: 64px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface) 70%, var(--color-bg));
+  color: var(--color-text-muted);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+}
+
+.swirlread-vault-layout__touch-handle::before {
+  content: '';
+  width: 3px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--color-text-muted);
+  opacity: 0.55;
+}
+
+.swirlread-vault-layout__touch-handle--left {
+  left: 0;
+  border-left: 0;
+  border-radius: 0 10px 10px 0;
+  padding-left: env(safe-area-inset-left, 0px);
+}
+
+.swirlread-vault-layout__touch-handle--right {
+  right: 0;
+  border-right: 0;
+  border-radius: 10px 0 0 10px;
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+@media (hover: none), (pointer: coarse) {
+  .swirlread-vault-layout__touch-handle {
+    display: flex;
+  }
+
+  /* Comfortable 44px tap targets for the header icon buttons. Visual size
+     only grows on coarse pointers — the 32px desktop button is untouched. */
+  .swirlread-shell__icon-button {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* Honour device safe areas (notch / home indicator) for the sticky header
+     and the fixed drawer + handles. Additive padding; 0 on inset-free UAs. */
+  .swirlread-shell__header {
+    padding-left: max(1rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1rem, env(safe-area-inset-right, 0px));
+  }
+
+  .swirlread-vault-layout__sidebar.swirlread-vault-layout__sidebar--floating {
+    padding-left: env(safe-area-inset-left, 0px);
+  }
+
+  .swirlread-vault-layout__toc.swirlread-vault-layout__toc--floating {
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+}
+
+/* Zen mode hides the rails entirely, so their tap handles must go too —
+   keep this outside the capability query so the rule always wins regardless
+   of where zen-mobile.css lands in the cascade. */
+body.zen-mode .swirlread-vault-layout__touch-handle {
+  display: none;
+}
+
+/* ── Feature B Phase C — large-monitor persistent rails (≥1600px) ───────
+ *
+ * Opt-in via `body.wide-rails` (ui-store `wideRails`). VaultLayout mounts the
+ * TOC with the `--wide` modifier whenever wide-rails is the only reason it's
+ * showing. The modifier is INERT below 1600px (hidden, takes no space) so the
+ * toggle does nothing on a smaller window — the rail still hover-floats as it
+ * does today. At ≥1600px the rail is pinned sticky and takes layout space, and
+ * the right hover zone is no longer needed.
+ *
+ * The prose column is never widened or moved by this rule, and BacklinksPanel
+ * (which lives inside the prose article) is out of scope.
+ */
+.swirlread-vault-layout__toc--wide {
+  display: none;
+}
+
+@media (min-width: 1600px) {
+  body.wide-rails .swirlread-vault-layout__toc--wide {
+    display: block;
+    position: sticky;
+    top: var(--shell-header-height);
+    align-self: flex-start;
+    width: var(--toc-width);
+    flex-shrink: 0;
+    height: calc(100vh - var(--shell-header-height));
+    box-shadow: none;
+  }
+
+  body.wide-rails .swirlread-vault-layout__hover-zone--right {
+    display: none;
+  }
+}
+
+/* Zen mode must always win over wide-rails. The wide-rails @media rule above
+   (`body.wide-rails .…__toc--wide`) and a plain `body.zen-mode .…__toc--wide`
+   have EQUAL specificity (0,2,1), so a plain restatement would only win by
+   source order — fragile. We bump specificity with a doubled `.zen-mode`
+   class so zen wins regardless of rule order or layering. A zen session never
+   shows a pinned rail. */
+body.zen-mode.zen-mode .swirlread-vault-layout__toc--wide {
+  display: none;
 }

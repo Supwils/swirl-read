@@ -9,7 +9,7 @@
     {
       "name": "main CSS",
       "pattern": "^index-.*\\.css$",
-      "limitGzKb": 32
+      "limitGzKb": 36
     },
     {
       "name": "DocumentEditSurface (CodeMirror)",
@@ -40,6 +40,21 @@
       "name": "SettingsPanel",
       "pattern": "^SettingsPanel-.*\\.js$",
       "limitGzKb": 8
+    },
+    {
+      "name": "GraphPage (knowledge map)",
+      "pattern": "^GraphPage-.*\\.js$",
+      "limitGzKb": 8
+    },
+    {
+      "name": "LocalGraphPanel (document-foot graph)",
+      "pattern": "^LocalGraphPanel-.*\\.js$",
+      "limitGzKb": 7
+    },
+    {
+      "name": "HighlightPopover (lazy highlight control)",
+      "pattern": "^HighlightPopover-.*\\.js$",
+      "limitGzKb": 4
     }
   ]
 }

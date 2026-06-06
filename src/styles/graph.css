@@ -1,0 +1,354 @@
+/* Knowledge graph — full-window map (swirlread-graphmap). Theme-aware via
+   semantic tokens + the six folder-colour tokens (--f-<id>). */
+
+.swirlread-graphmap {
+  height: calc(100vh - var(--shell-header-height));
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+  overflow: hidden;
+}
+
+/* ── top control bar ─────────────────────────────────────────────── */
+.swirlread-graphmap__bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0.9rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+  flex: 0 0 auto;
+}
+
+.swirlread-graphmap__bar-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  color: var(--color-text);
+}
+
+.swirlread-graphmap__bar-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto;
+}
+
+.swirlread-graphmap__seg {
+  display: inline-flex;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.swirlread-graphmap__seg button {
+  padding: 0.2rem 0.7rem;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.swirlread-graphmap__seg button[data-active='true'] {
+  background: var(--color-accent);
+  color: var(--color-bg);
+}
+
+.swirlread-graphmap__seg button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.swirlread-graphmap__depth {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.76rem;
+  color: var(--color-text-muted);
+}
+
+.swirlread-graphmap__depth button {
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.swirlread-graphmap__depth button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.swirlread-graphmap__depth-value {
+  min-width: 1ch;
+  text-align: center;
+  color: var(--color-text);
+}
+
+.swirlread-graphmap__count {
+  font-size: 0.74rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.swirlread-graphmap__exit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.swirlread-graphmap__exit:hover,
+.swirlread-graphmap__exit:focus-visible {
+  color: var(--color-text);
+  border-color: var(--color-accent);
+}
+
+/* ── canvas + svg ────────────────────────────────────────────────── */
+.swirlread-graphmap__canvas {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.swirlread-graphmap__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+}
+
+.swirlread-graphmap__svg:active {
+  cursor: grabbing;
+}
+
+/* ── edges ───────────────────────────────────────────────────────── */
+.swirlread-graphmap__edge {
+  stroke: var(--color-border);
+  stroke-opacity: 0.5;
+  stroke-width: 1;
+  transition:
+    stroke-opacity 0.12s ease,
+    stroke 0.12s ease;
+}
+
+.swirlread-graphmap__edge.is-active {
+  stroke: var(--color-accent);
+  stroke-opacity: 0.9;
+}
+
+.swirlread-graphmap__edge.is-dim {
+  stroke-opacity: 0.08;
+}
+
+/* ── nodes ───────────────────────────────────────────────────────── */
+.swirlread-graphmap__node {
+  cursor: pointer;
+  --node-fill: var(--color-text-muted);
+}
+
+.swirlread-graphmap__node[data-color='knowledge'] {
+  --node-fill: var(--f-knowledge);
+}
+.swirlread-graphmap__node[data-color='career'] {
+  --node-fill: var(--f-career);
+}
+.swirlread-graphmap__node[data-color='reading'] {
+  --node-fill: var(--f-reading);
+}
+.swirlread-graphmap__node[data-color='ai'] {
+  --node-fill: var(--f-ai);
+}
+.swirlread-graphmap__node[data-color='tasks'] {
+  --node-fill: var(--f-tasks);
+}
+.swirlread-graphmap__node[data-color='journal'] {
+  --node-fill: var(--f-journal);
+}
+
+.swirlread-graphmap__dot {
+  fill: var(--node-fill);
+  stroke: var(--color-bg);
+  stroke-width: 1;
+  transition:
+    fill 0.12s ease,
+    opacity 0.12s ease;
+}
+
+.swirlread-graphmap__node:hover .swirlread-graphmap__dot,
+.swirlread-graphmap__node.is-hover .swirlread-graphmap__dot {
+  stroke: var(--color-accent);
+  stroke-width: 2;
+}
+
+.swirlread-graphmap__node.is-current .swirlread-graphmap__dot {
+  fill: var(--color-accent);
+  stroke: var(--color-text);
+  stroke-width: 2;
+}
+
+.swirlread-graphmap__node.is-dim {
+  opacity: 0.18;
+}
+
+.swirlread-graphmap__label {
+  fill: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 9px;
+  pointer-events: none;
+  user-select: none;
+  paint-order: stroke;
+  stroke: var(--color-bg);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+/* ── hover card ──────────────────────────────────────────────────── */
+.swirlread-graphmap__card {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  z-index: 20;
+  width: min(280px, 60vw);
+  padding: 0.55rem 0.7rem;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+}
+
+.swirlread-graphmap__card-title {
+  font-family: var(--font-serif);
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.swirlread-graphmap__card-meta {
+  margin-top: 0.1rem;
+  font-size: 0.68rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.swirlread-graphmap__card-body {
+  margin-top: 0.4rem;
+  font-size: 0.74rem;
+  line-height: 1.5;
+  color: var(--color-text);
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.swirlread-graphmap__card-body--muted {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* ── zoom controls ───────────────────────────────────────────────── */
+.swirlread-graphmap__zoom {
+  position: absolute;
+  right: 0.8rem;
+  bottom: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.swirlread-graphmap__zoom button {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.swirlread-graphmap__zoom button:hover,
+.swirlread-graphmap__zoom button:focus-visible {
+  border-color: var(--color-accent);
+}
+
+/* ── states ──────────────────────────────────────────────────────── */
+.swirlread-graphmap__status {
+  margin: auto;
+  padding: 2rem;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.swirlread-graphmap__status--error {
+  color: color-mix(in srgb, red 55%, var(--color-text-muted));
+}
+
+.swirlread-graphmap__empty {
+  margin: auto;
+  max-width: 28rem;
+  padding: 2rem;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.swirlread-graphmap__empty svg {
+  opacity: 0.5;
+}
+
+.swirlread-graphmap__empty-title {
+  margin-top: 0.8rem;
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  color: var(--color-text);
+}
+
+.swirlread-graphmap__empty-body {
+  margin-top: 0.4rem;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.swirlread-graphmap__btn {
+  margin-top: 1rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.swirlread-graphmap__btn:hover,
+.swirlread-graphmap__btn:focus-visible {
+  border-color: var(--color-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swirlread-graphmap__edge,
+  .swirlread-graphmap__dot {
+    transition: none;
+  }
+}

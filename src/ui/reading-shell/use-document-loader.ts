@@ -34,7 +34,7 @@ export type LoadState =
   | { kind: 'text'; file: VaultFile; raw: string }
   | { kind: 'code'; file: VaultFile; raw: string; language: string }
   | { kind: 'table'; file: VaultFile; raw: string; delimiter: ',' | '\t' }
-  | { kind: 'html'; file: VaultFile; raw: string }
+  | { kind: 'html'; file: VaultFile; raw: string; vault: VaultFileSystem }
   | { kind: 'json'; file: VaultFile; raw: string }
   | { kind: 'media'; file: VaultFile; media: MediaKind; vault: VaultFileSystem }
   | { kind: 'binary'; file: VaultFile }
@@ -125,7 +125,7 @@ export function useDocumentLoader({
             delimiter: decision.delimiter,
           })
         } else if (decision.kind === 'html') {
-          setState({ kind: 'html', file: entry, raw })
+          setState({ kind: 'html', file: entry, raw, vault: v })
         } else if (decision.kind === 'json') {
           setState({ kind: 'json', file: entry, raw })
         } else {

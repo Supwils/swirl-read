@@ -496,3 +496,11 @@
   color: var(--color-text);
   word-break: break-word;
 }
+
+/* Keep the frontmatter title in step with the prose H1 in narrow columns
+   (the reading column is the @container — see prose.css). */
+@container swirlread-reader (max-width: 480px) {
+  .swirlread-frontmatter__title {
+    font-size: 1.8rem;
+  }
+}

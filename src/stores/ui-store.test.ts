@@ -4,10 +4,13 @@ import {
   DEFAULT_THEME,
   DEFAULT_FONT_SIZE,
   DEFAULT_LINE_HEIGHT,
+  DEFAULT_DENSITY,
   DEFAULT_FILE_TREE_OPEN,
   DEFAULT_FILE_TREE_WIDTH,
   DEFAULT_TOC_OPEN,
+  DEFAULT_LOCAL_GRAPH_OPEN,
   DEFAULT_FRONTMATTER_DISPLAY,
+  DEFAULT_WIDE_RAILS,
   FILE_TREE_WIDTH_MAX,
   FILE_TREE_WIDTH_MIN,
   FONT_SIZE_MIN,
@@ -25,13 +28,16 @@ beforeEach(async () => {
     fontSize: DEFAULT_FONT_SIZE,
     lineHeight: DEFAULT_LINE_HEIGHT,
     contentWidth: 'medium',
+    density: DEFAULT_DENSITY,
     zenMode: false,
     fileTreeOpen: DEFAULT_FILE_TREE_OPEN,
     fileTreeWidth: DEFAULT_FILE_TREE_WIDTH,
     tocOpen: DEFAULT_TOC_OPEN,
+    localGraphOpen: DEFAULT_LOCAL_GRAPH_OPEN,
     commandPaletteOpen: false,
     shortcutsHelpOpen: false,
     frontmatterDisplay: DEFAULT_FRONTMATTER_DISPLAY,
+    wideRails: DEFAULT_WIDE_RAILS,
     ready: false,
   })
 })
@@ -225,6 +231,41 @@ describe('ui store — tocOpen (M4.6)', () => {
   })
 })
 
+describe('ui store — localGraphOpen', () => {
+  it('defaults to closed', () => {
+    expect(useUIStore.getState().localGraphOpen).toBe(DEFAULT_LOCAL_GRAPH_OPEN)
+    expect(DEFAULT_LOCAL_GRAPH_OPEN).toBe(false)
+  })
+
+  it('setLocalGraphOpen writes to db', async () => {
+    await useUIStore.getState().setLocalGraphOpen(true)
+    expect(useUIStore.getState().localGraphOpen).toBe(true)
+    const row = await db.preferences.get('ui:localGraphOpen')
+    expect(row?.value).toBe(true)
+  })
+
+  it('toggleLocalGraphOpen flips and persists', async () => {
+    await useUIStore.getState().toggleLocalGraphOpen()
+    expect(useUIStore.getState().localGraphOpen).toBe(!DEFAULT_LOCAL_GRAPH_OPEN)
+    const row = await db.preferences.get('ui:localGraphOpen')
+    expect(row?.value).toBe(!DEFAULT_LOCAL_GRAPH_OPEN)
+  })
+
+  it('init restores localGraphOpen from db', async () => {
+    await db.preferences.put({ key: 'ui:localGraphOpen', value: true })
+    useUIStore.setState({ ready: false })
+    await useUIStore.getState().init()
+    expect(useUIStore.getState().localGraphOpen).toBe(true)
+  })
+
+  it('init falls back to default for invalid stored values', async () => {
+    await db.preferences.put({ key: 'ui:localGraphOpen', value: 'nope' })
+    useUIStore.setState({ ready: false })
+    await useUIStore.getState().init()
+    expect(useUIStore.getState().localGraphOpen).toBe(DEFAULT_LOCAL_GRAPH_OPEN)
+  })
+})
+
 describe('ui store — commandPaletteOpen (M5.1)', () => {
   it('defaults to closed', () => {
     expect(useUIStore.getState().commandPaletteOpen).toBe(false)
@@ -303,11 +344,69 @@ describe('ui store — frontmatterDisplay (M3.10)', () => {
   })
 })
 
+describe('ui store — density (Feature B Phase A)', () => {
+  it('defaults to comfortable', () => {
+    expect(useUIStore.getState().density).toBe(DEFAULT_DENSITY)
+    expect(DEFAULT_DENSITY).toBe('comfortable')
+  })
+
+  it('setDensity updates state and writes to db', async () => {
+    await useUIStore.getState().setDensity('compact')
+    expect(useUIStore.getState().density).toBe('compact')
+    const row = await db.preferences.get('ui:density')
+    expect(row?.value).toBe('compact')
+  })
+
+  it('init restores density from db', async () => {
+    await db.preferences.put({ key: 'ui:density', value: 'compact' })
+    useUIStore.setState({ ready: false })
+    await useUIStore.getState().init()
+    expect(useUIStore.getState().density).toBe('compact')
+  })
+
+  it('init falls back to default for invalid stored values', async () => {
+    await db.preferences.put({ key: 'ui:density', value: 'roomy' })
+    useUIStore.setState({ ready: false })
+    await useUIStore.getState().init()
+    expect(useUIStore.getState().density).toBe(DEFAULT_DENSITY)
+  })
+})
+
+describe('ui store — wideRails (Feature B Phase C)', () => {
+  it('defaults to false', () => {
+    expect(useUIStore.getState().wideRails).toBe(DEFAULT_WIDE_RAILS)
+    expect(DEFAULT_WIDE_RAILS).toBe(false)
+  })
+
+  it('setWideRails updates state and writes to db', async () => {
+    await useUIStore.getState().setWideRails(true)
+    expect(useUIStore.getState().wideRails).toBe(true)
+    const row = await db.preferences.get('ui:wideRails')
+    expect(row?.value).toBe(true)
+  })
+
+  it('init restores wideRails from db', async () => {
+    await db.preferences.put({ key: 'ui:wideRails', value: true })
+    useUIStore.setState({ ready: false })
+    await useUIStore.getState().init()
+    expect(useUIStore.getState().wideRails).toBe(true)
+  })
+
+  it('init falls back to default for invalid stored values', async () => {
+    await db.preferences.put({ key: 'ui:wideRails', value: 'yes' })
+    useUIStore.setState({ ready: false })
+    await useUIStore.getState().init()
+    expect(useUIStore.getState().wideRails).toBe(DEFAULT_WIDE_RAILS)
+  })
+})
+
 describe('ui store — resetToDefaults', () => {
   it('restores every field to its default', async () => {
     await useUIStore.getState().setTheme('dark')
     await useUIStore.getState().setFontSize(22)
     await useUIStore.getState().setContentWidth('wide')
+    await useUIStore.getState().setDensity('compact')
+    await useUIStore.getState().setWideRails(true)
 
     await useUIStore.getState().resetToDefaults()
 
@@ -315,6 +414,8 @@ describe('ui store — resetToDefaults', () => {
     expect(state.theme).toBe(DEFAULT_THEME)
     expect(state.fontSize).toBe(DEFAULT_FONT_SIZE)
     expect(state.contentWidth).toBe('medium')
+    expect(state.density).toBe(DEFAULT_DENSITY)
+    expect(state.wideRails).toBe(DEFAULT_WIDE_RAILS)
 
     const themeRow = await db.preferences.get('ui:theme')
     expect(themeRow?.value).toBe(DEFAULT_THEME)

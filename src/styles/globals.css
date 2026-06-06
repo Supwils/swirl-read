@@ -75,4 +75,7 @@
 @import './zen-mobile.css';
 @import './editor.css';
 @import './review.css';
+@import './graph.css';
+@import './local-graph.css';
+@import './highlights.css';
 @import './chunk-boundary.css';

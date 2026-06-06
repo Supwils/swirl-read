@@ -12,6 +12,7 @@ import { Settings, X } from 'lucide-react'
 import type { ReactNode } from 'react'
 import {
   CONTENT_WIDTH_PX,
+  DENSITY_OPTIONS,
   EDITOR_FONT_SIZE_OPTIONS,
   FONT_SIZE_MAX,
   FONT_SIZE_MIN,
@@ -121,6 +122,7 @@ export function SettingsPanel(): ReactNode {
             <FontSizeControl />
             <LineHeightControl />
             <ContentWidthControl />
+            <DensityControl />
             <FrontmatterControl />
             <ChromeModeControl />
             <FileTreeControl />
@@ -263,6 +265,37 @@ function ContentWidthControl(): ReactNode {
             aria-pressed={contentWidth === option.value}
             onClick={() => {
               void setContentWidth(option.value)
+            }}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+    </fieldset>
+  )
+}
+
+function DensityControl(): ReactNode {
+  const density = useUIStore((state) => state.density)
+  const setDensity = useUIStore((state) => state.setDensity)
+
+  return (
+    <fieldset className="swirlread-settings__field">
+      <legend className="swirlread-settings__label-row">
+        <span className="swirlread-settings__label">Density</span>
+        <span className="swirlread-settings__hint">
+          Spacing of the app chrome — never the reading column
+        </span>
+      </legend>
+      <div className="swirlread-settings__segmented">
+        {DENSITY_OPTIONS.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            className="swirlread-settings__segment"
+            aria-pressed={density === option.value}
+            onClick={() => {
+              void setDensity(option.value)
             }}
           >
             {option.label}

@@ -48,6 +48,15 @@
   --shadow-deep: rgb(58 47 36 / 0.18);
   --highlight: rgb(139 111 71 / 0.18);
 
+  /* Highlight palette (Feature E) — translucent fills tuned for warm
+     paper; `-ink` is the on-highlight text colour. */
+  --hl-yellow: rgb(232 196 86 / 0.42);
+  --hl-green: rgb(150 196 110 / 0.4);
+  --hl-blue: rgb(120 170 220 / 0.4);
+  --hl-pink: rgb(226 138 162 / 0.4);
+  --hl-purple: rgb(184 142 200 / 0.4);
+  --hl-ink: #3a2f24;
+
   /* Folder palette — each: fill, deep (border/dot), ink (deep text). */
   --f-knowledge: #e6c4a4;
   --f-knowledge-deep: #c89a72;
@@ -104,6 +113,14 @@
   --shadow-deep: rgb(0 0 0 / 0.12);
   --highlight: rgb(0 102 204 / 0.16);
 
+  /* Highlight palette (Feature E) — brighter fills on neutral white. */
+  --hl-yellow: rgb(255 224 102 / 0.55);
+  --hl-green: rgb(168 224 130 / 0.5);
+  --hl-blue: rgb(140 190 240 / 0.5);
+  --hl-pink: rgb(248 160 184 / 0.5);
+  --hl-purple: rgb(206 162 224 / 0.5);
+  --hl-ink: #1a1a1a;
+
   --f-knowledge: #e6c4a4;
   --f-knowledge-deep: #c89a72;
   --f-knowledge-ink: #5e3618;
@@ -153,6 +170,15 @@
   --shadow-deep: rgb(0 0 0 / 0.55);
   --highlight: rgb(212 167 103 / 0.22);
 
+  /* Highlight palette (Feature E) — muted fills + light ink so the
+     highlighted text stays legible against a dark canvas. */
+  --hl-yellow: rgb(214 178 80 / 0.4);
+  --hl-green: rgb(120 176 96 / 0.32);
+  --hl-blue: rgb(96 150 206 / 0.34);
+  --hl-pink: rgb(214 128 156 / 0.34);
+  --hl-purple: rgb(168 130 192 / 0.34);
+  --hl-ink: #e4dbc7;
+
   --f-knowledge: #3e2c1f;
   --f-knowledge-deep: #6a4a30;
   --f-knowledge-ink: #d6a576;
@@ -200,6 +226,15 @@
   --shadow: rgb(0 0 0 / 0.6);
   --shadow-deep: rgb(0 0 0 / 0.8);
   --highlight: rgb(255 157 77 / 0.22);
+
+  /* Highlight palette (Feature E) — pure-black canvas; keep fills lower
+     so they don't bloom on OLED. */
+  --hl-yellow: rgb(214 178 80 / 0.4);
+  --hl-green: rgb(120 176 96 / 0.3);
+  --hl-blue: rgb(96 150 206 / 0.32);
+  --hl-pink: rgb(214 128 156 / 0.32);
+  --hl-purple: rgb(168 130 192 / 0.32);
+  --hl-ink: #d6d6d6;
 
   --f-knowledge: #3e2c1f;
   --f-knowledge-deep: #6a4a30;
@@ -250,6 +285,13 @@
     --shadow-deep: rgb(0 0 0 / 0.55);
     --highlight: rgb(212 167 103 / 0.22);
 
+    --hl-yellow: rgb(214 178 80 / 0.4);
+    --hl-green: rgb(120 176 96 / 0.32);
+    --hl-blue: rgb(96 150 206 / 0.34);
+    --hl-pink: rgb(214 128 156 / 0.34);
+    --hl-purple: rgb(168 130 192 / 0.34);
+    --hl-ink: #e4dbc7;
+
     --f-knowledge: #3e2c1f;
     --f-knowledge-deep: #6a4a30;
     --f-knowledge-ink: #d6a576;
@@ -298,6 +340,13 @@
     --shadow: rgb(58 47 36 / 0.1);
     --shadow-deep: rgb(58 47 36 / 0.18);
     --highlight: rgb(139 111 71 / 0.18);
+
+    --hl-yellow: rgb(232 196 86 / 0.42);
+    --hl-green: rgb(150 196 110 / 0.4);
+    --hl-blue: rgb(120 170 220 / 0.4);
+    --hl-pink: rgb(226 138 162 / 0.4);
+    --hl-purple: rgb(184 142 200 / 0.4);
+    --hl-ink: #3a2f24;
 
     --f-knowledge: #e6c4a4;
     --f-knowledge-deep: #c89a72;

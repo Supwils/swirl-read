@@ -14,6 +14,8 @@
  *   - `reviewCards`      — individual review cards inside a batch
  *   - `panes`            — per-vault pane state (single|dual mode, active id,
  *                          each pane's current document path) for Workspace
+ *   - `highlights`       — per-vault local text highlights & annotations
+ *                          (Feature E), keyed by `vaultId::path` document
  *
  * Handle persistence (binary `FileSystemDirectoryHandle` blobs) lives in a
  * separate idb-keyval store; see `core/vault/handle-storage.ts`. Splitting
@@ -145,6 +147,27 @@ export interface PaneStateRow {
   viewMode: 'single' | 'dual'
 }
 
+/** One local highlight / annotation row (Feature E). `id` is a random
+ *  uuid; `vaultId` + `path` are indexed so all highlights for a document
+ *  load in one range query and vault deletion fans out in O(matched-rows).
+ *  The W3C-style anchor + colour + optional note all live inline. */
+export interface HighlightRow {
+  id: string
+  vaultId: string
+  path: string
+  color: string
+  note: string
+  anchor: {
+    quote: string
+    prefix: string
+    suffix: string
+    startHint: number
+    endHint: number
+  }
+  createdAtMs: number
+  updatedAtMs: number
+}
+
 interface SwirlReadDB extends Dexie {
   vaults: EntityTable<StoredVault, 'id'>
   preferences: EntityTable<PreferenceRow, 'key'>
@@ -157,6 +180,7 @@ interface SwirlReadDB extends Dexie {
   reviewBatches: EntityTable<ReviewBatchRow, 'id'>
   reviewCards: EntityTable<ReviewCardRow, 'id'>
   panes: EntityTable<PaneStateRow, 'vaultId'>
+  highlights: EntityTable<HighlightRow, 'id'>
 }
 
 function buildDb(): SwirlReadDB {
@@ -255,6 +279,23 @@ function buildDb(): SwirlReadDB {
     reviewCards: 'id, batchId, vaultId, [batchId+order], expiresAtMs',
     panes: 'vaultId',
   })
+  // Highlights table (Feature E). One row per highlight; `vaultId` is
+  // indexed for vault-deletion fan-out and `[vaultId+path]` is a compound
+  // index so all highlights for a document load in a single range query.
+  db.version(11).stores({
+    vaults: 'id, name, lastOpenedAtMs',
+    preferences: 'key',
+    recentFiles: 'id, vaultId, openedAtMs',
+    backlinks: 'id, vaultId, targetPath, sourcePath, updatedAtMs',
+    scrollPositions: 'id, vaultId, updatedAtMs',
+    hintsSeen: 'id, seenAtMs',
+    openTabs: 'id, vaultId, [vaultId+order], openedAtMs',
+    aiKeys: 'provider',
+    reviewBatches: 'id, vaultId, expiresAtMs, createdAtMs',
+    reviewCards: 'id, batchId, vaultId, [batchId+order], expiresAtMs',
+    panes: 'vaultId',
+    highlights: 'id, vaultId, [vaultId+path], createdAtMs',
+  })
   return db
 }
 
@@ -301,6 +342,7 @@ export async function __resetDbForTests(): Promise<void> {
       db.reviewBatches,
       db.reviewCards,
       db.panes,
+      db.highlights,
     ],
     async () => {
       await db.vaults.clear()
@@ -314,6 +356,7 @@ export async function __resetDbForTests(): Promise<void> {
       await db.reviewBatches.clear()
       await db.reviewCards.clear()
       await db.panes.clear()
+      await db.highlights.clear()
     },
   )
 }

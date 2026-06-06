@@ -4,6 +4,21 @@
    Tuned for reading: 65–72 ch line length, generous vertical rhythm,
    theme-aware colors via semantic tokens.
    ───────────────────────────────────────────────────────────────────────── */
+
+/* Responsive reading column. The <article> is the query container: its
+   inline-size == the reading column (min of available width and
+   --reader-content-width), identical in single-pane and a narrow dual pane.
+   The default values below equal the legacy desktop appearance (padding 24px
+   == old `px-6`); the @container tiers at the bottom of this file only tighten
+   things when the column itself is narrow (dual pane / iPad portrait / narrow
+   content-width pref). The user's --reader-font-size is never overridden —
+   only derived sizes (headings) and rhythm scale. */
+.swirlread-reader-column {
+  container-type: inline-size;
+  container-name: swirlread-reader;
+  padding-inline: 24px;
+}
+
 .swirlread-prose {
   font-family: var(--reader-font-family, var(--font-serif));
   font-size: var(--reader-font-size, 18px);
@@ -484,4 +499,75 @@
     var(--color-text-muted) 50%,
     transparent
   );
+}
+
+/* ── Narrow-column tiers (container queries) ──────────────────────────────
+   Fire ONLY when the reading column itself is narrow (dual pane, iPad
+   portrait, narrow content-width pref). A desktop single-pane medium/wide
+   column never matches these, so its rendering is byte-identical to before.
+   Body font-size stays the user's --reader-font-size; only derived heading
+   sizes, vertical rhythm, and the article gutter tighten. */
+
+/* Tier 1: ≤ 640cqi — narrow content-width pref / ~half-split dual pane. */
+@container swirlread-reader (max-width: 640px) {
+  .swirlread-reader-column {
+    padding-inline: 20px;
+  }
+  .swirlread-prose > * + * {
+    margin-top: 1.25em;
+  }
+  .swirlread-prose h1,
+  .swirlread-prose h2,
+  .swirlread-prose h3,
+  .swirlread-prose h4,
+  .swirlread-prose h5,
+  .swirlread-prose h6 {
+    margin-top: 1.7em;
+  }
+  .swirlread-prose h1 {
+    font-size: 2em;
+  }
+  .swirlread-prose h2 {
+    font-size: 1.55em;
+  }
+  .swirlread-prose h3 {
+    font-size: 1.3em;
+  }
+}
+
+/* Tier 2: ≤ 480cqi — tight dual pane / iPad portrait pane. */
+@container swirlread-reader (max-width: 480px) {
+  .swirlread-reader-column {
+    padding-inline: 16px;
+  }
+  .swirlread-prose > * + * {
+    margin-top: 1.1em;
+  }
+  .swirlread-prose h1,
+  .swirlread-prose h2,
+  .swirlread-prose h3,
+  .swirlread-prose h4,
+  .swirlread-prose h5,
+  .swirlread-prose h6 {
+    margin-top: 1.5em;
+  }
+  .swirlread-prose h1 {
+    font-size: 1.8em;
+  }
+  .swirlread-prose h2 {
+    font-size: 1.42em;
+  }
+  .swirlread-prose h3 {
+    font-size: 1.22em;
+  }
+  .swirlread-prose pre {
+    padding: 0.85em 0.95em;
+  }
+  .swirlread-prose blockquote {
+    padding-left: 1em;
+  }
+  .swirlread-prose ul,
+  .swirlread-prose ol {
+    padding-left: 1.2em;
+  }
 }

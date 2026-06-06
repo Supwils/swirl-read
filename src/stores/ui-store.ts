@@ -11,6 +11,7 @@
  *   - `fileTreeOpen`        — left-rail file tree visibility (M4.3)
  *   - `fileTreeWidth`       — left-rail width in px (220–520, drag-to-resize)
  *   - `tocOpen`             — right-rail table of contents visibility (M4.6)
+ *   - `localGraphOpen`      — document-foot local-graph panel expanded/collapsed
  *   - `commandPaletteOpen`  — ⌘K palette open/closed (M5.1, transient)
  *   - `shortcutsHelpOpen`   — `?` overlay listing all keybindings (M9.4, transient)
  *
@@ -30,6 +31,12 @@ export type Theme = 'sepia' | 'light' | 'dark' | 'oled' | 'auto'
 export type FontFamily = 'serif' | 'sans' | 'system'
 export type ContentWidth = 'narrow' | 'medium' | 'wide'
 export type FrontmatterDisplay = 'metadata' | 'raw' | 'hidden'
+/**
+ * Shell density (Feature B Phase A). Governs chrome spacing only — header
+ * height, rail/sidebar padding — never the prose reading column. `comfortable`
+ * reproduces today's literal spacing byte-for-byte; `compact` tightens it.
+ */
+export type Density = 'comfortable' | 'compact'
 
 /**
  * RX2 reading-chrome mode. Two persistent values plus the transient
@@ -71,9 +78,11 @@ export const DEFAULT_FONT_FAMILY: FontFamily = 'serif'
 export const DEFAULT_FONT_SIZE = 18
 export const DEFAULT_LINE_HEIGHT = 1.7
 export const DEFAULT_CONTENT_WIDTH: ContentWidth = 'medium'
+export const DEFAULT_DENSITY: Density = 'comfortable'
 export const DEFAULT_FILE_TREE_OPEN = true
 export const DEFAULT_FILE_TREE_WIDTH = 280
 export const DEFAULT_TOC_OPEN = true
+export const DEFAULT_LOCAL_GRAPH_OPEN = false
 export const DEFAULT_FRONTMATTER_DISPLAY: FrontmatterDisplay = 'metadata'
 export const DEFAULT_CHROME_MODE: ChromeMode = 'reading'
 export const DEFAULT_EDITOR_LINE_NUMBERS = false
@@ -93,6 +102,12 @@ export const DEFAULT_USE_LEGACY_TREE = false
  * at a time so the sidebar never sprawls into a wall. `null` means none.
  */
 export const DEFAULT_SHELF_EXPANDED_FOLDER_ID: string | null = null
+/**
+ * Large-monitor persistent rails (Feature B Phase C). Opt-in; defaults to
+ * `false`. Even when enabled it only takes layout space at ≥1600px (gated in
+ * CSS), so on smaller windows the toggle is inert and rails still hover-float.
+ */
+export const DEFAULT_WIDE_RAILS = false
 /** Per-window splitter ratio for the dual-pane Workspace (PR B Step 5). */
 export const DEFAULT_PANE_SPLIT_RATIO = 0.5
 export const PANE_SPLIT_RATIO_MIN = 0.2
@@ -106,10 +121,12 @@ interface UIStoreState {
   fontSize: number
   lineHeight: number
   contentWidth: ContentWidth
+  density: Density
   zenMode: boolean
   fileTreeOpen: boolean
   fileTreeWidth: number
   tocOpen: boolean
+  localGraphOpen: boolean
   commandPaletteOpen: boolean
   shortcutsHelpOpen: boolean
   frontmatterDisplay: FrontmatterDisplay
@@ -121,6 +138,7 @@ interface UIStoreState {
   useLegacyTree: boolean
   shelfExpandedFolderId: string | null
   paneSplitRatio: number
+  wideRails: boolean
   /** True after `init()` has finished loading from Dexie. */
   ready: boolean
 }
@@ -132,6 +150,7 @@ interface UIStoreActions {
   setFontSize: (size: number) => Promise<void>
   setLineHeight: (height: number) => Promise<void>
   setContentWidth: (width: ContentWidth) => Promise<void>
+  setDensity: (density: Density) => Promise<void>
   setZenMode: (on: boolean) => void
   toggleZenMode: () => void
   setFileTreeOpen: (open: boolean) => Promise<void>
@@ -139,6 +158,8 @@ interface UIStoreActions {
   setFileTreeWidth: (width: number) => Promise<void>
   setTocOpen: (open: boolean) => Promise<void>
   toggleToc: () => Promise<void>
+  setLocalGraphOpen: (open: boolean) => Promise<void>
+  toggleLocalGraphOpen: () => Promise<void>
   setCommandPaletteOpen: (open: boolean) => void
   toggleCommandPalette: () => void
   setShortcutsHelpOpen: (open: boolean) => void
@@ -153,6 +174,7 @@ interface UIStoreActions {
   setUseLegacyTree: (on: boolean) => Promise<void>
   setShelfExpandedFolderId: (id: string | null) => Promise<void>
   setPaneSplitRatio: (ratio: number) => Promise<void>
+  setWideRails: (on: boolean) => Promise<void>
   resetToDefaults: () => Promise<void>
 }
 
@@ -165,6 +187,7 @@ function clamp(value: number, min: number, max: number): number {
 const VALID_THEMES = new Set<Theme>(['sepia', 'light', 'dark', 'oled', 'auto'])
 const VALID_FONT_FAMILIES = new Set<FontFamily>(['serif', 'sans', 'system'])
 const VALID_CONTENT_WIDTHS = new Set<ContentWidth>(['narrow', 'medium', 'wide'])
+const VALID_DENSITIES = new Set<Density>(['comfortable', 'compact'])
 const VALID_FRONTMATTER_DISPLAYS = new Set<FrontmatterDisplay>([
   'metadata',
   'raw',
@@ -195,6 +218,9 @@ const isFontFamily = (v: unknown): v is FontFamily =>
 
 const isContentWidth = (v: unknown): v is ContentWidth =>
   typeof v === 'string' && VALID_CONTENT_WIDTHS.has(v as ContentWidth)
+
+const isDensity = (v: unknown): v is Density =>
+  typeof v === 'string' && VALID_DENSITIES.has(v as Density)
 
 const isFrontmatterDisplay = (v: unknown): v is FrontmatterDisplay =>
   typeof v === 'string' &&
@@ -228,10 +254,12 @@ export const useUIStore = create<UIStore>((set, get) => ({
   fontSize: DEFAULT_FONT_SIZE,
   lineHeight: DEFAULT_LINE_HEIGHT,
   contentWidth: DEFAULT_CONTENT_WIDTH,
+  density: DEFAULT_DENSITY,
   zenMode: false,
   fileTreeOpen: DEFAULT_FILE_TREE_OPEN,
   fileTreeWidth: DEFAULT_FILE_TREE_WIDTH,
   tocOpen: DEFAULT_TOC_OPEN,
+  localGraphOpen: DEFAULT_LOCAL_GRAPH_OPEN,
   commandPaletteOpen: false,
   shortcutsHelpOpen: false,
   frontmatterDisplay: DEFAULT_FRONTMATTER_DISPLAY,
@@ -243,6 +271,7 @@ export const useUIStore = create<UIStore>((set, get) => ({
   useLegacyTree: DEFAULT_USE_LEGACY_TREE,
   shelfExpandedFolderId: DEFAULT_SHELF_EXPANDED_FOLDER_ID,
   paneSplitRatio: DEFAULT_PANE_SPLIT_RATIO,
+  wideRails: DEFAULT_WIDE_RAILS,
   ready: false,
 
   async init() {
@@ -253,9 +282,11 @@ export const useUIStore = create<UIStore>((set, get) => ({
       fontSize,
       lineHeight,
       contentWidth,
+      density,
       fileTreeOpen,
       fileTreeWidth,
       tocOpen,
+      localGraphOpen,
       frontmatterDisplay,
       chromeMode,
       editorLineNumbers,
@@ -265,15 +296,18 @@ export const useUIStore = create<UIStore>((set, get) => ({
       useLegacyTree,
       shelfExpandedFolderId,
       paneSplitRatio,
+      wideRails,
     ] = await Promise.all([
       readPref('theme', isTheme, DEFAULT_THEME),
       readPref('fontFamily', isFontFamily, DEFAULT_FONT_FAMILY),
       readPref('fontSize', isFiniteNumber, DEFAULT_FONT_SIZE),
       readPref('lineHeight', isFiniteNumber, DEFAULT_LINE_HEIGHT),
       readPref('contentWidth', isContentWidth, DEFAULT_CONTENT_WIDTH),
+      readPref('density', isDensity, DEFAULT_DENSITY),
       readPref('fileTreeOpen', isBoolean, DEFAULT_FILE_TREE_OPEN),
       readPref('fileTreeWidth', isFiniteNumber, DEFAULT_FILE_TREE_WIDTH),
       readPref('tocOpen', isBoolean, DEFAULT_TOC_OPEN),
+      readPref('localGraphOpen', isBoolean, DEFAULT_LOCAL_GRAPH_OPEN),
       readPref(
         'frontmatterDisplay',
         isFrontmatterDisplay,
@@ -291,6 +325,7 @@ export const useUIStore = create<UIStore>((set, get) => ({
         DEFAULT_SHELF_EXPANDED_FOLDER_ID,
       ),
       readPref('paneSplitRatio', isFiniteNumber, DEFAULT_PANE_SPLIT_RATIO),
+      readPref('wideRails', isBoolean, DEFAULT_WIDE_RAILS),
     ])
     set({
       theme,
@@ -298,6 +333,7 @@ export const useUIStore = create<UIStore>((set, get) => ({
       fontSize: clamp(fontSize, FONT_SIZE_MIN, FONT_SIZE_MAX),
       lineHeight: clamp(lineHeight, LINE_HEIGHT_MIN, LINE_HEIGHT_MAX),
       contentWidth,
+      density,
       fileTreeOpen,
       fileTreeWidth: clamp(
         fileTreeWidth,
@@ -305,6 +341,7 @@ export const useUIStore = create<UIStore>((set, get) => ({
         FILE_TREE_WIDTH_MAX,
       ),
       tocOpen,
+      localGraphOpen,
       frontmatterDisplay,
       chromeMode,
       editorLineNumbers,
@@ -318,6 +355,7 @@ export const useUIStore = create<UIStore>((set, get) => ({
         PANE_SPLIT_RATIO_MIN,
         PANE_SPLIT_RATIO_MAX,
       ),
+      wideRails,
       ready: true,
     })
   },
@@ -347,6 +385,11 @@ export const useUIStore = create<UIStore>((set, get) => ({
   async setContentWidth(width) {
     set({ contentWidth: width })
     await writePref('contentWidth', width)
+  },
+
+  async setDensity(density) {
+    set({ density })
+    await writePref('density', density)
   },
 
   setZenMode(on) {
@@ -383,6 +426,17 @@ export const useUIStore = create<UIStore>((set, get) => ({
     const next = !get().tocOpen
     set({ tocOpen: next })
     await writePref('tocOpen', next)
+  },
+
+  async setLocalGraphOpen(open) {
+    set({ localGraphOpen: open })
+    await writePref('localGraphOpen', open)
+  },
+
+  async toggleLocalGraphOpen() {
+    const next = !get().localGraphOpen
+    set({ localGraphOpen: next })
+    await writePref('localGraphOpen', next)
   },
 
   setCommandPaletteOpen(open) {
@@ -454,6 +508,11 @@ export const useUIStore = create<UIStore>((set, get) => ({
     await writePref('paneSplitRatio', clamped)
   },
 
+  async setWideRails(on) {
+    set({ wideRails: on })
+    await writePref('wideRails', on)
+  },
+
   async resetToDefaults() {
     set({
       theme: DEFAULT_THEME,
@@ -461,9 +520,11 @@ export const useUIStore = create<UIStore>((set, get) => ({
       fontSize: DEFAULT_FONT_SIZE,
       lineHeight: DEFAULT_LINE_HEIGHT,
       contentWidth: DEFAULT_CONTENT_WIDTH,
+      density: DEFAULT_DENSITY,
       fileTreeOpen: DEFAULT_FILE_TREE_OPEN,
       fileTreeWidth: DEFAULT_FILE_TREE_WIDTH,
       tocOpen: DEFAULT_TOC_OPEN,
+      localGraphOpen: DEFAULT_LOCAL_GRAPH_OPEN,
       frontmatterDisplay: DEFAULT_FRONTMATTER_DISPLAY,
       chromeMode: DEFAULT_CHROME_MODE,
       editorLineNumbers: DEFAULT_EDITOR_LINE_NUMBERS,
@@ -473,6 +534,7 @@ export const useUIStore = create<UIStore>((set, get) => ({
       useLegacyTree: DEFAULT_USE_LEGACY_TREE,
       shelfExpandedFolderId: DEFAULT_SHELF_EXPANDED_FOLDER_ID,
       paneSplitRatio: DEFAULT_PANE_SPLIT_RATIO,
+      wideRails: DEFAULT_WIDE_RAILS,
     })
     await Promise.all([
       writePref('theme', DEFAULT_THEME),
@@ -480,9 +542,11 @@ export const useUIStore = create<UIStore>((set, get) => ({
       writePref('fontSize', DEFAULT_FONT_SIZE),
       writePref('lineHeight', DEFAULT_LINE_HEIGHT),
       writePref('contentWidth', DEFAULT_CONTENT_WIDTH),
+      writePref('density', DEFAULT_DENSITY),
       writePref('fileTreeOpen', DEFAULT_FILE_TREE_OPEN),
       writePref('fileTreeWidth', DEFAULT_FILE_TREE_WIDTH),
       writePref('tocOpen', DEFAULT_TOC_OPEN),
+      writePref('localGraphOpen', DEFAULT_LOCAL_GRAPH_OPEN),
       writePref('frontmatterDisplay', DEFAULT_FRONTMATTER_DISPLAY),
       writePref('chromeMode', DEFAULT_CHROME_MODE),
       writePref('editorLineNumbers', DEFAULT_EDITOR_LINE_NUMBERS),
@@ -492,6 +556,7 @@ export const useUIStore = create<UIStore>((set, get) => ({
       writePref('useLegacyTree', DEFAULT_USE_LEGACY_TREE),
       writePref('shelfExpandedFolderId', DEFAULT_SHELF_EXPANDED_FOLDER_ID),
       writePref('paneSplitRatio', DEFAULT_PANE_SPLIT_RATIO),
+      writePref('wideRails', DEFAULT_WIDE_RAILS),
     ])
   },
 }))
@@ -511,6 +576,12 @@ export const CONTENT_WIDTH_PX: Record<ContentWidth, number> = {
   medium: 720,
   wide: 880,
 }
+
+/** Shell density options (label + value), surfaced in the settings panel. */
+export const DENSITY_OPTIONS: { value: Density; label: string }[] = [
+  { value: 'comfortable', label: 'Comfortable' },
+  { value: 'compact', label: 'Compact' },
+]
 
 /** Frontmatter display options (label + value), surfaced in the settings panel. */
 export const FRONTMATTER_DISPLAY_OPTIONS: {

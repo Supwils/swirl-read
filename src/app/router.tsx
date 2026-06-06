@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router'
 import type { RouteObject } from 'react-router'
 import { AppShell } from '@/app/AppShell'
 import { ErrorFallback } from '@/app/ErrorFallback'
+import { LazyGraphPage } from '@/app/graph-route'
 import { LazyReviewPage } from '@/app/review-route'
 import { LandingPage } from '@/ui/landing/LandingPage'
 import { NoVaultSelected } from '@/ui/reading-shell/NoVaultSelected'
@@ -47,9 +48,10 @@ export const routes: RouteObject[] = [
         errorElement: <ErrorFallback />,
         children: [
           { index: true, element: <PebbleGarden /> },
-          // Review-page route is more specific than the catch-all
-          // below; react-router ranks by specificity, but listing it
+          // Full-window special views are more specific than the catch-all
+          // below; react-router ranks by specificity, but listing them
           // first also aids readability.
+          { path: '__graph__', element: <LazyGraphPage /> },
           { path: '__review__/:batchId', element: <LazyReviewPage /> },
           { path: '*', element: <Workspace /> },
         ],

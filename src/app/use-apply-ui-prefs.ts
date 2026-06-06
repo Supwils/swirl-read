@@ -35,7 +35,9 @@ export function useApplyUIPrefs(): void {
   const fontSize = useUIStore((s) => s.fontSize)
   const lineHeight = useUIStore((s) => s.lineHeight)
   const contentWidth = useUIStore((s) => s.contentWidth)
+  const density = useUIStore((s) => s.density)
   const fileTreeWidth = useUIStore((s) => s.fileTreeWidth)
+  const wideRails = useUIStore((s) => s.wideRails)
   const zenMode = useUIStore((s) => s.zenMode)
 
   // Theme class on <body>
@@ -61,6 +63,19 @@ export function useApplyUIPrefs(): void {
     )
     root.style.setProperty('--file-tree-width', `${String(fileTreeWidth)}px`)
   }, [fontFamily, fontSize, lineHeight, contentWidth, fileTreeWidth])
+
+  // Shell density toggles a body-level class. Comfortable (default) adds no
+  // class so the cascade is byte-identical to before this feature landed.
+  useEffect(() => {
+    document.body.classList.toggle('density-compact', density === 'compact')
+  }, [density])
+
+  // Large-monitor persistent rails — opt-in body class. The "takes layout
+  // space" behaviour is gated to ≥1600px in CSS, so the class alone is inert
+  // on smaller windows.
+  useEffect(() => {
+    document.body.classList.toggle('wide-rails', wideRails)
+  }, [wideRails])
 
   // Zen mode toggles a body-level class so any rule can react.
   useEffect(() => {

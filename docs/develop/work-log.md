@@ -4,6 +4,179 @@
 
 ---
 
+## 2026-06-05 · Reading-experience wave — responsive, HTML assets, inline graph, highlights
+
+Five planned + five implemented features across the reading experience, each
+landed via a sub-agent and gate-verified, then swept by a 3-agent review whose
+findings were fixed. All green via `pnpm check:full`: **1080 tests** (96→99
+files), main bundle 271.68 KB gz / 280, main CSS 32.58 KB gz (ceiling raised
+32→36 for this wave's container-query + HTML + graph + highlights styles).
+
+**A · Responsive reading column** — the `<article>` is now a `container-type:
+inline-size` query container; `prose.css` adds 640/480 narrow-column tiers that
+tighten heading scale + rhythm + gutter for dual-pane / iPad / narrow-width,
+while the desktop single-pane column stays byte-identical (the user's
+`--reader-font-size` is never overridden). `frontmatter` title tracks the prose
+H1 in narrow columns.
+
+**C · HTML renderer upgrade** — new `html-asset-rewrite.ts` (pure, DOMParser):
+relative `img/srcset/poster/link/CSS url()` are rewritten to vault `blob:` URLs
+(`.`/`..` collapsed, root-escape rejected, `<script>` left dead, `sandbox=""`
+preserved), so self-contained HTML finally renders its assets. The iframe is
+themed to the app theme (no white flash in dark/oled), with expand /
+reading-width / open-in-new-tab toolbar actions. Async build (building/ready/
+error). Known first-cut limit: `url()` inside an external `.css` isn't resolved.
+
+**D · Inline local-graph panel** — a collapsed-by-default document-foot panel
+(sibling to backlinks) reusing the `core/graph` engine + `GraphCanvas` (new
+`compact` prop); lazy-on-expand so a collapsed panel costs nothing; persisted
+`ui-store.localGraphOpen`; depth 1–2 stepper; "Open full graph" link; suppressed
+in zen; reference-stable graph means no re-animation on no-op polls.
+
+**B · Responsive shell** — density (comfortable|compact) + a documented
+breakpoint scale (768/1024/1440/1600) via shell CSS vars whose comfortable
+defaults equal the old literals; touch/iPad affordances gated by
+`@media (hover:none),(pointer:coarse)` (edge tap-handles reusing hover-summon,
+44px targets, `env(safe-area-inset-*)`, splitter `touch-action`) + two-pointer
+pinch-zoom in `GraphCanvas`; opt-in wide-monitor persistent TOC rail (≥1600px,
+zen still wins). PWA deferred to a separate PR.
+
+**E · Highlights & annotations (first cut)** — select prose → pick a color
+(5, theme-mapped) → persisted per-vault in Dexie **v11** (`highlights` table +
+store + `vault-lifecycle` deletion hook). Anchoring is W3C-style quote + 32-char
+prefix/suffix over the rendered plain text (skips code/math/mermaid subtrees),
+resolving by context then nearest-offset, orphaning (never losing) on a miss —
+no fuzzy yet. Decoration is post-render DOM (`<span class="swirlread-hl">`) with
+a strict unwrap-first / cleanup-before-React-commit discipline (round-trip
+`innerHTML`-identity tested), multi-text-node wrapping, and a delegated click
+listener. Color popover (lazy), document-bottom list with orphan surfacing +
+click-to-scroll. `to-review-source` seam stubbed for a future
+review-from-highlights. Deferred: fuzzy resolution, margin-note-on-create.
+
+**Review wave (3 read-only agents) — findings fixed:**
+
+- E decoration could inject a `<span>` inside a code/math subtree a highlight
+  spanned — `collectTextPieces` now applies the same skip filter as anchoring
+  (regression-tested).
+- `HighlightsLayer` read the doc bucket with an un-normalized key while the
+  store wrote a normalized one → now uses the store's `docKey` helper.
+- Graph drag-then-pinch left a node pinned forever (fx/fy persist across sim
+  rebuilds) — the pinch entry now releases the in-progress pin.
+- Active-pointer map could leak (wedging pinch mode) when pointer capture
+  silently failed — added window-level `pointerup`/`pointercancel` pruning.
+- A highlight over a link hijacked navigation — the delegated handler now lets
+  clicks inside an `<a>` through.
+- Highlight popover wasn't keyboard/touch-operable — focuses a swatch on open,
+  dismisses on `pointerdown`; the create flow hides the (discarded) note field.
+- `decorate` rebuilt the plain-text map once per highlight (O(H·N)) — now builds
+  it once per pass (`resolveAnchorInMap`).
+- Dark/OLED yellow highlight contrast bumped; highlight `cursor` → `text`.
+
+## 2026-06-05 · Knowledge graph — full-window relationship map (`__graph__`)
+
+**Status**: ✅ First cut shipped. An Obsidian-style, SVG, force-directed
+knowledge map as a full-window route, plus a reading-centric **local graph**
+mode. Scope locked with the user: notes-only nodes (no tag/unresolved/attachment
+nodes yet), full-window route (no persistent tab-strip pill yet), local graph in
+the first cut. Honours `vision.md`'s critique of vanity graph views — the design
+serves reading: hover **focuses** a node's 1-hop neighbourhood (dims the rest)
+and shows a rich preview card; click opens the note.
+
+### Core (`src/core/graph/`, pure TS, no React)
+
+- **`graph-types.ts`** — `GraphNode` (id/label/kind/in·out·total degree/section/
+  `folderColorId`), `GraphEdge`, `VaultGraph` (nodes + edges + undirected
+  adjacency + `byId`), `GraphView` + `GraphViewOptions`.
+- **`build-graph.ts`** — builds the _full_ graph from resolved `[[wikilinks]]`
+  (same extractor/resolver the backlinks index uses), memoised per vault.
+  `selectGraphView` derives the renderable view: **global** (degree-cull to a
+  600-node cap with `hiddenCount`) or **local** (BFS neighbourhood around a
+  focus note to an adjustable depth). Pure, so the UI re-derives on every
+  mode/depth/focus flip.
+- **`force-sim.ts`** — framework-free velocity-Verlet sim: many-body repulsion
+  - link springs + centre gravity + collision, with **alpha cooling** so the
+    layout settles. Driven one `tick()` at a time from a `requestAnimationFrame`
+    loop (animated settle) or `runToSettle()` synchronously (reduced-motion /
+    tests). Seeded RNG → deterministic. O(n²) repulsion is fine inside the node
+    cap; Barnes-Hut is the noted next step if the cap is raised past ~1k.
+
+### UI (`src/ui/graph/`, lazy chunk)
+
+- **`GraphCanvas.tsx`** — the SVG renderer. React owns _structure_ + pan/zoom
+  transform; the rAF loop writes node/edge positions to the DOM imperatively
+  (no reconciliation on the 60 fps path). Hover never re-renders the node list:
+  neighbour-focus dimming is applied via `classList`, the preview card is a
+  single sibling driven by an imperative handle. Pan/zoom (wheel zooms toward
+  cursor), node drag-to-reposition + reheat, click/⌘-click to open, LOD labels
+  (hubs always; all on zoom-in), nodes coloured by top-level folder.
+- **`GraphHoverCard.tsx`** — the "basic content" preview; reuses the wikilink
+  preview LRU cache + `previewSnippet`, so a note hovered in the graph and in
+  the prose paints from one cache.
+- **`GraphPage.tsx`** — route shell. Mode/focus/depth live in URL search params
+  (shareable, back/forward-safe). Loading / error / empty / orphan states; Esc
+  exits (guarded against editable targets).
+
+### Wiring
+
+- Route `{ path: '__graph__', element: <LazyGraphPage /> }` under `VaultLayout`,
+  sibling to `__review__` (lazy via `app/graph-route.tsx` + `ChunkBoundary`).
+- Entry points: AppShell header button (Network icon, vault routes only) +
+  command-palette group ("Open knowledge graph" / "Local graph for this note").
+- Legacy sidebar `vault-graph.ts` refactored into a thin shim delegating to
+  `@/core/graph` (one builder, one cache; the existing vault-store
+  content-revision fan-out invalidator is unchanged via re-export).
+- New `src/styles/graph.css` (`swirlread-graphmap` namespace, all themes).
+  Bundle ceiling added for `GraphPage-*.js`.
+
+### Verification
+
+All gates green via `pnpm check:full`: **1016 tests** (+31: 11 build-graph,
+10 force-sim, 5 GraphCanvas, 5 GraphPage, +1 router-tree assertion), typecheck,
+lint (max-warnings 0), format, build. Bundle: main **266.74 KB gz / 280**, CSS
+**30.83 KB gz / 32**, new lazy `GraphPage` **5.43 KB gz / 8** (whole graph
+feature ≈ 9.5 KB gz across `GraphPage` + `graph` + `build-graph` chunks).
+
+### Follow-ups (not in this cut)
+
+- Persistent `__graph__` tab pill (needs tabs-store pseudo-path support).
+- Optional tag / unresolved-link / attachment nodes behind a setting.
+- Force-parameter tuning panel; Barnes-Hut if the node cap is raised.
+- Collapse the legacy sidebar mini-graph onto the shared engine as a "local
+  mini-graph" panel.
+
+### Hardening pass (same day) — 10-finding review + fixes
+
+A multi-agent review (one planner per finding) swept the new graph code; all
+fixes landed with regression tests. **1023 tests** green via `pnpm check:full`.
+
+- **HIGH #1** — the 30 s vault poll bumped `contentRevision` unconditionally,
+  which made GraphPage flash its loading screen, **remount the canvas, and
+  reset the user's pan/zoom + re-animate** every 30 s even when nothing changed.
+  Fix: `getVaultGraph` now stamps each build with an order-independent
+  `signature` and returns the **same object reference** when a rebuild is
+  structurally identical (`lastBuilt` baseline, cleared on vault removal via a
+  new `vault-lifecycle` hook); GraphPage keeps the current graph on screen
+  across a background poll (no loading flash, reuse `phase` when the graph
+  ref is unchanged); the destructive `[view]` transform-reset effect is gone.
+  (The background re-walk still runs — same pessimistic-refresh model as the
+  file tree — but is now invisible.)
+- **HIGH #2** — index-keyed element-ref arrays could desync from the sim when
+  the node set changed (file added/removed while open), stranding nodes at the
+  SVG origin / mis-dimming. Fix: id-keyed `Map` refs for nodes + edges.
+- **MED #3** — the edge key used an **embedded raw NUL byte** in source (not a
+  space as first reported — it made `grep` treat the files as binary). Cleaned
+  to `String.fromCharCode(0)`; the redundant `edgeKeys` dedup (pairs already
+  unique) was removed; the React `<line>` key uses a shared `edgeKey()` helper.
+- **MED #4** — unbounded `Promise.all` reads → bounded worker pool (8).
+- **MED #5** — an every-render `useLayoutEffect(applyPositions)` did O(n+e) DOM
+  writes on every pan move for nothing (React never clobbers the imperatively
+  set node transforms). Removed; positions are applied once at sim build + per
+  settle frame.
+- **LOW #6–#10** — drag resolves the sim node by id (survives mid-drag
+  rebuilds); added `onPointerCancel`; clear hover highlight/card on rebuild;
+  global mode highlights the source note via a new highlight-only `?from=`
+  param; removed a dead `worldRef` + a misleading comment.
+
 ## 2026-05-30 · Browse/dual-pane polish + R3 production-readiness audit & fixes
 
 Three rounds, one commit. (1) Pebble Garden sizing by recursive **folder weight** (new `core/vault/folder-weight.ts`, skips system folders), system folders sorted last + muted, drill-in "← Back", folder + sub-folder right-click → Open here/left/right, sub-folders shown as chips inside cards. (2) Dual-pane scroll decoupled — each pane is its own bounded scroller (`.swirlread-workspace--dual` height + `overscroll-behavior`), wheel follows the pane under the cursor; splitter grab zone + keyboard resize.

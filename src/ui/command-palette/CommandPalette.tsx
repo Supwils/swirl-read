@@ -13,7 +13,7 @@ import { useMemo, useState, type ReactNode } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Command } from 'cmdk'
 import { useNavigate } from 'react-router'
-import { Clock, Library, RotateCcw, Sparkles } from 'lucide-react'
+import { Clock, Library, Network, RotateCcw, Sparkles } from 'lucide-react'
 import { basename } from '@/core/vault'
 import { useReviewStore } from '@/stores/review-store'
 import { useTabsStore, type Tab } from '@/stores/tabs-store'
@@ -250,6 +250,62 @@ function PaletteBody({ onSelect }: { onSelect: () => void }): ReactNode {
                 {basename(currentFilePath)}
               </span>
             </Command.Item>
+          </Command.Group>
+        )}
+
+        {showStaticGroups && currentVaultId && (
+          <Command.Group
+            heading="Knowledge graph"
+            className="swirlread-cmdk__group"
+          >
+            <Command.Item
+              key="graph::global"
+              value="knowledge graph relationship map global links network"
+              onSelect={() =>
+                handleSelect(
+                  currentFilePath
+                    ? `/app/${currentVaultId}/__graph__?from=${encodeURIComponent(currentFilePath)}`
+                    : `/app/${currentVaultId}/__graph__`,
+                )
+              }
+              className="swirlread-cmdk__item"
+            >
+              <Network
+                className="swirlread-cmdk__item-icon"
+                size={14}
+                aria-hidden="true"
+              />
+              <span className="swirlread-cmdk__item-primary">
+                Open knowledge graph
+              </span>
+              <span className="swirlread-cmdk__item-secondary">
+                Whole-vault relationship map
+              </span>
+            </Command.Item>
+            {currentFilePath && (
+              <Command.Item
+                key="graph::local"
+                value={`local graph neighbours connections ${currentFilePath}`}
+                onSelect={() =>
+                  handleSelect(
+                    `/app/${currentVaultId}/__graph__?mode=local&focus=${encodeURIComponent(currentFilePath)}`,
+                  )
+                }
+                className="swirlread-cmdk__item"
+              >
+                <Network
+                  className="swirlread-cmdk__item-icon"
+                  size={14}
+                  aria-hidden="true"
+                />
+                <span className="swirlread-cmdk__item-primary">
+                  Local graph for this note
+                </span>
+                <span className="swirlread-cmdk__item-secondary">
+                  {basename(currentFilePath)}
+                </span>
+              </Command.Item>
+            )}
           </Command.Group>
         )}
 

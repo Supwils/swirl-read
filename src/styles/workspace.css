@@ -226,6 +226,9 @@
   gap: 3px;
   padding: 0;
   margin: 0;
+  /* Stop the browser stealing a touch-drag for page scroll while resizing
+     (Feature B Phase B). No effect on mouse interaction. */
+  touch-action: none;
 }
 
 .swirlread-workspace__splitter::before {

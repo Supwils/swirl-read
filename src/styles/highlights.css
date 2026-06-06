@@ -1,0 +1,321 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Highlights & annotations (Feature E).
+
+   Three surfaces:
+     1. `.swirlread-hl`            — the inline mark wrapped around prose text.
+     2. `.swirlread-hl-popover`    — the floating create/edit control.
+     3. `.swirlread-highlights`    — the calm document-bottom list (+ orphans).
+
+   Colours map to theme-aware `--hl-*` variables (see themes.css) so a
+   highlight reads correctly in light/sepia/dark/oled.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* ─── Inline mark ─────────────────────────────────────────────────────── */
+.swirlread-hl {
+  border-radius: 2px;
+  /* Wrap cleanly across line breaks so multi-line highlights look continuous. */
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  padding: 0.04em 0.04em;
+  /* Keep the reading cursor over highlighted prose — clicking still opens the
+     edit popover, but a pointer cursor over body text reads as a link and
+     fights the calm reading surface. */
+  cursor: text;
+  color: var(--hl-ink);
+  transition: filter 120ms ease;
+}
+
+.swirlread-hl:hover {
+  filter: brightness(1.05) saturate(1.08);
+}
+
+.swirlread-hl[data-hl-color='yellow'] {
+  background-color: var(--hl-yellow);
+}
+.swirlread-hl[data-hl-color='green'] {
+  background-color: var(--hl-green);
+}
+.swirlread-hl[data-hl-color='blue'] {
+  background-color: var(--hl-blue);
+}
+.swirlread-hl[data-hl-color='pink'] {
+  background-color: var(--hl-pink);
+}
+.swirlread-hl[data-hl-color='purple'] {
+  background-color: var(--hl-purple);
+}
+
+/* Click-to-scroll flash from the list. */
+@keyframes swirlread-hl-flash {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+  30% {
+    box-shadow: 0 0 0 3px var(--accent-soft, var(--color-accent));
+  }
+}
+.swirlread-hl--flash {
+  animation: swirlread-hl-flash 1.1s ease;
+}
+
+/* ─── Popover ─────────────────────────────────────────────────────────── */
+.swirlread-hl-popover {
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.55rem;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  box-shadow: 0 8px 24px var(--shadow-deep, var(--color-shadow));
+  font-family: var(--font-sans);
+}
+
+.swirlread-hl-popover__swatches {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.swirlread-hl-popover__swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    transform 100ms ease,
+    border-color 100ms ease;
+}
+
+.swirlread-hl-popover__swatch:hover {
+  transform: scale(1.12);
+}
+
+.swirlread-hl-popover__swatch--active {
+  border-color: var(--color-text);
+}
+
+.swirlread-hl-popover__swatch[data-hl-color='yellow'] {
+  background-color: var(--hl-yellow);
+}
+.swirlread-hl-popover__swatch[data-hl-color='green'] {
+  background-color: var(--hl-green);
+}
+.swirlread-hl-popover__swatch[data-hl-color='blue'] {
+  background-color: var(--hl-blue);
+}
+.swirlread-hl-popover__swatch[data-hl-color='pink'] {
+  background-color: var(--hl-pink);
+}
+.swirlread-hl-popover__swatch[data-hl-color='purple'] {
+  background-color: var(--hl-purple);
+}
+
+.swirlread-hl-popover__remove {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.swirlread-hl-popover__remove:hover {
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-text) 8%, transparent);
+}
+
+.swirlread-hl-popover__note {
+  width: 100%;
+  resize: vertical;
+  min-height: 2.2rem;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.swirlread-hl-popover__note:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+/* ─── Document-bottom list ────────────────────────────────────────────── */
+.swirlread-highlights {
+  margin-top: 2.5rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--color-border);
+  font-family: var(--font-sans);
+  color: var(--color-text);
+}
+
+.swirlread-highlights__title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.swirlread-highlights__title svg {
+  color: var(--color-text-muted);
+}
+
+.swirlread-highlights__count {
+  margin-left: 0.2rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-text) 8%, transparent);
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+.swirlread-highlights__list {
+  list-style: none;
+  margin: 0.85rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.swirlread-highlights__item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  padding: 0.6rem 2.2rem 0.6rem 0.75rem;
+  background: color-mix(in srgb, var(--color-surface) 35%, transparent);
+}
+
+.swirlread-highlights__item--orphaned {
+  opacity: 0.75;
+  border-style: dashed;
+}
+
+.swirlread-highlights__hit {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.swirlread-highlights__hit:disabled {
+  cursor: default;
+}
+
+.swirlread-highlights__chip {
+  flex: 0 0 auto;
+  margin-top: 0.18rem;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid color-mix(in srgb, var(--color-text) 18%, transparent);
+}
+
+.swirlread-highlights__chip[data-hl-color='yellow'] {
+  background-color: var(--hl-yellow);
+}
+.swirlread-highlights__chip[data-hl-color='green'] {
+  background-color: var(--hl-green);
+}
+.swirlread-highlights__chip[data-hl-color='blue'] {
+  background-color: var(--hl-blue);
+}
+.swirlread-highlights__chip[data-hl-color='pink'] {
+  background-color: var(--hl-pink);
+}
+.swirlread-highlights__chip[data-hl-color='purple'] {
+  background-color: var(--hl-purple);
+}
+
+.swirlread-highlights__quote {
+  font-family: var(--font-serif);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--color-text);
+}
+
+.swirlread-highlights__hit:not(:disabled):hover .swirlread-highlights__quote {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.swirlread-highlights__row-note {
+  margin: 0 0 0 1.5rem;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+  font-style: italic;
+}
+
+.swirlread-highlights__delete {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.swirlread-highlights__item:hover .swirlread-highlights__delete,
+.swirlread-highlights__delete:focus-visible {
+  opacity: 1;
+}
+
+.swirlread-highlights__delete:hover {
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-text) 8%, transparent);
+}
+
+.swirlread-highlights__orphans {
+  margin-top: 1.1rem;
+}
+
+.swirlread-highlights__orphan-note {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.6rem;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.swirlread-highlights__orphan-note svg {
+  flex: 0 0 auto;
+}

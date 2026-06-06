@@ -50,6 +50,7 @@ export function VaultLayout() {
   const fileTreeOpen = useUIStore((s) => s.fileTreeOpen)
   const setFileTreeOpen = useUIStore((s) => s.setFileTreeOpen)
   const tocOpen = useUIStore((s) => s.tocOpen)
+  const wideRails = useUIStore((s) => s.wideRails)
   const chromeMode = useUIStore((s) => s.chromeMode)
   const useLegacyTree = useUIStore((s) => s.useLegacyTree)
   const tabCapHit = useTabsStore((s) => s.tabCapHit)
@@ -87,12 +88,22 @@ export function VaultLayout() {
   const fileTreePersistent = chromeMode === 'working' && fileTreeOpen
   const tocPersistent = chromeMode === 'working' && tocOpen
   const showFileTree = fileTreePersistent || hoverFileTree
-  const showToc = tocPersistent || hoverToc
+  // Wide-rails (Phase C) mounts the TOC even when it isn't working-pinned so
+  // CSS can pin it at ≥1600px. Below that the `--wide` modifier is inert and
+  // the rail keeps the floating/hover treatment, so the toggle does nothing on
+  // a small window (as specified).
+  const showToc = tocPersistent || hoverToc || wideRails
   // When the sidebar is shown via hover (i.e. NOT persistent), render
   // it floating regardless of chromeMode so it doesn't shove content
   // sideways for a transient peek.
   const fileTreeFloating = !fileTreePersistent
-  const tocFloating = !tocPersistent
+  // Wide-rails-only = mounted purely because wideRails is on (not working-
+  // pinned, not currently hovered). It gets a dedicated `--wide` modifier
+  // instead of `--floating`: CSS keeps it inert (display:none) below 1600px and
+  // promotes it to a sticky, space-taking rail at ≥1600px. A genuine hover
+  // still takes the normal floating path.
+  const tocWideOnly = wideRails && !tocPersistent && !hoverToc
+  const tocFloating = !tocPersistent && !tocWideOnly
 
   const currentPath = deriveCurrentPathFromPathname(pathname)
 
@@ -137,6 +148,34 @@ export function VaultLayout() {
           className="swirlread-vault-layout__hover-zone swirlread-vault-layout__hover-zone--right"
           aria-hidden="true"
           onMouseEnter={() => {
+            cancelTimer(tocTimerRef)
+            setHoverToc(true)
+          }}
+        />
+      )}
+
+      {/* Touch handles (Feature B Phase B). Hover-summon is a mouse-only
+          gesture, so coarse-pointer / no-hover devices get an explicit tap
+          target instead. `display:none` by default; the capability media
+          query in layout.css flips them to `display:flex`. They reuse the
+          existing transient-show flow (+ its backdrop dismiss). */}
+      {!fileTreePersistent && vaultId && (
+        <button
+          type="button"
+          className="swirlread-vault-layout__touch-handle swirlread-vault-layout__touch-handle--left"
+          aria-label="Show file shelf"
+          onClick={() => {
+            cancelTimer(fileTreeTimerRef)
+            setHoverFileTree(true)
+          }}
+        />
+      )}
+      {!tocPersistent && vaultId && (
+        <button
+          type="button"
+          className="swirlread-vault-layout__touch-handle swirlread-vault-layout__touch-handle--right"
+          aria-label="Show table of contents"
+          onClick={() => {
             cancelTimer(tocTimerRef)
             setHoverToc(true)
           }}
@@ -202,7 +241,7 @@ export function VaultLayout() {
         <aside
           className={`swirlread-vault-layout__toc${
             tocFloating ? ' swirlread-vault-layout__toc--floating' : ''
-          }`}
+          }${tocWideOnly ? ' swirlread-vault-layout__toc--wide' : ''}`}
           aria-label="Table of contents"
           onMouseEnter={() => {
             cancelTimer(tocTimerRef)

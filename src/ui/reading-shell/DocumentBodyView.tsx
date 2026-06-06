@@ -6,13 +6,20 @@
 
 import { lazy, useEffect, type ReactNode, type RefObject } from 'react'
 import { ChunkBoundary } from '@/ui/components/ChunkBoundary'
-import { Pencil, Sparkles } from 'lucide-react'
+import {
+  ChevronDown,
+  ChevronRight,
+  Network,
+  Pencil,
+  Sparkles,
+} from 'lucide-react'
 import { useReviewStore } from '@/stores/review-store'
 import type { WikilinkIndex } from '@/core/navigation/wikilink-resolver'
 import { useEditorStore } from '@/stores/editor-store'
 import { useUIStore } from '@/stores/ui-store'
 import { getAdapter } from '@/stores/vault-store'
 import { DirectoryListing } from './DirectoryListing'
+import { HighlightsLayer } from './HighlightsLayer'
 import { ReauthorizeVault } from './ReauthorizeVault'
 import { DocumentSkeleton } from './DocumentSkeleton'
 import { FrontmatterPanel } from './Frontmatter'
@@ -57,6 +64,12 @@ const DocumentEditSurface = lazy(() =>
   })),
 )
 
+// The local-graph panel pulls in the graph engine + SVG canvas. Lazy + gated
+// behind the panel's expanded state so a collapsed panel costs nothing.
+const LocalGraphPanel = lazy(() =>
+  import('./LocalGraphPanel').then((m) => ({ default: m.LocalGraphPanel })),
+)
+
 interface DocumentBodyViewProps {
   state: LoadState
   vaultId: string | undefined
@@ -97,6 +110,9 @@ export function DocumentBodyView({
   onDismissExternalChange,
 }: DocumentBodyViewProps): ReactNode {
   const frontmatterDisplay = useUIStore((s) => s.frontmatterDisplay)
+  const zenMode = useUIStore((s) => s.zenMode)
+  const localGraphOpen = useUIStore((s) => s.localGraphOpen)
+  const setLocalGraphOpen = useUIStore((s) => s.setLocalGraphOpen)
   const adjacent = useAdjacentFiles(vaultId, filePath)
   const isEditing = useIsEditingThisDocument(vaultId, filePath)
   const requestGenerate = useReviewStore((s) => s.requestGenerate)
@@ -146,7 +162,7 @@ export function DocumentBodyView({
 
   return (
     <article
-      className="mx-auto px-6 py-12 font-serif"
+      className="swirlread-reader-column mx-auto py-12 font-serif"
       style={{
         color: 'var(--color-text)',
         maxWidth: articleMaxWidth,
@@ -272,10 +288,54 @@ export function DocumentBodyView({
               {state.content}
             </div>
           </EmbedContext.Provider>
+          <HighlightsLayer
+            vaultId={ctxValue.vaultId}
+            filePath={ctxValue.currentPath}
+            proseRef={proseRef}
+            renderKey={state}
+            suppressPopover={zenMode}
+            suppressDecoration={false}
+          />
           <BacklinksPanel
             vaultId={ctxValue.vaultId}
             currentPath={ctxValue.currentPath}
           />
+          {!zenMode && (
+            <section
+              className="swirlread-localgraph"
+              aria-labelledby="local-graph-title"
+            >
+              <button
+                type="button"
+                className="swirlread-localgraph__header"
+                aria-expanded={localGraphOpen}
+                onClick={() => {
+                  void setLocalGraphOpen(!localGraphOpen)
+                }}
+              >
+                {localGraphOpen ? (
+                  <ChevronDown size={14} aria-hidden="true" />
+                ) : (
+                  <ChevronRight size={14} aria-hidden="true" />
+                )}
+                <Network size={16} aria-hidden="true" />
+                <span
+                  id="local-graph-title"
+                  className="swirlread-localgraph__title"
+                >
+                  Local graph
+                </span>
+              </button>
+              {localGraphOpen && (
+                <ChunkBoundary label="local graph">
+                  <LocalGraphPanel
+                    vaultId={ctxValue.vaultId}
+                    currentPath={ctxValue.currentPath}
+                  />
+                </ChunkBoundary>
+              )}
+            </section>
+          )}
         </WikilinkContext.Provider>
       )}
 
@@ -305,7 +365,11 @@ export function DocumentBodyView({
 
       {state.kind === 'html' && (
         <ChunkBoundary label="HTML renderer" resetKey={filePath}>
-          <HtmlRenderer source={state.raw} />
+          <HtmlRenderer
+            source={state.raw}
+            vault={state.vault}
+            path={filePath}
+          />
         </ChunkBoundary>
       )}
 

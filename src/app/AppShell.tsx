@@ -5,6 +5,7 @@ import {
   Home,
   Maximize2,
   Minimize2,
+  Network,
   PanelLeftClose,
   PanelLeftOpen,
   PanelRightClose,
@@ -99,6 +100,8 @@ export function AppShell() {
   const toggleZenMode = useUIStore((s) => s.toggleZenMode)
   const theme = useUIStore((s) => s.theme)
   const setTheme = useUIStore((s) => s.setTheme)
+  const wideRails = useUIStore((s) => s.wideRails)
+  const setWideRails = useUIStore((s) => s.setWideRails)
   const navigate = useNavigate()
   // Whether each sidebar is actually pinned (visible persistently).
   // In reading mode neither is ever pinned — only hover-summoned.
@@ -265,6 +268,20 @@ export function AppShell() {
                     onChange={handleThemePrimaryChange}
                   />
                 </div>
+                <div className="swirlread-view-menu__row">
+                  <span className="swirlread-view-menu__label">Wide rails</span>
+                  <Toggle<'on' | 'off'>
+                    value={wideRails ? 'on' : 'off'}
+                    ariaLabel="Wide rails"
+                    options={[
+                      { value: 'on', label: 'On' },
+                      { value: 'off', label: 'Off' },
+                    ]}
+                    onChange={(next) => {
+                      void setWideRails(next === 'on')
+                    }}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -282,6 +299,23 @@ export function AppShell() {
               <Maximize2 size={18} aria-hidden="true" />
             )}
           </button>
+          {vaultId && (
+            <button
+              type="button"
+              onClick={() =>
+                void navigate(
+                  currentPath
+                    ? `/app/${vaultId}/__graph__?from=${encodeURIComponent(currentPath)}`
+                    : `/app/${vaultId}/__graph__`,
+                )
+              }
+              className="swirlread-shell__icon-button"
+              aria-label="Open knowledge graph"
+              title="Knowledge graph"
+            >
+              <Network size={18} aria-hidden="true" />
+            </button>
+          )}
           <button
             type="button"
             onClick={toggleCommandPalette}
