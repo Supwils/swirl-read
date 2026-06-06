@@ -10,7 +10,9 @@
  *   - `zenMode`             — F-key toggle, hides chrome (M2.6 wires the key)
  *   - `fileTreeOpen`        — left-rail file tree visibility (M4.3)
  *   - `fileTreeWidth`       — left-rail width in px (220–520, drag-to-resize)
- *   - `tocOpen`             — right-rail table of contents visibility (M4.6)
+ *   - `tocOpen`             — TOC preference (M4.6): "show when chromeMode===
+ *                            'working'". Has no visual effect in reading mode;
+ *                            persisted so the preference survives mode switches.
  *   - `localGraphOpen`      — document-foot local-graph panel expanded/collapsed
  *   - `commandPaletteOpen`  — ⌘K palette open/closed (M5.1, transient)
  *   - `shortcutsHelpOpen`   — `?` overlay listing all keybindings (M9.4, transient)

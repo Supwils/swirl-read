@@ -15,9 +15,9 @@
  * RX2 + M2.5: hover-to-summon is the **primary** sidebar interaction in
  * every chrome mode. Edge hover zones reveal a floating sidebar
  * transiently; leaving the zone + sidebar dismisses after a short grace
- * period. Working chrome additionally pins the sidebars in flex flow
- * (sticky, takes layout space) when their persistent toggle is on —
- * users who want a constantly-visible tree opt into that explicitly.
+ * period. Working chrome additionally pins the sidebars (persistent
+ * toggle on) — they remain as fixed overlays at lower z-index rather
+ * than entering flex flow, so the article column never shifts.
  */
 
 import { lazy, useEffect, useRef, useState } from 'react'
@@ -81,10 +81,10 @@ export function VaultLayout() {
   }, [])
 
   // Two paths to visibility:
-  //   1. Persistent (working mode + the user's toggle is on) — sidebar
-  //      sits in flex flow, takes layout width, never auto-dismisses.
+  //   1. Persistent (working mode + the user's toggle is on) — sidebar is
+  //      a fixed overlay at z-45 (lower z than hover), never auto-dismisses.
   //   2. Hover-summon — works in any chrome mode, shows the floating
-  //      treatment, dismisses 800 ms after the cursor leaves.
+  //      treatment at z-70 (with shadow), dismisses 800 ms after cursor leaves.
   const fileTreePersistent = chromeMode === 'working' && fileTreeOpen
   const tocPersistent = chromeMode === 'working' && tocOpen
   const showFileTree = fileTreePersistent || hoverFileTree
@@ -238,24 +238,37 @@ export function VaultLayout() {
         <Outlet />
       </div>
       {showToc && vaultId && (
-        <aside
-          className={`swirlread-vault-layout__toc${
-            tocFloating ? ' swirlread-vault-layout__toc--floating' : ''
-          }${tocWideOnly ? ' swirlread-vault-layout__toc--wide' : ''}`}
-          aria-label="Table of contents"
-          onMouseEnter={() => {
-            cancelTimer(tocTimerRef)
-          }}
-          onMouseLeave={() => {
-            if (tocFloating) {
-              scheduleHide(tocTimerRef, setHoverToc)
-            }
-          }}
-        >
-          <ChunkBoundary label="table of contents">
-            <TableOfContents />
-          </ChunkBoundary>
-        </aside>
+        <>
+          {tocFloating && (
+            <button
+              type="button"
+              className="swirlread-vault-layout__sidebar-backdrop swirlread-vault-layout__sidebar-backdrop--floating"
+              aria-label="Dismiss table of contents"
+              onClick={() => {
+                setHoverToc(false)
+                cancelTimer(tocTimerRef)
+              }}
+            />
+          )}
+          <aside
+            className={`swirlread-vault-layout__toc${
+              tocFloating ? ' swirlread-vault-layout__toc--floating' : ''
+            }${tocWideOnly ? ' swirlread-vault-layout__toc--wide' : ''}`}
+            aria-label="Table of contents"
+            onMouseEnter={() => {
+              cancelTimer(tocTimerRef)
+            }}
+            onMouseLeave={() => {
+              if (tocFloating) {
+                scheduleHide(tocTimerRef, setHoverToc)
+              }
+            }}
+          >
+            <ChunkBoundary label="table of contents">
+              <TableOfContents />
+            </ChunkBoundary>
+          </aside>
+        </>
       )}
       {vaultId && (
         <ChunkBoundary label="tags panel">

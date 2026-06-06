@@ -147,8 +147,9 @@ body.density-compact {
 .swirlread-vault-layout__sidebar {
   /* Always a fixed overlay — content column never shifts whether the sidebar
      is pinned (persistent) or hover-summoned (floating). Pinned state stays
-     at z-45 with a semi-transparent background; hover state lifts to z-70
-     with a shadow + opaque background via the `--floating` modifier. */
+     at z-45; hover state lifts to z-70 with a shadow via the `--floating`
+     modifier. Both states use var(--color-bg) so sidebar text is always
+     readable regardless of what article content is underneath. */
   position: fixed;
   top: var(--shell-header-height);
   left: 0;
@@ -158,9 +159,11 @@ body.density-compact {
   overflow-y: auto;
   overflow-x: hidden;
   border-right: 1px solid var(--color-border);
-  background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+  background: var(--color-bg);
+  /* safe-area-inset-left resolves to 0 on non-notch devices; additive. */
   padding: var(--shell-sidebar-padding-block) 0
-    var(--shell-sidebar-padding-block) var(--sidebar-gutter);
+    var(--shell-sidebar-padding-block)
+    max(var(--sidebar-gutter), env(safe-area-inset-left, 0px));
   font-family: var(--font-sans);
   font-size: 0.86em;
 }
@@ -253,14 +256,18 @@ body:has(.swirlread-vault-layout__sidebar-resize[data-dragging='true']) {
 .swirlread-vault-layout__content {
   flex: 1 1 auto;
   min-width: 0;
+  /* Prevent scroll-anchoring from snapping the viewport when the wide-rails
+     TOC transitions between position:fixed (default) and position:sticky
+     (≥1600px + body.wide-rails), which changes the content column width. */
+  overflow-anchor: none;
 }
 
 .swirlread-vault-layout__toc {
   /* Always a fixed overlay — matches the left sidebar model. Content column
      never shifts whether the TOC is pinned or hover-summoned. The --floating
-     modifier lifts z-index and adds shadow + opaque background for transient
-     peeks. The --wide modifier (≥1600px + body.wide-rails) intentionally
-     overrides this to a sticky in-flow rail for large-monitor layouts. */
+     modifier lifts z-index and adds a shadow for transient peeks. The --wide
+     modifier (≥1600px + body.wide-rails) intentionally overrides this to a
+     sticky in-flow rail for large-monitor layouts. */
   position: fixed;
   top: var(--shell-header-height);
   right: 0;
@@ -270,9 +277,11 @@ body:has(.swirlread-vault-layout__sidebar-resize[data-dragging='true']) {
   overflow-y: auto;
   overflow-x: hidden;
   border-left: 1px solid var(--color-border);
-  background: color-mix(in srgb, var(--color-surface) 25%, transparent);
-  padding: var(--shell-toc-padding-block-start) var(--shell-toc-padding-inline)
-    var(--shell-toc-padding-block-end);
+  background: var(--color-bg);
+  /* safe-area-inset-right resolves to 0 on non-notch devices; additive. */
+  padding: var(--shell-toc-padding-block-start)
+    max(var(--shell-toc-padding-inline), env(safe-area-inset-right, 0px))
+    var(--shell-toc-padding-block-end) var(--shell-toc-padding-inline);
   font-family: var(--font-sans);
   font-size: 0.84em;
 }
@@ -297,15 +306,6 @@ body:has(.swirlread-vault-layout__sidebar-resize[data-dragging='true']) {
     width: min(280px, 80vw);
     box-shadow: 6px 0 24px var(--color-shadow);
     background: var(--color-bg);
-  }
-
-  /* The desktop floating-modifier override (specificity 0,2,0) wins
-     over the rule above (0,1,0) and would otherwise stick a custom
-     resized 480 px sidebar into a phone-width viewport. Re-apply the
-     drawer width with matching specificity so small viewports always
-     respect `min(280px, 80vw)`. (Audit: A.H3) */
-  .swirlread-vault-layout__sidebar.swirlread-vault-layout__sidebar--floating {
-    width: min(280px, 80vw);
   }
 
   .swirlread-vault-layout__sidebar-backdrop {
@@ -409,7 +409,8 @@ body:has(.swirlread-vault-layout__sidebar-resize[data-dragging='true']) {
   z-index: 100;
 }
 
-.swirlread-view-menu:hover .swirlread-view-menu__panel {
+.swirlread-view-menu:hover .swirlread-view-menu__panel,
+.swirlread-view-menu:focus-within .swirlread-view-menu__panel {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0);

@@ -82,20 +82,18 @@ const GenerateCardsDialog = lazy(() =>
 )
 
 export function AppShell() {
+  // fileTreeOpen / tocOpen / chromeMode are still subscribed — they drive the
+  // pinned-state derived values (fileTreePinned / tocPinned) used for icon and
+  // aria-pressed. The action functions are read via getState() inside handlers.
   const fileTreeOpen = useUIStore((s) => s.fileTreeOpen)
-  const toggleFileTree = useUIStore((s) => s.toggleFileTree)
-  const setFileTreeOpen = useUIStore((s) => s.setFileTreeOpen)
   const tocOpen = useUIStore((s) => s.tocOpen)
-  const setTocOpen = useUIStore((s) => s.setTocOpen)
-  const toggleToc = useUIStore((s) => s.toggleToc)
+  const chromeMode = useUIStore((s) => s.chromeMode)
   const commandPaletteOpen = useUIStore((s) => s.commandPaletteOpen)
   const toggleCommandPalette = useUIStore((s) => s.toggleCommandPalette)
   const shortcutsHelpOpen = useUIStore((s) => s.shortcutsHelpOpen)
   const confirmDialogPayload = useDialogStore((s) => s.confirmPayload)
   const reviewIntent = useReviewStore((s) => s.pending)
   const dismissReview = useReviewStore((s) => s.dismissGenerate)
-  const chromeMode = useUIStore((s) => s.chromeMode)
-  const setChromeMode = useUIStore((s) => s.setChromeMode)
   const zenMode = useUIStore((s) => s.zenMode)
   const toggleZenMode = useUIStore((s) => s.toggleZenMode)
   const theme = useUIStore((s) => s.theme)
@@ -180,14 +178,14 @@ export function AppShell() {
             type="button"
             onClick={() =>
               void (async () => {
-                if (chromeMode === 'reading') {
-                  // Promote to working mode so the toggle has a visible
-                  // effect (A.H4). Ensure fileTreeOpen is true so the
-                  // sidebar appears immediately after the mode switch.
-                  await setChromeMode('working')
-                  if (!fileTreeOpen) await setFileTreeOpen(true)
+                // Read live store state — not the closed-over render value —
+                // so rapid double-clicks don't race on a stale chromeMode.
+                const s = useUIStore.getState()
+                if (s.chromeMode === 'reading') {
+                  await s.setChromeMode('working')
+                  if (!s.fileTreeOpen) await s.setFileTreeOpen(true)
                 } else {
-                  await toggleFileTree()
+                  await s.toggleFileTree()
                 }
               })()
             }
@@ -329,11 +327,12 @@ export function AppShell() {
             type="button"
             onClick={() =>
               void (async () => {
-                if (chromeMode === 'reading') {
-                  await setChromeMode('working')
-                  if (!tocOpen) await setTocOpen(true)
+                const s = useUIStore.getState()
+                if (s.chromeMode === 'reading') {
+                  await s.setChromeMode('working')
+                  if (!s.tocOpen) await s.setTocOpen(true)
                 } else {
-                  await toggleToc()
+                  await s.toggleToc()
                 }
               })()
             }
