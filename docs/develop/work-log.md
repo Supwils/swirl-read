@@ -4,6 +4,26 @@
 
 ---
 
+## 2026-06-07 · Production hardening — PWA offline routing + review label
+
+A review pass found three issues in the just-shipped PWA / review work; fixed
+and re-validated by a sub-agent (verdict: production-ready). `pnpm check:full`
+green (1087 tests).
+
+- **PWA offline document deep-links (HIGH).** The `navigateFallbackDenylist`
+  included `/\.[^/]+$/`, which matched document URLs (`/app/<vault>/note.md`
+  end in an extension) and excluded them from the SPA navigation fallback —
+  breaking OFFLINE reload / deep-link of any note. Online was masked by the
+  `vercel.json` `/(.*) -> /index.html` rewrite. Fix: denylist is now
+  `[/^\/api\//]` only. (Static assets are never `mode: navigate`, so they don't
+  need a denylist entry.) Verified against the built `dist/sw.js`.
+- **Preview SW shadowing dev (LOW).** `pnpm preview` (production build, registers
+  the SW) shared dev's port 7945, so a lingering SW could shadow a later
+  `pnpm dev`. Preview moved to 7946; dev stays 7945.
+- **Review label (LOW).** Cards generated from highlights now carry the
+  "N highlights · doc.md" label onto the batch (`generateBatch`'s existing
+  optional `label`); `sourcePaths` stays `[path]` so back-to-source is intact.
+
 ## 2026-06-06 · Follow-ups — fuzzy anchoring, review-from-highlights, legacy graph retired, PWA
 
 Closed out the deferred items from the reading-experience wave. All green via

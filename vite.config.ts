@@ -110,9 +110,13 @@ export default defineConfig({
         // reader never downloads megabytes of CJK/math fonts up front.
         globPatterns: ['**/index-*.{js,css}', '**/*.html'],
         navigateFallback: 'index.html',
-        // Don't let the SPA fallback shadow future backend routes or any
-        // path that names a file extension.
-        navigateFallbackDenylist: [/^\/api\//, /\.[^/]+$/],
+        // Only keep backend-style paths out of the SPA navigation fallback.
+        // Do NOT denylist dotted paths: document URLs are
+        // `/app/<vault>/<path>.md`, so a `/\.[^/]+$/` rule would wrongly
+        // exclude them and break OFFLINE reload / deep-link of any note. Static
+        // assets aren't navigation requests, so they never reach this fallback
+        // and need no denylist entry.
+        navigateFallbackDenylist: [/^\/api\//],
         cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
@@ -152,9 +156,12 @@ export default defineConfig({
     strictPort: true,
   },
   preview: {
-    // Match dev so `pnpm preview` (production build) reuses the same
-    // bookmarkable URL.
-    port: 7945,
+    // Deliberately NOT the dev port (7945). `pnpm preview` serves the
+    // production build, which registers the service worker; sharing the dev
+    // port would leave that SW registered for localhost:7945 and let it shadow
+    // a later `pnpm dev` (serving the cached prod shell instead of HMR). A
+    // separate port keeps the PWA's SW scoped to preview only.
+    port: 7946,
     strictPort: true,
   },
   build: {

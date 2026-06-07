@@ -126,6 +126,10 @@ export function GenerateCardsDialog({
         {
           vaultId,
           sources: [{ path, content: source }],
+          // Carry the caller's label (e.g. "N highlights · doc.md") onto the
+          // batch so the review header reflects what the cards were distilled
+          // from; `sourcePaths` stays `[path]` so "open source" still works.
+          ...(sourceLabel !== undefined && { label: sourceLabel }),
           options: { cardCount },
           signal: controller.signal,
         },
@@ -154,7 +158,15 @@ export function GenerateCardsDialog({
         })
       }
     }
-  }, [vaultId, path, inlineContent, cardCount, navigate, onOpenChange])
+  }, [
+    vaultId,
+    path,
+    inlineContent,
+    sourceLabel,
+    cardCount,
+    navigate,
+    onOpenChange,
+  ])
 
   return (
     <Dialog.Root open={open} onOpenChange={handleClose}>
